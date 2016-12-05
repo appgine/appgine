@@ -1,6 +1,6 @@
 
 import React, { Component } from 'react'
-import { dispatch } from 'plugins.api/channel'
+import { dispatch } from '../api/channel'
 
 const context = {};
 const contextTypes = {};
