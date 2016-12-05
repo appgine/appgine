@@ -1,7 +1,7 @@
 
 
 
-export default function createConnector(onTick, tickdelay=null) {
+export function createConnector(onTick, tickdelay=null) {
 	let handlers = [];
 	let pendingTick = null;
 
