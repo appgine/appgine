@@ -9,7 +9,15 @@
     "build": "gulp build",
     "prepublish": "npm run build"
   },
-  "main": "lib/",
+  "main": "run.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wavelo/appgine.git"
+  },
+  "files": [
+    "lib/",
+    "run.js"
+  ],
   "dependencies": {
     "kefir": "^3.1.0",
     "plugin-macro-loader": "^1.6.0",
