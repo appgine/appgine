@@ -1,4 +1,8 @@
 
+export {
+	command, commandAll
+} from 'plugin-macro-loader/lib/loader'
+
 import {
 	reloadTargets
 } from './api/targets/container'
