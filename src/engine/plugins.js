@@ -30,11 +30,11 @@ export function swapDocument(fn)
 
 export function loadMain()
 {
+	loadSystem();
 	loadScripts(document);
 	loadGlobal(document);
 	loadStatic(document);
 	unloadScripts(document);
-	loadSystem();
 }
 
 
