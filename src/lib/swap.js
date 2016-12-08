@@ -4,6 +4,7 @@ import { swapDocument, load, loadStatic, unload, unloadStatic } from '../engine/
 import { willUpdate } from '../update'
 import closure from '../closure'
 import createFragment from './createFragment'
+import loadHtml from './loadHtml'
 
 
 export function swap(from, into) {
@@ -19,7 +20,7 @@ export function swap(from, into) {
 				$atomic.parentNode.replaceChild(document.createElement('dataAtomic'), $atomic);
 			});
 
-			const $nextFragment = createFragment($into.querySelector('body').outerHTML);
+			const $nextFragment = createFragment(loadHtml($into.querySelector('body')));
 
 			const $staticList = [];
 			Array.from($nextFragment.querySelectorAll('[data-static]')).forEach(function($static) {

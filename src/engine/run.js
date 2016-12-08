@@ -2,6 +2,7 @@
 import RequestStack from './RequestStack'
 
 import { loadMain, update } from './plugins'
+import loadHtml from '../lib/loadHtml'
 import { swap } from '../lib/swap'
 import { scrollToView, scrollFormToView } from '../lib/scroll'
 import { dispatch } from '../api/channel'
@@ -85,9 +86,9 @@ export function isRequestCurrent() {
 	return _request===_stack.loadRequest();
 }
 
-	const html = document.body.parentNode.outerHTML;
 export default function run(options) {
 	_options = options;
+	const html = loadHtml(document.documentElement);
 
 	willUpdate(loadMain);
 

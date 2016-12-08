@@ -1,6 +1,7 @@
 
 import { dom } from '../closure'
 
+
 export default function createFragment(htmlString) {
 	let $fragment;
 
@@ -10,6 +11,10 @@ export default function createFragment(htmlString) {
 	} catch (e) {
 		_createFragmentPartially($fragment = _createFragmentElement(), htmlString);
 	}
+
+	Array.from($fragment.querySelectorAll('script')).forEach(function($script) {
+		$script.textContent = String($script.textContent).replace('__END_SCRIPT_TAG__', '<');
+	});
 
 	return $fragment;
 }
