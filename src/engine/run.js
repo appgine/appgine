@@ -11,6 +11,7 @@ import * as history from './history'
 
 import closure from '../closure'
 
+var _options = {};
 var _pending = 0;
 var _requestnum = 0;
 var _stack = new RequestStack();
@@ -84,8 +85,9 @@ export function isRequestCurrent() {
 	return _request===_stack.loadRequest();
 }
 
-export default function run() {
 	const html = document.body.parentNode.outerHTML;
+export default function run(options) {
+	_options = options;
 
 	willUpdate(loadMain);
 
@@ -318,7 +320,7 @@ function bindAjaxRequest($element, endpoint) {
 			response(text, json);
 
 		} else if (err || json===undefined) {
-			alert('Failed to handle request.\n' + String(err||''));
+			options.onError && options.onError('Failed to handle request.\n' + String(err||''));
 		}
 	}
 }
@@ -345,7 +347,7 @@ function bindRequest($element, endpoint, newPage=false, scrollTo=0) {
 			response(text, json);
 
 		} else if (err || json===undefined) {
-			alert('Failed to load requested page.\n' + String(err||''));
+			options.onError && options.onError('Failed to load requested page.\n' + String(err||''));
 
 			if (newPage && requestnum===_requestnum) {
 				history.cancelState();

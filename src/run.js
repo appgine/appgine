@@ -5,6 +5,8 @@ import { addListener } from './api/channel'
 
 
 export default function(options={}) {
+	options = {...options, ...{}}
+
 	require('./plugins').loader(module, function({ bindApi, bindSystem }) {
 		bindApi('channel', require('./api/channel'));
 
@@ -20,5 +22,5 @@ export default function(options={}) {
 	addListener('app.event', 'clickHash', onClickHash);
 	addListener('app.event', 'submit', onSubmitForm);
 
-	ready(run);
+	ready(() => run(options));
 }
