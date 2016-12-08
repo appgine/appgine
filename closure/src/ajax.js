@@ -160,6 +160,8 @@ function bindRequest(request, fn)
  */
 function handleResponse(event, err, fn)
 {
+	event.target.getAllResponseHeaders();
+
 	fn(
 		err,
 		handleResponseText(event.target.getResponseText()),
