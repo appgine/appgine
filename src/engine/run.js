@@ -321,7 +321,7 @@ function bindAjaxRequest($element, endpoint) {
 			response(text, json);
 
 		} else if (err || json===undefined) {
-			options.onError && options.onError('Failed to handle request.\n' + String(err||''));
+			_options.onError && _options.onError('Failed to handle request.\n' + String(err||''));
 		}
 	}
 }
@@ -348,7 +348,7 @@ function bindRequest($element, endpoint, newPage=false, scrollTo=0) {
 			response(text, json);
 
 		} else if (err || json===undefined) {
-			options.onError && options.onError('Failed to load requested page.\n' + String(err||''));
+			_options.onError && _options.onError('Failed to load requested page.\n' + String(err||''));
 
 			if (newPage && requestnum===_requestnum) {
 				history.cancelState();
