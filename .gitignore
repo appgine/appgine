@@ -3,3 +3,4 @@ npm-debug.log
 lib
 !src/lib
 dist
+*.sublime-*
