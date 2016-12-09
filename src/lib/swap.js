@@ -5,6 +5,7 @@ import { willUpdate } from '../update'
 import closure from '../closure'
 import createFragment from './createFragment'
 import loadHtml from './loadHtml'
+import loadTitle from './loadTitle'
 
 
 export function swap(from, into) {
@@ -12,7 +13,7 @@ export function swap(from, into) {
 
 	willUpdate(function() {
 		swapDocument(function() {
-			document.title = $into.querySelector('title').textContent||'';
+			document.title = loadTitle($into);
 
 			const $atomicList = [];
 			Array.from($into.querySelectorAll('[data-atomic]')).forEach(function($atomic) {
