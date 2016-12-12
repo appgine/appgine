@@ -176,16 +176,6 @@ function handleResponse(event, err, fn)
  */
 function handleResponseText(text)
 {
-	if (String(text).indexOf('<html')===-1) {
-		return '';
-
-	} else if (String(text).indexOf('<head')===-1) {
-		return '';
-
-	} else if (String(text).indexOf('<body')===-1) {
-		return '';
-	}
-
 	return text;
 }
 
