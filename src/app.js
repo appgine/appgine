@@ -1,7 +1,6 @@
 
-window.redirect = function(endpoint) {
-	window.location.href = endpoint;
-}
-
 import './shim.js'
-require('./run').default();
+import run from './run'
+import bridgeTracy from './bridges/tracy'
+
+run(bridgeTracy());
