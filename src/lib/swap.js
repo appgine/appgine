@@ -8,7 +8,7 @@ import loadHtml from './loadHtml'
 import loadTitle from './loadTitle'
 
 
-export function swap(from, into) {
+export default function swap(from, into) {
 	const { $fragment: $into, scrolled, scrollTop } = into;
 
 	willUpdate(function() {

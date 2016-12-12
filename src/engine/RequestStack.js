@@ -14,14 +14,14 @@ export default class RequestStack {
 	}
 
 
-	createRequest(endpoint, text, scrollTo) {
+	createRequest(endpoint, fragment, scrollTo) {
 		var pos = history.getCurrentPos();
 
 		if (this.history[pos]) {
 			this.history[pos].dispose();
 		}
 
-		let request = new Request(endpoint, text, scrollTo);
+		let request = new Request(endpoint, fragment, scrollTo);
 		this.history[pos] = request;
 
 		if (this.order.indexOf(pos)===-1) {

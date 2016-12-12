@@ -1,18 +1,18 @@
 
 import RequestStack from './RequestStack'
 
+import createOptions from './createOptions'
+
 import { loadMain, update } from './plugins'
 import loadHtml from '../lib/loadHtml'
-import { swap } from '../lib/swap'
 import { scrollToView, scrollFormToView } from '../lib/scroll'
-import { dispatch } from '../api/channel'
 import { onEachTick } from '../tick'
 import { willUpdate, wasUpdated } from '../update'
 import * as history from './history'
 
 import closure from '../closure'
 
-var _options = {};
+var _options = createOptions({});
 var _pending = 0;
 var _requestnum = 0;
 var _stack = new RequestStack();
@@ -87,19 +87,21 @@ export function isRequestCurrent() {
 }
 
 export default function run(options) {
-	_options = options;
+	_options = createOptions(options);
+	_options.initHTML(document.documentElement);
+
 	const html = loadHtml(document.documentElement);
 
 	willUpdate(loadMain);
 
-	swap(null, _request = _stack.createRequest(closure.uri.create(), html, 0));
+	_options.swap(null, _request = _stack.createRequest(closure.uri.create(), _options.createFragment(html), 0));
 
 	history.popstate(function(e, endpoint) {
 		if (_pending) {
 			_pending = 0;
 			_pushing = false;
 			_requestnum++;
-			dispatch('app.request', 'abort');
+			_options.dispatch('app.request', 'abort');
 		}
 
 		const request = _stack.loadRequest();
@@ -119,13 +121,14 @@ export default function run(options) {
 
 			} else if (_swap) {
 				request.swap = null;
-				swap(_request, _request = _stack.createRequest(..._swap));
-				dispatch('app.request', 'pageview', endpoint);
+				const [_swapUrl, _swapHtml, _swapScrollTo] = _swap;
+				_options.swap(_request, _request = _stack.createRequest(_swapUrl, _options.createFragment(_swapHtml), _swapScrollTo));
+				_options.dispatch('app.request', 'pageview', endpoint);
 
 			} else if (request!==_request) {
 				request.scrolled = -1;
-				swap(_request, _request = request);
-				dispatch('app.request', 'pageview', endpoint);
+				_options.swap(_request, _request = request);
+				_options.dispatch('app.request', 'pageview', endpoint);
 			}
 
 		} else {
@@ -219,14 +222,14 @@ const ajaxResponse = function($element, endpoint, newPage=false, scrollTo=false)
 				wasUpdated();
 
 			} else if (text && isCurrent) {
-				swap(_request, _request = _stack.createRequest(endpoint, text, anchor||scrollTo));
+				_options.swap(_request, _request = _stack.createRequest(endpoint, _options.createFragment(text), anchor||scrollTo));
 
 			} else if (text && foundRequest) {
 				foundRequest.willSwap(endpoint, text, anchor||scrollTo);
 			}
 
 			if (isCurrent && newPage) {
-				dispatch('app.request', 'pageview', closure.uri.create());
+				_options.dispatch('app.request', 'pageview', closure.uri.create());
 			}
 		}
 	}
@@ -235,10 +238,10 @@ const ajaxResponse = function($element, endpoint, newPage=false, scrollTo=false)
 
 function leave(endpoint) {
 	const requestnum = ++_requestnum;
-	dispatch('app.request', 'start', endpoint);
+	_options.dispatch('app.request', 'start', endpoint);
 
-	if (window.redirect(endpoint)) {
-		dispatch('app.request', 'stop');
+	if (_options.redirect(endpoint)) {
+		_options.dispatch('app.request', 'stop');
 
 		if (_pending) {
 			_pending = 0;
@@ -321,7 +324,7 @@ function bindAjaxRequest($element, endpoint) {
 			response(text, json);
 
 		} else if (err || json===undefined) {
-			_options.onError && _options.onError('Failed to handle request.\n' + String(err||''));
+			_options.onError('Failed to handle request.\n' + String(err||''));
 		}
 	}
 }
@@ -339,7 +342,7 @@ function bindRequest($element, endpoint, newPage=false, scrollTo=0) {
 	const response = ajaxResponse($element, endpoint, newPage, scrollTo);
 
 	if (_pending===1) {
-		dispatch('app.request', 'start', endpoint);
+		_options.dispatch('app.request', 'start', endpoint);
 		_pending = 2;
 	}
 
@@ -348,7 +351,7 @@ function bindRequest($element, endpoint, newPage=false, scrollTo=0) {
 			response(text, json);
 
 		} else if (err || json===undefined) {
-			_options.onError && _options.onError('Failed to load requested page.\n' + String(err||''));
+			_options.onError('Failed to load requested page.\n' + String(err||''));
 
 			if (newPage && requestnum===_requestnum) {
 				history.cancelState();
@@ -358,7 +361,7 @@ function bindRequest($element, endpoint, newPage=false, scrollTo=0) {
 		if (requestnum===_requestnum) {
 			_pending = 0;
 			_pushing = false;
-			dispatch('app.request', 'stop')
+			_options.dispatch('app.request', 'stop')
 		}
 	}
 }

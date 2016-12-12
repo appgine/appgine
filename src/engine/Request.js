@@ -4,16 +4,13 @@ import {
 	loadGlobal, reloadStatic, loadAtomic, unloadAtomic
 } from './plugins'
 
-import createFragment from '../lib/createFragment'
-
 
 export default class Request {
 
 
-	constructor(endpoint, text, scrollTo) {
+	constructor(endpoint, fragment, scrollTo) {
 		this.endpoint = endpoint;
-		this.text = text;
-		this.$fragment = createFragment(text);
+		this.$fragment = fragment;
 
 		if (typeof scrollTo === 'string' || typeof scrollTo === 'function') {
 			this.scrollTop = 0;
