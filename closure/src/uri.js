@@ -43,27 +43,27 @@ exports.create = function(location, params) {
 }
 
 exports.createFormAction = function($form) {
-	var uri;
+	var createdUri;
 
 	if ($form.getAttribute('action')) {
-		uri = exports.createUri($form.getAttribute('action'));
+		createdUri = exports.createUri($form.getAttribute('action'));
 
 	} else {
-		uri = exports.createUri();
-		uri.setQuery('');
+		createdUri = exports.createUri();
+		createdUri.setQuery('');
 	}
 
-	return uri.toString();
+	return createdUri.toString();
 }
 
 exports.createForm = function($form, $submitter) {
-	var uri = exports.createUri($form.getAttribute('action'));
+	var createdUri = exports.createUri($form.getAttribute('action'));
 
 	if (String($form.method||'GET').toUpperCase()==='GET') {
-		uri.setQueryData(form.queryData($form, $submitter));
+		createdUri.setQueryData(form.queryData($form, $submitter));
 	}
 
-	return uri.toString();
+	return createdUri.toString();
 }
 
 exports.createReport = function(location, params) {
