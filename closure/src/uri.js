@@ -43,6 +43,20 @@ exports.create = function(location, params) {
 	return exports.createUri(location, params).toString();
 }
 
+exports.createFormAction = function($form) {
+	var uri;
+
+	if ($form.getAttribute('action')) {
+		uri = exports.createUri($form.getAttribute('action'));
+
+	} else {
+		uri = exports.createUri();
+		uri.setQuery('');
+	}
+
+	return uri.toString();
+}
+
 exports.createForm = function($form, $submitter) {
 	var uri = exports.createUri($form.getAttribute('action'));
 
