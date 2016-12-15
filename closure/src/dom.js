@@ -69,3 +69,17 @@ exports.createFormId = function($form) {
 	md5.update(names.join('\n'));
 	return goog.crypt.byteArrayToHex(md5.digest());
 }
+
+
+exports.findForm = function(formName, formId) {
+	if (formName) {
+		return document.forms[formName]
+
+	} else if (formId) {
+		for (var i=0; i<document.forms.length; i++) {
+			if (formId===exports.createFormId(document.forms[i])) {
+				return document.forms[i];
+			}
+		}
+	}
+}
