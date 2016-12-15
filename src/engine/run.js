@@ -273,14 +273,15 @@ function redirect(endpoint, newPage=false, scrollTo=0) {
 }
 
 
-function pushEndpoint(endpoint) {
-	if (_pushing || closure.uri.isSame(endpoint)) {
-		history.replaceState({scrollTop: history.state('scrollTop', 0)}, endpoint);
+function pushEndpoint(endpoint, state={}, replacing=null) {
+	if (_pushing || replacing || (closure.uri.isSame(endpoint) && replacing===null)) {
+		_pushing = true;
+		history.replaceState({...state, scrollTop: history.state('scrollTop', 0)}, endpoint);
 
 	} else {
 		_pushing = true;
 		_stack.clearForward();
-		history.pushState({}, endpoint);
+		history.pushState({...state}, endpoint);
 	}
 }
 
