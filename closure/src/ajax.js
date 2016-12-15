@@ -2,17 +2,12 @@
 goog.module('ajax');
 
 goog.require('uri');
+goog.require('form');
 
 goog.require('goog.events');
 goog.require('goog.net.XhrIo');
 goog.require('goog.net.EventType');
-goog.require('goog.Uri.QueryData');
 goog.require('goog.net.Jsonp');
-
-goog.require('goog.dom');
-goog.require('goog.dom.forms');
-goog.require('goog.array');
-goog.require('goog.crypt');
 
 
 exports.jsonp = function(endpoint, args, fn) {
@@ -60,62 +55,14 @@ exports.submit = function($form, $submitter, fn) {
 		_request.abort();
 	}
 
-	var query;
-	var data = '';
+	var endpoint = uri.createForm($form, $submitter);
 	var method = ($form.method||'GET').toUpperCase();
+	var data = method==='POST' ? form.postData($form, $submitter) : '';
 
-	if (method==='POST') {
-		data = exports.postData($form, $submitter);
-
-	} else {
-		query = exports.queryData($form, $submitter);
-	}
-
-	var endpoint = uri.createUri($form.getAttribute('action'), query);
 	bindRequest(_request = new goog.net.XhrIo(), fn);
 	_request.send(endpoint, method, data, {
 		'X-Requested-With': 'XMLHttpRequest'
 	});
-}
-
-
-exports.postData = function($form, $submitter) {
-	var data = new FormData();
-	eachFormData($form, $submitter, function(name, value) {
-		data.append(name, value);
-	});
-
-	return data;
-}
-
-
-exports.queryData = function($form, $submitter) {
-	var query = new goog.Uri.QueryData();
-	eachFormData($form, $submitter, function(name, value, isFile) {
-		if (!isFile) {
-			query.add(name, value);
-		}
-	});
-
-	return query;
-}
-
-
-function eachFormData($form, $submitter, fn) {
-	goog.dom.forms.getFormDataMap($form).forEach(function(value, key) {
-		fn(key, value, false);
-	});
-
-	var els = $form.elements;
-	for (var el, i = 0; el = els[i]; i++) {
-		if (el.type.toLowerCase()==='file' && el.files.length) {
-			fn(el.name, el.files[0], true);
-		}
-	}
-
-	if ($submitter && $submitter.name) {
-		fn($submitter.name, $submitter.value, false);
-	}
 }
 
 
