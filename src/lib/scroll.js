@@ -3,7 +3,7 @@ import closure from '../closure'
 
 
 export function scrollToView(hash, animated, onEnd) {
-	const $node = document.getElementById(hash);
+	const $node = hash ? document.getElementById(hash) : document.body;
 
 	if ($node) {
 		const fixedOffset = findHeaderBottom();
