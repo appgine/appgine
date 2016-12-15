@@ -2,6 +2,7 @@
 goog.module('uri')
 
 goog.require('dom');
+goog.require('form');
 
 goog.require('goog.dom');
 goog.require('goog.Uri');
@@ -40,6 +41,16 @@ exports.isSame = function(location) {
 
 exports.create = function(location, params) {
 	return exports.createUri(location, params).toString();
+}
+
+exports.createForm = function($form, $submitter) {
+	var uri = exports.createUri($form.getAttribute('action'));
+
+	if (String($form.method||'GET').toUpperCase()==='GET') {
+		uri.setQueryData(form.queryData($form, $submitter));
+	}
+
+	return uri.toString();
 }
 
 exports.createReport = function(location, params) {
