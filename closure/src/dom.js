@@ -53,7 +53,7 @@ exports.getSubmitter = function(target) {
 var md5;
 exports.createFormId = function($form) {
 	var names = [
-		uri.createUri($form.getAttribute('')),
+		uri.createFormAction($form),
 		String($form.method||'GET'),
 		String($form.name||'')
 	];
