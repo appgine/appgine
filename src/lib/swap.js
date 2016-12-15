@@ -15,6 +15,8 @@ export default function swap(from, into) {
 		swapDocument(function() {
 			document.title = loadTitle($into);
 
+			const formFocus = createFormFocus();
+
 			const $atomicList = [];
 			Array.from($into.querySelectorAll('[data-atomic]')).forEach(function($atomic) {
 				$atomicList.push($atomic);
@@ -66,9 +68,41 @@ export default function swap(from, into) {
 			unloadStatic($lastBody);
 			unload($lastBody);
 
+			formFocus();
+
 			if (scrolled===-1) {
 				window.scrollTo(0, scrollTop);
 			}
 		});
 	});
+}
+
+
+function createFormFocus() {
+	if (document.activeElement) {
+		const $active = document.activeElement;
+
+		if ($active && String($active.tagName||'').toLowerCase()==='input' && $active.name && $active.form) {
+			const formId = closure.dom.createFormId($active.form);
+			const inputName = $active.name;
+			const inputValue = $active.value;
+			const selectionStart = closure.selection.getStart($active);
+			const selectionEnd = closure.selection.getEnd($active);
+
+			return function() {
+				const $found = closure.dom.findForm(null, formId);
+
+				if ($found && $found[inputName]) {
+					const $input = $found[inputName];
+
+					$input.value = inputValue;
+					closure.selection.setStart($input, selectionStart);
+					closure.selection.setEnd($input, selectionEnd);
+					$input.focus();
+				}
+			}
+		}
+	}
+
+	return function() {};
 }
