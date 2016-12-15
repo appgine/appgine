@@ -1,8 +1,12 @@
 
 goog.module('dom');
 
+goog.require('uri');
 goog.require('goog.dom');
 goog.require('goog.array');
+goog.require('goog.crypt');
+goog.require('goog.crypt.Md5');
+
 
 
 exports.setTextContent = goog.dom.setTextContent;
@@ -44,4 +48,23 @@ exports.getSubmitter = function(target) {
 	return goog.dom.getAncestor(target.target || target, function($node) {
 		return String($node.type).toLowerCase()==='submit';
 	}, true);
+}
+
+var md5;
+exports.createFormId = function($form) {
+	var names = [
+		uri.createUri($form.getAttribute('')),
+		String($form.name||'')
+	];
+
+	if ($form.elements.length>0) {
+		goog.array.forEach($form.elements, function($element) {
+			names.push(String($element.name||''));
+		});
+	}
+
+	md5 = md5 || new goog.crypt.Md5();
+	md5.reset();
+	md5.update(names.join('\n'));
+	return goog.crypt.byteArrayToHex(md5.digest());
 }
