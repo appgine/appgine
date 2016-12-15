@@ -293,17 +293,21 @@ function loadPage(endpoint, newPage=false, scrollTo=0) {
 
 
 function submitForm($form, $submitter) {
-	const endpoint = closure.uri.create($form.getAttribute('action'));
+	const endpoint = closure.uri.createForm($form, $submitter);
 	const newPage = closure.uri.isSame(endpoint)===false;
 
-	pushEndpoint(endpoint);
+	const formName = String($form.name);
+	const formId = closure.dom.createFormId($form);
 
-	const name = $form.name;
+	pushEndpoint(endpoint, { formId }, history.state('formId')===formId);
+
 	const scrollTo = () => {
-		if (name && name[0]!=='#' && document.forms[name]) {
-			scrollFormToView(document.forms[name]);
+		const $found = closure.dom.findForm(formName, formId);
 
-		} else if (name) {
+		if ($found) {
+			scrollFormToView($found, formName[0]==='#');
+
+		} else {
 			window.scrollTo(0, 0);
 		}
 	}
