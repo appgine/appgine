@@ -1,7 +1,6 @@
 
 goog.module('uri')
 
-goog.require('dom');
 goog.require('form');
 
 goog.require('goog.dom');
@@ -98,15 +97,6 @@ exports.createUri = function(location, params) {
 
 	uri.setQueryData(queryData);
 	return uri;
-}
-
-exports.isEventHashLink = function(e) {
-	var $link;
-	if ($link = dom.getLink(e)) {
-		return exports.isHashLink($link.href);
-	}
-
-	return false;
 }
 
 exports.isHashLink = function(link) {
