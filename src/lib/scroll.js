@@ -2,9 +2,12 @@
 import closure from '../closure'
 
 
-export function scrollToView(hash, animated, onEnd) {
+export function scrollHashToView(hash, animated, onEnd) {
 	const $node = hash ? document.getElementById(hash) : document.body;
+	$node && scrollNodeToView($node, animated, onEnd);
+}
 
+export function scrollNodeToView($node, animated, onEnd) {
 	if ($node) {
 		const fixedOffset = findHeaderBottom();
 		const [left, top] = findNodeOffset($node);
@@ -13,23 +16,32 @@ export function scrollToView(hash, animated, onEnd) {
 		const scrollTop = top-fixedOffset;
 
 		setTimeout(() => {
-			animated
-				? closure.animation.scrollTo(scrollLeft, scrollTop, onEnd)
-				: window.scrollTo(scrollLeft, scrollTop);
+			if (animated) {
+				closure.animation.scrollTo(scrollLeft, scrollTop, onEnd);
+
+			} else {
+				window.scrollTo(scrollLeft, scrollTop);
+				onEnd && onEnd();
+			}
 		}, 0);
 	}
 }
 
-export function scrollFormToView($form) {
+export function scrollFormToView($form, top=false) {
 	if ($form && $form.tagName.toLowerCase()==='form') {
-		const fixedOffset = findHeaderBottom();
-		const [left, top, right, bottom] = findNodeOffset($form);
-		const screen = closure.rect.fromScreen()
+		if (top) {
+			scrollNodeToView($form)
 
-		window.scrollTo(
-			screen.left+screen.width < left ? left : Math.min(screen.left, left),
-			screen.top+screen.height < top ? Math.min(top-fixedOffset, bottom-screen.height) : Math.min(screen.top, top-fixedOffset)
-		);
+		} else {
+			const fixedOffset = findHeaderBottom();
+			const [left, top, right, bottom] = findNodeOffset($form);
+			const screen = closure.rect.fromScreen()
+
+			window.scrollTo(
+				screen.left+screen.width < left ? left : Math.min(screen.left, left),
+				screen.top+screen.height < top ? Math.min(top-fixedOffset, bottom-screen.height) : Math.min(screen.top, top-fixedOffset)
+			);
+		}
 	}
 }
 

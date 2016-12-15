@@ -5,7 +5,7 @@ import createOptions from './createOptions'
 
 import { loadMain, update } from './plugins'
 import loadHtml from '../lib/loadHtml'
-import { scrollToView, scrollFormToView } from '../lib/scroll'
+import { scrollHashToView, scrollFormToView } from '../lib/scroll'
 import { onEachTick } from '../tick'
 import { willUpdate, wasUpdated } from '../update'
 import * as history from './history'
@@ -37,7 +37,7 @@ onEachTick(function(screen, updated, done) {
 
 		} else if (request.scrolled!==true) {
 			if (typeof request.scrolled === 'string') {
-				scrollToView(request.scrolled, true);
+				scrollHashToView(request.scrolled, true);
 				request.scrolled = true;
 
 			} else if (typeof request.scrolled === 'function') {
@@ -141,7 +141,7 @@ export default function run(options) {
 
 
 export function onClickHash(hash) {
-	scrollToView(hash, true);
+	scrollHashToView(hash, true);
 }
 
 
