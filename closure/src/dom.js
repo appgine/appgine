@@ -54,6 +54,7 @@ var md5;
 exports.createFormId = function($form) {
 	var names = [
 		uri.createUri($form.getAttribute('')),
+		String($form.method||'GET'),
 		String($form.name||'')
 	];
 
