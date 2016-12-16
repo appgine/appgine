@@ -68,7 +68,7 @@ export default function swap(from, into) {
 			unloadStatic($lastBody);
 			unload($lastBody);
 
-			formFocus();
+			formFocus(into);
 
 			if (scrolled===-1) {
 				window.scrollTo(0, scrollTop);
@@ -89,16 +89,23 @@ function createFormFocus() {
 			const selectionStart = closure.selection.getStart($active);
 			const selectionEnd = closure.selection.getEnd($active);
 
-			return function() {
+			return function(request) {
 				const $found = closure.dom.findForm(null, formId);
 
 				if ($found && $found[inputName]) {
 					const $input = $found[inputName];
 
-					$input.value = inputValue;
-					closure.selection.setStart($input, selectionStart);
-					closure.selection.setEnd($input, selectionEnd);
 					$input.focus();
+					closure.selection.setCursorAtEnd($input);
+
+					if (request.formSubmitted && request.formSubmitted[0]===formId) {
+						if (request.formSubmitted[1].get(inputName)===$input.value) {
+							$input.value = inputValue;
+							closure.selection.setStart($input, selectionStart);
+							closure.selection.setEnd($input, selectionEnd);
+						}
+					}
+
 				}
 			}
 		}

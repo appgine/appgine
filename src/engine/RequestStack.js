@@ -7,25 +7,26 @@ export default class RequestStack {
 
 
 	constructor(back=3, forward=1) {
-		this.back = Math.max(0, back);
-		this.forward = Math.max(0, forward);
-		this.history = {}
-		this.order = [];
+		this._back = Math.max(0, back);
+		this._forward = Math.max(0, forward);
+		this._history = {}
+		this._order = [];
+		this._formSubmitted = null;
 	}
 
 
 	createRequest(endpoint, fragment, scrollTo) {
 		var pos = history.getCurrentPos();
 
-		if (this.history[pos]) {
-			this.history[pos].dispose();
+		if (this._history[pos]) {
+			this._history[pos].dispose();
 		}
 
-		let request = new Request(endpoint, fragment, scrollTo);
-		this.history[pos] = request;
+		let request = new Request(endpoint, fragment, scrollTo, this._formSubmitted);
+		this._history[pos] = request;
 
-		if (this.order.indexOf(pos)===-1) {
-			this.order.push(pos);
+		if (this._order.indexOf(pos)===-1) {
+			this._order.push(pos);
 		}
 
 		this.clear();
@@ -38,7 +39,7 @@ export default class RequestStack {
 			return this.loadRequest();
 
 		} else if ($element) {
-			return this.history
+			return this._history
 				.filter(request => request.$fragment.contains($element))
 				.pop();
 		}
@@ -46,40 +47,45 @@ export default class RequestStack {
 
 
 	loadRequest() {
-		return this.history[history.getCurrentPos()];
+		return this._history[history.getCurrentPos()];
+	}
+
+
+	formSubmitted(formId, formData) {
+		this._formSubmitted = [formId, formData];
 	}
 
 
 	clear() {
 		const pos = history.getCurrentPos();
-		const order = this.order.filter(id => id==pos || this.history[id]);
+		const order = this._order.filter(id => id==pos || this._history[id]);
 		const index = order.indexOf(pos);
 
-		this._clear(order.filter((id, i) => i>index+this.forward));
-		this._clear(order.filter((id, i) => i<index-this.back));
+		this._clear(order.filter((id, i) => i>index+this._forward));
+		this._clear(order.filter((id, i) => i<index-this._back));
 	}
 
 
 	clearForward() {
-		const index = this.order.indexOf(history.getCurrentPos());
-		this._clear(this.order.filter((id, i) => i>index));
+		const index = this._order.indexOf(history.getCurrentPos());
+		this._clear(this._order.filter((id, i) => i>index));
 	}
 
 
 	clearAll() {
 		const pos = history.getCurrentPos();
-		if (this.history[pos]) {
-			this.history[pos].dispose();
+		if (this._history[pos]) {
+			this._history[pos].dispose();
 		}
 
-		const index = this.order.indexOf(history.getCurrentPos());
-		this._clear(this.order.filter((id, i) => i!==index));
+		const index = this._order.indexOf(history.getCurrentPos());
+		this._clear(this._order.filter((id, i) => i!==index));
 	}
 
 
 	_clear(keys) {
-		keys.filter(id => this.history[id]).forEach(id => this.history[id].dispose());
-		keys.filter(id => this.history[id]).forEach(id => delete this.history[id]);
+		keys.filter(id => this._history[id]).forEach(id => this._history[id].dispose());
+		keys.filter(id => this._history[id]).forEach(id => delete this._history[id]);
 	}
 
 }

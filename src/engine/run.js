@@ -314,6 +314,7 @@ function submitForm($form, $submitter) {
 
 	_pending = Math.max(_pending, 1);
 	_stack.clearAll();
+	_stack.formSubmitted(formId, closure.form.postData($form, $submitter));
 	closure.ajax.submit($form, $submitter, bindRequest($form, endpoint, newPage, scrollTo));
 }
 

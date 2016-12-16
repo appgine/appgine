@@ -60,6 +60,7 @@ exports.scrollHeight = goog.require('scroll').scrollHeight;
 exports.scrollWidth = goog.require('scroll').scrollWidth;
 exports.animation = goog.require('animation');
 exports.ajax = goog.require('ajax');
+exports.form = goog.require('form');
 exports.autocomplete = goog.require('autocomplete');
 exports.scroll = goog.require('scroll');
 exports.keyhandler = goog.require('handler').keycut;
