@@ -30,5 +30,14 @@ export default function createOptions(options={}) {
 		onError(err) {
 			return options.onError && options.onError(err);
 		},
+		onAjaxResponse(fn) {
+			return function(err, html, json) {
+				const _err = options.onAjaxError ? options.onAjaxError(err, html, json) : err;
+				const _html = options.onAjaxHtml ? options.onAjaxHtml(err, html, json) : html;
+				const _json = options.onAjaxJson ? options.onAjaxJson(err, html, json) : json;
+
+				return fn(_err, _html, _json);
+			}
+		},
 	}
 }

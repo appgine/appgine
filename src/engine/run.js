@@ -179,13 +179,13 @@ export function reload() {
 export function ajaxGet($element, params) {
 	const foundRequest = _stack.findRequest($element);
 	const endpoint = foundRequest ? closure.uri.create(foundRequest.endpoint, params) : closure.uri.create(params);
-	closure.ajax.get(endpoint, bindAjaxRequest($element, endpoint));
+	closure.ajax.get(endpoint, _options.onAjaxResponse(bindAjaxRequest($element, endpoint)));
 }
 
 
 export function ajaxPost($element, endpoint, data) {
 	endpoint = closure.uri.create(endpoint);
-	closure.ajax.post(endpoint, data, bindAjaxRequest($element, endpoint));
+	closure.ajax.post(endpoint, data, _options.onAjaxResponse(bindAjaxRequest($element, endpoint)));
 }
 
 
@@ -288,7 +288,7 @@ function pushEndpoint(endpoint, state={}, replacing=null) {
 
 function loadPage(endpoint, newPage=false, scrollTo=0) {
 	_pending = Math.max(_pending, 1);
-	closure.ajax.load(endpoint, bindRequest(document.body, endpoint, newPage, scrollTo));
+	closure.ajax.load(endpoint, _options.onAjaxResponse(bindRequest(document.body, endpoint, newPage, scrollTo)));
 }
 
 
@@ -315,7 +315,7 @@ function submitForm($form, $submitter) {
 	_pending = Math.max(_pending, 1);
 	_stack.clearAll();
 	_stack.formSubmitted(formId, closure.form.postData($form, $submitter));
-	closure.ajax.submit($form, $submitter, bindRequest($form, endpoint, newPage, scrollTo));
+	closure.ajax.submit($form, $submitter, _options.onAjaxResponse(bindRequest($form, endpoint, newPage, scrollTo)));
 }
 
 
