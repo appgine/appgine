@@ -44,6 +44,14 @@ export default function bridgeTracy(options={}) {
 		}
 	}
 
+	options.onAjaxHtml = function(err, html, json) {
+		if (tracyId && err && !html && !json) {
+			return "ERROR: " + err;
+		}
+
+		return html;
+	}
+
 	options.onBeforeSwap = function() {
 		onBeforeSwap && onBeforeSwap();
 
