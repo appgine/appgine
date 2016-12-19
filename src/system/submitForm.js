@@ -37,11 +37,22 @@ export default function create() {
 		dispatch('app.event', 'submit', e, _$form, _$submitter, toTarget);
 	}
 
+	const submit = HTMLFormElement.prototype.submit;
+	HTMLFormElement.prototype.submit = function() {
+		const event = new Event('submit', {bubbles: true, cancelable: true, target: this, srcElement: this});
+		this.dispatchEvent(event);
+
+		if (!event.defaultPrevented) {
+			submit.call(this);
+		}
+	}
+
 	document.addEventListener('click', onClick);
 	document.addEventListener('keydown', onKeyDown);
 	document.addEventListener('submit', onSubmit);
 
 	return function() {
+		HTMLFormElement.prototype.submit = submit;
 		document.removeEventListener('submit', onSubmit);
 		document.removeEventListener('keydown', onKeyDown);
 		document.removeEventListener('click', onClick);
