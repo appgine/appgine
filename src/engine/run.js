@@ -142,12 +142,17 @@ export default function run(options) {
 }
 
 
-export function onClickHash(e, $link, hash) {
-	scrollHashToView(hash, true);
+export function onClickHash(e, $link, hash, toTarget) {
+	if (toTarget==='' || toTarget==='_ajax') {
+		e.preventDefault();
+		e.stopImmediatePropagation();
+
+		scrollHashToView(hash, true);
+	}
 }
 
 
-export function onClick(e, $link, href, anchor, toTarget) {
+export function onClick(e, $link, href, hash, toTarget) {
 	if (toTarget==='' || toTarget==='_ajax') {
 		e.preventDefault();
 
