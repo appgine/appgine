@@ -9,7 +9,7 @@ import {
 	load, unload,
 	loadScripts, unloadScripts,
 	loadGlobal, loadSystem,
-	updatePlugins,
+	updatePlugins, updatePlugin,
 	querySelectorAll, resolveDataAttribute, contains,
 } from 'plugin-macro-loader/lib/loader'
 
@@ -17,6 +17,8 @@ import {
 	getTargetsContainer,
 	reloadTargets, completeTargets,
 } from '../api/targets/container'
+
+import closure from '../closure'
 
 
 export function swapDocument(fn)
@@ -73,7 +75,7 @@ export function reloadStatic($dom)
 		});
 
 		const plugins = findPlugins(({ options }) => options.static===attr);
-		_updatePlugins(plugins, update);
+		updatePlugins(plugins, update);
 	});
 }
 
@@ -99,12 +101,26 @@ export function unloadAtomic($dom, request)
 
 /**
  * @param {Element}
+ * @param {Element}
  * @param {object}
  */
-export function update($dom, data)
+export function update($dom, $element, data)
 {
 	const plugins = findPlugins(({ $element, options }) => contains($dom, $element) || options.static);
-	_updatePlugins(plugins, data);
+	let plugin = null;
+
+	plugins.forEach(function(_plugin) {
+		if (contains(_plugin.$element, $element)) {
+			plugin = plugin || _plugin;
+
+			if (closure.dom.compareNodeOrder(_plugin.$element, plugin.$element)>=0) {
+				plugin = _plugin;
+			}
+		}
+	});
+
+	updatePlugins(plugins, data);
+	updatePlugin(plugin, data);
 }
 
 
@@ -123,10 +139,4 @@ function _unloadPlugins($dom, type, targets)
 		targets.remove($node);
 		unload($node);
 	});
-}
-
-
-function _updatePlugins(plugins, data)
-{
-	updatePlugins(plugins, data);
 }

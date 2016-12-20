@@ -18,6 +18,7 @@ exports.contains = function(parent, descendant) {
 	return parent && descendant ? goog.dom.contains(parent, descendant) : false;
 };
 
+exports.compareNodeOrder = goog.dom.compareNodeOrder;
 exports.append = goog.dom.append;
 exports.getAncestorByClass = goog.dom.getAncestorByClass;
 exports.getPreviousElementSibling = goog.dom.getPreviousElementSibling;
