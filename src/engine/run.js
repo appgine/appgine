@@ -153,9 +153,9 @@ export function onClick(href) {
 
 
 export function onSubmitForm(e, $form, $submitter, toTarget) {
-	if (toTarget===false && 'FormData' in window) {
+	if ((toTarget==='' || toTarget==='_ajax') && 'FormData' in window) {
 		e.preventDefault();
-		submitForm($form, $submitter);
+		submitForm($form, $submitter, toTarget==='_ajax');
 	}
 }
 

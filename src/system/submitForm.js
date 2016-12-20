@@ -23,13 +23,13 @@ export default function create() {
 	const onSubmit = function onSubmit(e) {
 		const toTarget = (function() {
 			if ($submitter && $submitter.metaKey) {
-				return true;
+				return '_blank';
 
 			} else if (e.target && e.target.getAttribute('target')) {
-				return true;
+				return e.target.getAttribute('target');
 			}
 
-			return false;
+			return '';
 		})();
 
 		const _$form = e.target;
