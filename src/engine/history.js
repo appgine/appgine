@@ -27,7 +27,7 @@ let _origin = _state.origin || _link;
 
 function createState(state={}, initial=false) {
 	return {...state,
-		_id: _session + (++_id),
+		_id: _session + _id,
 		initial: initial,
 	};
 }
@@ -142,30 +142,30 @@ export function cancelState() {
 	_supported ? window.history.back() : null;
 }
 
-export function replaceState(state={}, link, newPage=true) {
+export function replaceState(state={}, link) {
 	closure.uri.isSame(link) && _link!==_origin && (state.origin = _origin);
-	changeState(state, link, newPage, 'replaceState', 'replace');
+	changeState(state, link, 'replaceState', 'replace');
 }
 
-export function pushState(state={}, link, newPage=true) {
+export function pushState(state={}, link) {
 	if (_canceling) {
 		_canceling = false;
-		replaceState(state, link, newPage);
+		replaceState(state, link);
 
 	} else {
 		commitMergeState();
-		changeState(state, link, newPage, 'pushState', 'push');
+		changeState(state, link, 'pushState', 'push');
 	}
 }
 
-export function redirectState(state={}, link, newPage=true) {
-	changeState({...state, origin: _origin}, link, newPage, 'replaceState', 'replace');
+export function redirectState(state={}, link) {
+	changeState({...state, origin: _origin}, link, 'replaceState', 'replace');
 }
 
-function changeState(state, link, newPage, method, invoke) {
+function changeState(state, link, method, invoke) {
 	_firstlink = null;
 	_merging = false;
-	_state = newPage ? createState(state) : {...state, _id: _state._id};
+	_state = createState(state);
 	_link = closure.uri.change(link);
 	_origin = _state.origin || _link;
 
@@ -178,6 +178,10 @@ function changeState(state, link, newPage, method, invoke) {
 
 	dispatch(invoke);
 	dispatch('change');
+}
+
+export function changeId() {
+	return mergeState({_id: _session + (++_id)});
 }
 
 export function getCurrentPos() {

@@ -121,7 +121,9 @@ export default function run(options) {
 
 			} else if (_swap) {
 				request.swap = null;
-				const [_swapUrl, _swapHtml, _swapScrollTo] = _swap;
+				const [_swapUrl, _swapHtml, _swapScrollTo, _swapNewPage] = _swap;
+
+				_swapNewPage && history.changeId();
 				_options.swap(_request, _request = _stack.createRequest(_swapUrl, _options.createFragment(_swapHtml), _swapScrollTo));
 				_options.dispatch('app.request', 'pageview', endpoint);
 
@@ -222,10 +224,11 @@ const ajaxResponse = function($element, endpoint, newPage=false, scrollTo=false)
 				wasUpdated();
 
 			} else if (text && isCurrent) {
+				newPage && history.changeId();
 				_options.swap(_request, _request = _stack.createRequest(endpoint, _options.createFragment(text), anchor||scrollTo));
 
 			} else if (text && foundRequest) {
-				foundRequest.willSwap(endpoint, text, anchor||scrollTo);
+				foundRequest.willSwap(endpoint, text, anchor||scrollTo, newPage);
 			}
 
 			if (isCurrent && newPage) {
