@@ -15,6 +15,7 @@ export default function(options={}) {
 		bindSystem(require('./system/click'));
 		bindSystem(require('./system/submitForm'));
 		bindSystem(require('./system/shortcut.reload'));
+		bindSystem(require('./system/tabIndex'));
 		bindSystem(require('./system/dragAndDrop'), plugin => plugin('body-dragging'));
 	});
 
