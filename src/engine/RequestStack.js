@@ -66,12 +66,7 @@ export default class RequestStack {
 	}
 
 
-	clearAll() {
-		const pos = history.getCurrentPos();
-		if (this._history[pos]) {
-			this._history[pos].dispose();
-		}
-
+	clearHistory() {
 		const index = this._order.indexOf(history.getCurrentPos());
 		this._clear(this._order.filter((id, i) => i!==index));
 	}

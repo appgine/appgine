@@ -105,7 +105,6 @@ function createFormFocus() {
 							closure.selection.setEnd($input, selectionEnd);
 						}
 					}
-
 				}
 			}
 		}

@@ -320,18 +320,23 @@ function submitForm($form, $submitter, isAjax=false) {
 		});
 	}
 
-	_stack.clearAll();
+	const foundRequest = _stack.findRequest($element);
+	const currentRequest = _stack.loadRequest();
 
 	closure.ajax.submit($form, $submitter, _options.onAjaxResponse(function(err, text, json) {
-		const foundRequest = _stack.findRequest($element);
-		const currentRequest = _stack.loadRequest();
-
 		submitRequest(err, text, json);
 
 		if (currentRequest===_stack.loadRequest()) {
-			foundRequest.formSubmitted[formId] = formData;
+			if (foundRequest) {
+				foundRequest.formSubmitted[formId] = formData;
+			}
+
+			if (_pushing) {
+				_stack.clearHistory();
+			}
 
 		} else {
+			_stack.clearHistory();
 			_stack.loadRequest().formSubmitted[formId] = formData;
 		}
 	}));
