@@ -8,18 +8,32 @@ export default function create() {
 		if ($link && closure.uri.isHashLink($link.href)) {
 			e.preventDefault();
 			e.stopImmediatePropagation();
-			this.dispatch('app.event', 'clickHash', $link, closure.uri.getHash($link.href));
+			this.dispatch('app.event', 'clickHash', e, $link, closure.uri.getHash($link.href));
 		}
 	}
 
 	const onClick = e => {
 		let $link = closure.dom.getLink(e);
-		if ($link && e.metaKey===false && $link.target!=='_blank' && $link.hostname===window.location.hostname) {
-			e.preventDefault();
+		if ($link && e.metaKey===false && e.ctrlKey===false && $link.hostname===window.location.hostname) {
+			const href = String($link.href||'');
 
-			var href;
-			if (href = $link.href) {
-				this.dispatch('app.event', 'click', $link, href.indexOf('#')!==-1 ? href.substr(0, href.indexOf('#')) : href);
+			if (href) {
+				const toTarget = (function() {
+					if (e && (e.metaKey || e.ctrlKey)) {
+						return '_blank';
+
+					} else if (e.target && e.target.getAttribute('target')) {
+						return e.target.getAttribute('target');
+					}
+
+					return '';
+				})();
+
+				const [endpoint, ...hash] = href.split('#');
+				this.dispatch('app.event', 'click', e, $link, endpoint, hash.join('#'), toTarget);
+
+			} else {
+				e.preventDefault();
 			}
 		}
 	}

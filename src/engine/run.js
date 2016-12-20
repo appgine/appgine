@@ -142,14 +142,18 @@ export default function run(options) {
 }
 
 
-export function onClickHash($link, hash) {
+export function onClickHash(e, $link, hash) {
 	scrollHashToView(hash, true);
 }
 
 
-export function onClick($link, href) {
-	if (_pending===0 || href!==history.getLink()) {
-		location(href, $link);
+export function onClick(e, $link, href, anchor, toTarget) {
+	if (toTarget==='' || toTarget==='_ajax') {
+		e.preventDefault();
+
+		if (_pending===0 || toTarget==='_ajax' || href!==history.getLink()) {
+			location(href, toTarget==='_ajax');
+		}
 	}
 }
 
@@ -162,11 +166,17 @@ export function onSubmitForm(e, $form, $submitter, toTarget) {
 }
 
 
-export function location(endpoint) {
+export function location(endpoint, isAjax=false) {
 	if (closure.uri.sameOrigin(endpoint)) {
 		endpoint = history.getCanonizedLink(endpoint);
-		pushEndpoint(endpoint);
-		return loadPage(endpoint, true);
+
+		if (isAjax) {
+			return loadAjax(endpoint, document.body);
+
+		} else {
+			pushEndpoint(endpoint);
+			return loadPage(endpoint, true);
+		}
 	}
 
 	leave(endpoint);
@@ -286,6 +296,11 @@ function pushEndpoint(endpoint, state={}, replacing=null) {
 		_stack.clearForward();
 		history.pushState({...state}, endpoint);
 	}
+}
+
+
+function loadAjax(endpoint, $element) {
+	closure.ajax.get(endpoint, _options.onAjaxResponse(bindAjaxRequest($element, endpoint)));
 }
 
 
