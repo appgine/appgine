@@ -15,9 +15,12 @@ exports.keycut = function($element, handle, capture) {
 
 
 exports.shortcut = function() {
-	var handler = new goog.ui.KeyboardShortcutHandler(window);
-	var args = [].slice.call(arguments);
-	var fn = args.pop();
+	var handler, args, fn;
+
+	handler = new goog.ui.KeyboardShortcutHandler(window)
+	handler.setAlwaysPreventDefault(false);
+	args = [].slice.call(arguments);
+	fn = args.pop();
 
 	goog.array.forEach(args, function(shortcut) { handler.registerShortcut(shortcut, shortcut); });
 	goog.events.listen(handler, goog.ui.KeyboardShortcutHandler.EventType.SHORTCUT_TRIGGERED, function(e) {
