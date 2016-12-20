@@ -218,7 +218,7 @@ const ajaxResponse = function($element, endpoint, newPage=false, scrollTo=false)
 		} else {
 			if (json!==undefined) {
 				willUpdate();
-				update((isCurrent && document) || (foundRequest && foundRequest.$fragment), json);
+				update((isCurrent && document) || (foundRequest && foundRequest.$fragment), $element, json);
 				wasUpdated();
 
 			} else if (text && isCurrent) {
@@ -287,52 +287,65 @@ function pushEndpoint(endpoint, state={}, replacing=null) {
 
 
 function loadPage(endpoint, newPage=false, scrollTo=0) {
-	_pending = Math.max(_pending, 1);
 	closure.ajax.load(endpoint, _options.onAjaxResponse(bindRequest(document.body, endpoint, newPage, scrollTo)));
 }
 
 
-function submitForm($form, $submitter) {
+function submitForm($form, $submitter, isAjax=false) {
 	const endpoint = closure.uri.createForm($form, $submitter);
-	const newPage = closure.uri.isSame(endpoint)===false;
+	const $element = $submitter||$form;
 
 	const formName = String($form.name);
 	const formId = closure.dom.createFormId($form);
+	const formData = closure.form.postData($form, $submitter);
 
-	pushEndpoint(endpoint, { formId }, history.state('formId')===formId);
+	const newPage = history.state('formId')!==formId;
 
-	const scrollTo = () => {
-		const $found = closure.dom.findForm(formName, formId);
+	let submitRequest;
+	if (isAjax) {
+		submitRequest = bindAjaxRequest($element, endpoint);
 
-		if ($found) {
-			scrollFormToView($found, formName[0]==='#');
+	} else {
+		pushEndpoint(endpoint, { formId }, !newPage);
 
-		} else {
-			window.scrollTo(0, 0);
-		}
+		submitRequest = bindRequest($element, endpoint, newPage, function() {
+			const $found = closure.dom.findForm(formName, formId);
+
+			if ($found) {
+				scrollFormToView($found, formName[0]==='#');
+
+			} else {
+				window.scrollTo(0, 0);
+			}
+		});
 	}
 
-	_pending = Math.max(_pending, 1);
 	_stack.clearAll();
-	_stack.formSubmitted(formId, closure.form.postData($form, $submitter));
-	closure.ajax.submit($form, $submitter, _options.onAjaxResponse(bindRequest($submitter||$form, endpoint, newPage, scrollTo)));
+
+	closure.ajax.submit($form, $submitter, _options.onAjaxResponse(function(err, text, json) {
+		const foundRequest = _stack.findRequest($element);
+		const currentRequest = _stack.loadRequest();
+
+		submitRequest(err, text, json);
+
+		if (currentRequest===_stack.loadRequest()) {
+			foundRequest.formSubmitted[formId] = formData;
+
+		} else {
+			_stack.loadRequest().formSubmitted[formId] = formData;
+		}
+	}));
 }
 
 
 /**
  * @param {Element}
+ * @param {string}
  */
 function bindAjaxRequest($element, endpoint) {
-	const response = ajaxResponse($element, endpoint)
-
-	return function(err, text, json) {
-		if (text || json) {
-			response(text, json);
-
-		} else if (err || json===undefined) {
-			_options.onError('Failed to handle request.\n' + String(err||''));
-		}
-	}
+	return _bindRequest(_pushing ? 0 : ++_requestnum, $element, endpoint, false, 0, function(err) {
+		_options.onError('Failed to handle request.\n' + String(err||''));
+	});
 }
 
 
@@ -341,11 +354,25 @@ function bindAjaxRequest($element, endpoint) {
  * @param {string}
  * @param {bool}
  * @param {number}
- * @param {bool}
  */
-function bindRequest($element, endpoint, newPage=false, scrollTo=0) {
-	const requestnum = ++_requestnum;
+ function bindRequest($element, endpoint, newPage=false, scrollTo=0) {
+	return _bindRequest(++_requestnum, $element, endpoint, newPage, scrollTo, function(err) {
+		_options.onError('Failed to load requested page.\n' + String(err||''));
+	});
+}
+
+
+/**
+ * @param {int} [varname]
+ * @param {Element}
+ * @param {string}
+ * @param {bool}
+ * @param {number}
+ */
+function _bindRequest(requestnum, $element, endpoint, newPage, scrollTo, onError) {
 	const response = ajaxResponse($element, endpoint, newPage, scrollTo);
+
+	_pending = Math.max(_pending, 1);
 
 	if (_pending===1) {
 		_options.dispatch('app.request', 'start', endpoint);
@@ -357,7 +384,7 @@ function bindRequest($element, endpoint, newPage=false, scrollTo=0) {
 			response(text, json);
 
 		} else if (err || json===undefined) {
-			_options.onError('Failed to load requested page.\n' + String(err||''));
+			onError(err);
 
 			if (newPage && requestnum===_requestnum) {
 				history.cancelState();

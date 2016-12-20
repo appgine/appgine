@@ -8,10 +8,10 @@ import {
 export default class Request {
 
 
-	constructor(endpoint, $fragment, scrollTo, formSubmitted) {
+	constructor(endpoint, $fragment, scrollTo) {
 		this.endpoint = endpoint;
 		this.$fragment = $fragment;
-		this.formSubmitted = formSubmitted;
+		this.formSubmitted = [];
 
 		if (typeof scrollTo === 'string' || typeof scrollTo === 'function') {
 			this.scrollTop = 0;

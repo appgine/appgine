@@ -11,7 +11,6 @@ export default class RequestStack {
 		this._forward = Math.max(0, forward);
 		this._history = {}
 		this._order = [];
-		this._formSubmitted = null;
 	}
 
 
@@ -22,7 +21,7 @@ export default class RequestStack {
 			this._history[pos].dispose();
 		}
 
-		let request = new Request(endpoint, fragment, scrollTo, this._formSubmitted);
+		let request = new Request(endpoint, fragment, scrollTo);
 		this._history[pos] = request;
 
 		if (this._order.indexOf(pos)===-1) {
@@ -48,11 +47,6 @@ export default class RequestStack {
 
 	loadRequest() {
 		return this._history[history.getCurrentPos()];
-	}
-
-
-	formSubmitted(formId, formData) {
-		this._formSubmitted = [formId, formData];
 	}
 
 
