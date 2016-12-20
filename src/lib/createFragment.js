@@ -21,6 +21,9 @@ export default function createFragment(htmlString) {
 
 
 function _createFragmentElement() {
+	// TODO: Remove when React fixes issue https://github.com/facebook/react/issues/7986
+	return document.createElement('iframe');
+
 	if (navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform)) {
 		return document.createElement('iframe');
 
