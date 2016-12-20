@@ -82,7 +82,7 @@ function createFormFocus() {
 	if (document.activeElement) {
 		const $active = document.activeElement;
 
-		if ($active && String($active.tagName||'').toLowerCase()==='input' && $active.name && $active.form) {
+		if (closure.dom.isFormElement($active)) {
 			const formId = closure.dom.createFormId($active.form);
 			const inputName = $active.name;
 			const inputValue = $active.value;
