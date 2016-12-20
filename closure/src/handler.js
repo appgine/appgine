@@ -20,6 +20,8 @@ exports.shortcut = function() {
 	var fn = args.pop();
 
 	goog.array.forEach(args, function(shortcut) { handler.registerShortcut(shortcut, shortcut); });
-	goog.events.listen(handler, goog.ui.KeyboardShortcutHandler.EventType.SHORTCUT_TRIGGERED, fn);
+	goog.events.listen(handler, goog.ui.KeyboardShortcutHandler.EventType.SHORTCUT_TRIGGERED, function(e) {
+		fn(e, e.identifier);
+	});
 }
 
