@@ -142,14 +142,14 @@ export default function run(options) {
 }
 
 
-export function onClickHash(hash) {
+export function onClickHash($link, hash) {
 	scrollHashToView(hash, true);
 }
 
 
-export function onClick(href) {
+export function onClick($link, href) {
 	if (_pending===0 || href!==history.getLink()) {
-		location(href);
+		location(href, $link);
 	}
 }
 

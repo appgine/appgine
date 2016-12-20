@@ -8,7 +8,7 @@ export default function create() {
 		if ($link && closure.uri.isHashLink($link.href)) {
 			e.preventDefault();
 			e.stopImmediatePropagation();
-			this.dispatch('app.event', 'clickHash', closure.uri.getHash($link.href));
+			this.dispatch('app.event', 'clickHash', $link, closure.uri.getHash($link.href));
 		}
 	}
 
@@ -19,7 +19,7 @@ export default function create() {
 
 			var href;
 			if (href = $link.href) {
-				this.dispatch('app.event', 'click', href.indexOf('#')!==-1 ? href.substr(0, href.indexOf('#')) : href);
+				this.dispatch('app.event', 'click', $link, href.indexOf('#')!==-1 ? href.substr(0, href.indexOf('#')) : href);
 			}
 		}
 	}
