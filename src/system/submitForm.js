@@ -22,8 +22,11 @@ export default function create() {
 
 	const onSubmit = function onSubmit(e) {
 		const toTarget = (function() {
-			if ($submitter && $submitter.metaKey) {
+			if ($submitter && ($submitter.metaKey || $submitter.ctrlKey)) {
 				return '_blank';
+
+			} else if ($submitter && $submitter.target && $submitter.target.getAttribute('formtarget')) {
+				return $submitter.target.getAttribute('formtarget');
 
 			} else if (e.target && e.target.getAttribute('target')) {
 				return e.target.getAttribute('target');
