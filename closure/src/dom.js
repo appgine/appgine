@@ -51,6 +51,33 @@ exports.getSubmitter = function(target) {
 	}, true);
 }
 
+exports.isFormTag = function($element) {
+	if (!$element) {
+		return false;
+	}
+
+	var tagName = String($element.tagName).toLowerCase();
+
+	if (tagName==='input') {
+		return true;
+
+	} else if (tagName==='button') {
+		return true;
+
+	} else if (tagName==='textarea') {
+		return true;
+
+	} else if (tagName==='select') {
+		return true;
+	}
+
+	return false;
+}
+
+exports.isFormElement = function($element) {
+	return exports.isFormTag($element) && $element.name && $element.form;
+}
+
 var md5;
 exports.createFormId = function($form) {
 	var names = [
