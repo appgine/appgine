@@ -4,7 +4,7 @@ import closure from '../closure'
 
 export default function bridgeTracy(options={}) {
 	const { initHTML, initFragment, onBeforeSwap } = options;
-	let tracyId = null;
+	let tracyStaticId = null;
 
 	options.initHTML = function($html) {
 		initHTML && initHTML($html);
@@ -13,15 +13,15 @@ export default function bridgeTracy(options={}) {
 		const $body = $html.querySelector('body');
 
 		if ($tracy && $body) {
-			tracyId = closure.string.getRandomString();
+			tracyStaticId = tracyStaticId || ('tracy-' + closure.string.getRandomString());
 
-			const $sibling = closure.dom.getNextElementSibling($tracy);
+			const $siblings = findTracySiblings($tracy);
 
 			const $tracyStatic = $html.ownerDocument.createElement('div');
-			$tracyStatic.dataset.static = 'tracy-' + tracyId;
+			$tracyStatic.dataset.static = tracyStaticId;
 			$tracyStatic.appendChild($tracy);
 
-			if ($sibling && String($sibling.tagName||'').toLowerCase()==='script') {
+			for (let $sibling of $siblings) {
 				$tracyStatic.appendChild($sibling);
 			}
 
@@ -32,12 +32,12 @@ export default function bridgeTracy(options={}) {
 	options.initFragment = function($fragment) {
 		initFragment && initFragment($fragment);
 
-		if (tracyId) {
+		if (tracyStaticId) {
 			const $body = $fragment.querySelector('body');
 
 			if ($body) {
 				const $tracyStatic = ($fragment.ownerDocument||$fragment).createElement('div');
-				$tracyStatic.dataset.static = 'tracy-' + tracyId;
+				$tracyStatic.dataset.static = tracyStaticId;
 
 				$body.appendChild($tracyStatic);
 			}
@@ -45,7 +45,7 @@ export default function bridgeTracy(options={}) {
 	}
 
 	options.onAjaxHtml = function(err, html, json) {
-		if (tracyId && err && !html && !json) {
+		if (tracyStaticId && err && !html && !json) {
 			return "ERROR: " + err;
 		}
 
@@ -64,4 +64,37 @@ export default function bridgeTracy(options={}) {
 	}
 
 	return options;
+}
+
+
+function findTracySiblings($tracy) {
+	const patterns = [
+		['link', 'script', 'script'],
+		['script'],
+	];
+
+	for (let pattern of patterns) {
+		loopSiblings: {
+			const $siblings = [];
+
+			let $element = $tracy;
+			for (let tagName of pattern) {
+				const $sibling = closure.dom.getNextElementSibling($element);
+
+				if (!$sibling) {
+					break loopSiblings;
+
+				} else if (String($sibling.tagName).toLowerCase()!==tagName) {
+					break loopSiblings;
+				}
+
+				$siblings.push($sibling);
+				$element = $sibling;
+			}
+
+			return $siblings;
+		}
+	}
+
+	return [];
 }
