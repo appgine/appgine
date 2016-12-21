@@ -27,10 +27,6 @@ export default function create() {
 			} else {
 				this.dispatch('app.event', 'click', e, $link, endpoint, hash.join('#'), toTarget);
 			}
-
-
-		} else {
-			e.preventDefault();
 		}
 	}
 
