@@ -27,6 +27,7 @@ export default function create() {
 				});
 
 				if (focusFirstElement($elements)) {
+					e.preventDefault();
 					return true;
 				}
 			}
@@ -39,7 +40,6 @@ export default function create() {
 function focusFirstElement($elements) {
 	for (let $element of $elements) {
 		if (($element.focus(), $element===document.activeElement)) {
-			e.preventDefault();
 			return true;
 		}
 	}
@@ -49,7 +49,6 @@ function focusFirstElement($elements) {
 
 		if (bounds.height>0 && bounds.width>0) {
 			$element.focus();
-			e.preventDefault();
 			return true;
 		}
 	}
