@@ -26,25 +26,33 @@ export default function create() {
 					return parseInt(a.getAttribute('tabIndex'), 10)-parseInt(b.getAttribute('tabIndex'), 10);
 				});
 
-				for (let $element of $elements) {
-					if (($element.focus(), $element===document.activeElement)) {
-						e.preventDefault();
-						return true;
-					}
-				}
-
-				for (let $element of $elements) {
-					const bounds = $element.getBoundingClientRect();
-
-					if (bounds.height>0 && bounds.width>0) {
-						$element.focus();
-						e.preventDefault();
-						return true;
-					}
+				if (focusFirstElement($elements)) {
+					return true;
 				}
 			}
 		}
 
 		return false;
 	});
+}
+
+function focusFirstElement($elements) {
+	for (let $element of $elements) {
+		if (($element.focus(), $element===document.activeElement)) {
+			e.preventDefault();
+			return true;
+		}
+	}
+
+	for (let $element of $elements) {
+		const bounds = $element.getBoundingClientRect();
+
+		if (bounds.height>0 && bounds.width>0) {
+			$element.focus();
+			e.preventDefault();
+			return true;
+		}
+	}
+
+	return false;
 }
