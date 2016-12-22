@@ -45,4 +45,9 @@ export default class Request {
 		unloadScripts(this.$fragment);
 	}
 
+
+	shouldReloadForHash(hash) {
+		return false;
+	}
+
 }

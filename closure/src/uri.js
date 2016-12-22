@@ -7,6 +7,8 @@ goog.require('goog.dom');
 goog.require('goog.Uri');
 goog.require('goog.Uri.QueryData');
 
+goog.Uri.reDisallowedInFragment_ = /^$/;
+
 var $link = goog.dom.createDom('a');
 var $location = goog.dom.createDom('a', {'href': window.location.href});
 
@@ -38,28 +40,18 @@ exports.isSame = function(location) {
 	return $location.href===($link.href=location, $link.href = $link.href);
 }
 
-exports.create = function(location, params) {
-	return exports.createUri(location, params).toString();
+exports.create = function(location, params, hash) {
+	return createUri(location, params, hash).toString();
 }
 
 exports.createFormAction = function($form) {
-	var createdUri;
-
-	if ($form.getAttribute('action')) {
-		createdUri = exports.createUri($form.getAttribute('action'));
-
-	} else {
-		createdUri = exports.createUri();
-		createdUri.setQuery('');
-	}
-
-	return createdUri.toString();
+	return createUri($form.getAttribute('action'), !form.isMethod($form, 'GET')).toString();
 }
 
 exports.createForm = function($form, $submitter) {
-	var createdUri = exports.createUri($form.getAttribute('action'));
+	var createdUri = createUri(exports.createFormAction($form));
 
-	if (String($form.method||'GET').toUpperCase()==='GET') {
+	if (form.isMethod($form, 'GET')) {
 		createdUri.setQueryData(form.queryData($form, $submitter));
 	}
 
@@ -71,55 +63,40 @@ exports.createReport = function(location, params) {
 	return '/' + $link.pathname.replace(/^\//, '') + $link.search;
 }
 
-exports.createUri = function(location, params) {
-	if (!location) {
-		location = $location.href;
-		params = params||{};
 
-	} else if (typeof location === 'object') {
+/**
+ * @param {string}
+ * @param {object}
+ * @param {string}
+ * @return {goog.Uri}
+ */
+createUri = function(location, params, hash) {
+	if (location && typeof location === 'object') {
 		params = location;
 		location = $location.href;
 
 	} else {
 		location = location || $location.href;
-		params = params||{};
 	}
 
 	var uri = new goog.Uri(location);
 	var queryData = uri.getQueryData().clone();
 
-	if (params instanceof goog.Uri.QueryData) {
+	if (params===false) {
+		queryData.clear();
+
+	} else if (params instanceof goog.Uri.QueryData) {
 		queryData = params.clone();
 
-	} else {
-		queryData.extend(goog.Uri.QueryData.createFromMap(params));
+	} else if (typeof params === 'object') {
+		queryData.extend(goog.Uri.QueryData.createFromMap(params||{}));
 	}
 
 	uri.setQueryData(queryData);
+
+	if (typeof hash==='string') {
+		uri.setFragment(hash);
+	}
+
 	return uri;
-}
-
-exports.isHashLink = function(link) {
-	if (link.indexOf('#')===-1) {
-		return false;
-	}
-
-	var uri = link.split('#', 2)[0];
-
-	if (uri===$location.href) {
-		return true;
-
-	} else if ($location.href.indexOf(uri + '#')!==-1) {
-		return true;
-	}
-
-	return false;
-}
-
-exports.getHash = function(link) {
-	if (link.indexOf('#')===-1) {
-		return '';
-	}
-
-	return link.substr(link.indexOf('#')+1);
 }

@@ -19,13 +19,11 @@ export default function create() {
 				return '';
 			})();
 
-			const [endpoint, ...hash] = href.split('#');
-
-			if (closure.uri.isHashLink(href)) {
-				this.dispatch('app.event', 'clickHash', e, $link, hash.join('#'), toTarget);
+			if ($link.getAttribute('href')[0]==='#') {
+				this.dispatch('app.event', 'clickHash', e, $link, $link.getAttribute('href').substr(1), toTarget);
 
 			} else {
-				this.dispatch('app.event', 'click', e, $link, endpoint, hash.join('#'), toTarget);
+				this.dispatch('app.event', 'click', e, $link, href, toTarget);
 			}
 		}
 	}

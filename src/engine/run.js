@@ -145,19 +145,30 @@ export default function run(options) {
 export function onClickHash(e, $link, hash, toTarget) {
 	if (toTarget==='' || toTarget==='_ajax') {
 		e.preventDefault();
-		e.stopImmediatePropagation();
 
-		scrollHashToView(hash, true);
+		const endpoint = closure.uri.create('', {}, hash);
+
+		if (toTarget==='' && endpoint!==history.getLink()) {
+			pushEndpoint(endpoint);
+			_pushing = false;
+		}
+
+		if (_stack.loadRequest().shouldReloadForHash(hash)) {
+			loadPage(endpoint, false, 0);
+
+		} else {
+			scrollHashToView(hash, true);
+		}
 	}
 }
 
 
-export function onClick(e, $link, href, hash, toTarget) {
+export function onClick(e, $link, endpoint, toTarget) {
 	if (toTarget==='' || toTarget==='_ajax') {
 		e.preventDefault();
 
-		if (_pending===0 || toTarget==='_ajax' || href!==history.getLink()) {
-			location(href, toTarget==='_ajax');
+		if (_pending===0 || toTarget==='_ajax' || endpoint!==history.getLink()) {
+			location(endpoint, toTarget==='_ajax');
 		}
 	}
 }
@@ -176,11 +187,11 @@ export function location(endpoint, isAjax=false) {
 		endpoint = history.getCanonizedLink(endpoint);
 
 		if (isAjax) {
-			return loadAjax(endpoint, document.body);
+			return loadAjax(endpoint, document.body, 0);
 
 		} else {
 			pushEndpoint(endpoint);
-			return loadPage(endpoint, true);
+			return loadPage(endpoint, true, 0);
 		}
 	}
 
@@ -196,61 +207,13 @@ export function reload() {
 export function ajaxGet($element, params) {
 	const foundRequest = _stack.findRequest($element);
 	const endpoint = foundRequest ? closure.uri.create(foundRequest.endpoint, params) : closure.uri.create(params);
-	closure.ajax.get(endpoint, _options.onAjaxResponse(bindAjaxRequest($element, endpoint)));
+	closure.ajax.get(endpoint, _options.onAjaxResponse(bindAjaxRequest($element, endpoint, 0)));
 }
 
 
 export function ajaxPost($element, endpoint, data) {
 	endpoint = closure.uri.create(endpoint);
-	closure.ajax.post(endpoint, data, _options.onAjaxResponse(bindAjaxRequest($element, endpoint)));
-}
-
-
-const ajaxResponse = function($element, endpoint, newPage=false, scrollTo=false) {
-	const [, anchor] = endpoint.split('#', 2);
-	const foundRequest = _stack.findRequest($element);
-
-	return function(text, json) {
-		const isCurrent = foundRequest===_stack.loadRequest();
-
-		if (json && json.reload) {
-			leave(closure.uri.create());
-
-		} else if (json && json.canonize) {
-			if (isCurrent) {
-				canonize(json.canonize, newPage, scrollTo);
-
-			} else if (foundRequest) {
-				foundRequest.willCanonize(json.canonize, newPage, scrollTo);
-			}
-
-		} else if (json && json.redirect) {
-			if (isCurrent) {
-				redirect(json.redirect, newPage, scrollTo);
-
-			} else if (foundRequest) {
-				foundRequest.willRedirect(json.redirect, newPage, scrollTo);
-			}
-
-		} else {
-			if (json!==undefined) {
-				willUpdate();
-				update((isCurrent && document) || (foundRequest && foundRequest.$fragment), $element, json);
-				wasUpdated();
-
-			} else if (text && isCurrent) {
-				newPage && history.changeId();
-				_options.swap(_request, _request = _stack.createRequest(endpoint, _options.createFragment(text), anchor||scrollTo));
-
-			} else if (text && foundRequest) {
-				foundRequest.willSwap(endpoint, text, anchor||scrollTo, newPage);
-			}
-
-			if (isCurrent && newPage) {
-				_options.dispatch('app.request', 'pageview', closure.uri.create());
-			}
-		}
-	}
+	closure.ajax.post(endpoint, data, _options.onAjaxResponse(bindAjaxRequest($element, endpoint, 0)));
 }
 
 
@@ -304,12 +267,12 @@ function pushEndpoint(endpoint, state={}, replacing=null) {
 }
 
 
-function loadAjax(endpoint, $element) {
-	closure.ajax.get(endpoint, _options.onAjaxResponse(bindAjaxRequest($element, endpoint)));
+function loadAjax(endpoint, $element, scrollTo) {
+	closure.ajax.get(endpoint, _options.onAjaxResponse(bindAjaxRequest($element, endpoint, scrollTo)));
 }
 
 
-function loadPage(endpoint, newPage=false, scrollTo=0) {
+function loadPage(endpoint, newPage, scrollTo) {
 	closure.ajax.load(endpoint, _options.onAjaxResponse(bindRequest(document.body, endpoint, newPage, scrollTo)));
 }
 
@@ -324,23 +287,24 @@ function submitForm($form, $submitter, isAjax=false) {
 
 	const newPage = history.state('formId')!==formId;
 
+	const scrollTo = function() {
+		const $found = closure.dom.findForm(formName, formId);
+
+		if ($found) {
+			scrollFormToView($found, formName[0]==='#');
+
+		} else {
+			window.scrollTo(0, 0);
+		}
+	}
+
 	let submitRequest;
 	if (isAjax) {
-		submitRequest = bindAjaxRequest($element, endpoint);
+		submitRequest = bindAjaxRequest($element, endpoint, scrollTo);
 
 	} else {
 		pushEndpoint(endpoint, { formId }, !newPage);
-
-		submitRequest = bindRequest($element, endpoint, newPage, function() {
-			const $found = closure.dom.findForm(formName, formId);
-
-			if ($found) {
-				scrollFormToView($found, formName[0]==='#');
-
-			} else {
-				window.scrollTo(0, 0);
-			}
-		});
+		submitRequest = bindRequest($element, endpoint, newPage, scrollTo);
 	}
 
 	const foundRequest = _stack.findRequest($element);
@@ -369,9 +333,10 @@ function submitForm($form, $submitter, isAjax=false) {
 /**
  * @param {Element}
  * @param {string}
+ * @param {mixed}
  */
-function bindAjaxRequest($element, endpoint) {
-	return _bindRequest(_pushing ? 0 : ++_requestnum, $element, endpoint, false, 0, function(err) {
+function bindAjaxRequest($element, endpoint, scrollTo) {
+	return _bindRequest(_pushing ? 0 : ++_requestnum, $element, endpoint, false, scrollTo, function(err) {
 		_options.onError('Failed to handle request.\n' + String(err||''));
 	});
 }
@@ -381,9 +346,9 @@ function bindAjaxRequest($element, endpoint) {
  * @param {Element}
  * @param {string}
  * @param {bool}
- * @param {number}
+ * @param {mixed}
  */
- function bindRequest($element, endpoint, newPage=false, scrollTo=0) {
+ function bindRequest($element, endpoint, newPage, scrollTo) {
 	return _bindRequest(++_requestnum, $element, endpoint, newPage, scrollTo, function(err) {
 		_options.onError('Failed to load requested page.\n' + String(err||''));
 	});
@@ -391,11 +356,12 @@ function bindAjaxRequest($element, endpoint) {
 
 
 /**
- * @param {int} [varname]
+ * @param {int}
  * @param {Element}
  * @param {string}
  * @param {bool}
- * @param {number}
+ * @param {mixed}
+ * @param {function}
  */
 function _bindRequest(requestnum, $element, endpoint, newPage, scrollTo, onError) {
 	const response = ajaxResponse($element, endpoint, newPage, scrollTo);
@@ -423,6 +389,54 @@ function _bindRequest(requestnum, $element, endpoint, newPage, scrollTo, onError
 			_pending = 0;
 			_pushing = false;
 			_options.dispatch('app.request', 'stop')
+		}
+	}
+}
+
+
+function ajaxResponse($element, endpoint, newPage, scrollTo) {
+	const [, ...anchor] = endpoint.split('#');
+	const foundRequest = _stack.findRequest($element);
+
+	return function(text, json) {
+		const isCurrent = foundRequest===_stack.loadRequest();
+
+		if (json && json.reload) {
+			leave(closure.uri.create());
+
+		} else if (json && json.canonize) {
+			if (isCurrent) {
+				canonize(json.canonize, newPage, scrollTo);
+
+			} else if (foundRequest) {
+				foundRequest.willCanonize(json.canonize, newPage, scrollTo);
+			}
+
+		} else if (json && json.redirect) {
+			if (isCurrent) {
+				redirect(json.redirect, newPage, scrollTo);
+
+			} else if (foundRequest) {
+				foundRequest.willRedirect(json.redirect, newPage, scrollTo);
+			}
+
+		} else {
+			if (json!==undefined) {
+				willUpdate();
+				update((isCurrent && document) || (foundRequest && foundRequest.$fragment), $element, json);
+				wasUpdated();
+
+			} else if (text && isCurrent) {
+				newPage && history.changeId();
+				_options.swap(_request, _request = _stack.createRequest(endpoint, _options.createFragment(text), anchor.join('#')||scrollTo));
+
+			} else if (text && foundRequest) {
+				foundRequest.willSwap(endpoint, text, anchor.join('#')||scrollTo, newPage);
+			}
+
+			if (isCurrent && newPage) {
+				_options.dispatch('app.request', 'pageview', closure.uri.create());
+			}
 		}
 	}
 }

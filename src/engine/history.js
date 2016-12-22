@@ -7,8 +7,6 @@ if (window.history && window.history.scrollRestoration) {
 	window.history.scrollRestoration = 'manual';
 }
 
-
-const _session = closure.string.getRandomString();
 const _supported = !!(window.history && window.history.pushState);
 const _events = {};
 
@@ -16,18 +14,32 @@ let _canceling = false;
 let _merging = false;
 let _mergeEmitter = null;
 
+let _session = '';
 let _id = 0;
 let _firstlink = window.location.href;
 let _state = window.history.state||{};
 let _link = closure.uri.change(window.location.href);
 let _origin = _state.origin || _link;
 
-!_state._id && mergeState(_state = createState({}, true));
+const matched = String(_state._id).match(/^(.*)_([0-9]+)$/);
 
+if (matched) {
+	_session = matched[1];
+	_id = parseInt(matched[2], 10);
+
+} else {
+	_session = closure.string.getRandomString();
+	mergeState(_state = createState({}, true))
+}
+
+function createId(increment) {
+	increment && _id++;
+	return _session + '_' + String(_id);
+}
 
 function createState(state={}, initial=false) {
 	return {...state,
-		_id: _session + _id,
+		_id: createId(false),
 		initial: initial,
 	};
 }
@@ -181,7 +193,7 @@ function changeState(state, link, method, invoke) {
 }
 
 export function changeId() {
-	return mergeState({_id: _session + (++_id)});
+	return mergeState({_id: createId(true)});
 }
 
 export function getCurrentPos() {
