@@ -4,7 +4,14 @@ import closure from '../closure'
 
 export function scrollHashToView(hash, animated, onEnd) {
 	const $node = hash ? document.getElementById(hash) : document.body;
-	$node && scrollNodeToView($node, animated, onEnd);
+
+	if ($node) {
+		scrollNodeToView($node, animated, onEnd);
+		return true;
+
+	} else {
+		return false;
+	}
 }
 
 export function scrollNodeToView($node, animated, onEnd) {
