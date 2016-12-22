@@ -6,6 +6,11 @@ goog.require('goog.dom');
 goog.require('goog.dom.forms');
 
 
+exports.isMethod = function($form, method) {
+	return String($form.method||'GET').toUpperCase()===String(method).toUpperCase();
+}
+
+
 exports.postData = function($form, $submitter) {
 	var data = new FormData();
 	eachFormData($form, $submitter, function(name, value) {
