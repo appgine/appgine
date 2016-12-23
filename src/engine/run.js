@@ -66,7 +66,7 @@ onEachTick(function(screen, updated, done) {
 				request.scrolled = true;
 			}
 
-		} else if (request.scrollTop!==screen.top) {
+		} else if (history.state('scrollTop', 0)!==screen.top) {
 			request.scrollTop = screen.top;
 			history.mergeState({scrollTop: screen.top});
 		}
