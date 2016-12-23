@@ -132,7 +132,7 @@ Kefir.stream(emitter => { _mergeEmitter = emitter; _merging && emitter.emit(_sta
 	.map(value => ({..._state, ...value}))
 	.filter(state => _merging = _merging || !shallowEqual(_state, state))
 	.onValue(state => _state = state)
-	.debounce(1000)
+	.debounce(100)
 	.onValue(commitMergeState);
 
 export function mergeState(state={}) {
