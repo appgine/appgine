@@ -24,7 +24,7 @@ var _pushing = false;
 onEachTick(function(screen, updated, done) {
 
 	if (_poping && _poping!==true) {
-		loadPage(_poping, true, history.state('scrollTop', 0));
+		loadPage(closure.uri.create(_poping, {}, ''), true, history.state('scrollTop', 0));
 		_poping = true;
 	}
 
