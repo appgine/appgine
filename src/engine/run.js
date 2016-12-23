@@ -186,6 +186,11 @@ export function onSubmitForm(e, $form, $submitter, toTarget) {
 }
 
 
+export function onReload() {
+	loadPage(history.getLink(), false, _stack.loadRequest().scrollTop);
+}
+
+
 export function location(endpoint, isAjax=false) {
 	if (closure.uri.sameOrigin(endpoint)) {
 		endpoint = history.getCanonizedLink(endpoint);
@@ -200,11 +205,6 @@ export function location(endpoint, isAjax=false) {
 	}
 
 	leave(endpoint);
-}
-
-
-export function reload() {
-	loadPage(history.getLink(), false, _stack.loadRequest().scrollTop);
 }
 
 

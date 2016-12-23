@@ -1,6 +1,6 @@
 
 import ready from './lib/ready'
-import run, { onClick, onClickHash, onSubmitForm } from './engine/run'
+import run, { onClick, onClickHash, onSubmitForm, onReload } from './engine/run'
 import { addListener } from './api/channel'
 
 
@@ -22,6 +22,7 @@ export default function(options={}) {
 	addListener('app.event', 'click', onClick);
 	addListener('app.event', 'clickHash', onClickHash);
 	addListener('app.event', 'submit', onSubmitForm);
+	addListener('app.event', 'reload', onReload);
 
 	ready(() => run(options));
 }
