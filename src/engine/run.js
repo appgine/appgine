@@ -187,7 +187,7 @@ export function onSubmitForm(e, $form, $submitter, toTarget) {
 
 
 export function onReload() {
-	loadPage(history.getLink(), false, _stack.loadRequest().scrollTop);
+	loadPage(closure.uri.create(history.getLink(), {}, ''), false, _stack.loadRequest().scrollTop);
 }
 
 
