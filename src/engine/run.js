@@ -157,7 +157,7 @@ export function onClickHash(e, $link, hash, toTarget) {
 			_pushing = false;
 		}
 
-		if (_stack.loadRequest().shouldReloadForHash(hash)) {
+		if (_stack.loadRequest() && _stack.loadRequest().shouldReloadForHash(hash)) {
 			loadPage(endpoint, false, 0);
 
 		} else {
