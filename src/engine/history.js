@@ -8,12 +8,19 @@ if (window.history && window.history.scrollRestoration) {
 }
 
 const _supported = !!(window.history && window.history.pushState);
-const _events = {};
-
-let _canceling = false;
 let _merging = false;
 let _mergeEmitter = null;
 
+Kefir.stream(emitter => { _mergeEmitter = emitter; })
+	.filter(value => isSupported())
+	.map(value => ({..._state, ...value}))
+	.filter(state => _merging = _merging || !shallowEqual(_state, state))
+	.onValue(state => _state = state)
+	.debounce(100)
+	.onValue(commitMergeState);
+
+const _events = {};
+let _canceling = false;
 let _session = '';
 let _id = 0;
 let _firstlink = window.location.href;
@@ -29,7 +36,7 @@ if (matched) {
 
 } else {
 	_session = closure.string.getRandomString();
-	mergeState(_state = createState({}, true))
+	mergeState(createState({}, true))
 }
 
 function createId(increment) {
@@ -127,16 +134,8 @@ function dispatch(name) {
 	(_events[name]||[]).forEach(fn => fn());
 }
 
-Kefir.stream(emitter => { _mergeEmitter = emitter; _merging && emitter.emit(_state); })
-	.filter(value => isSupported())
-	.map(value => ({..._state, ...value}))
-	.filter(state => _merging = _merging || !shallowEqual(_state, state))
-	.onValue(state => _state = state)
-	.debounce(100)
-	.onValue(commitMergeState);
-
 export function mergeState(state={}) {
-	_mergeEmitter ? _mergeEmitter.emit(state) : (_merging = true);
+	_mergeEmitter.emit(state);
 }
 
 function commitMergeState() {
