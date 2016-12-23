@@ -39,9 +39,8 @@ if (matched) {
 	mergeState(createState({}, true))
 }
 
-function createId(increment) {
-	increment && _id++;
-	return _session + '_' + String(_id);
+function createId(newId) {
+	return (_state && _state._id && newId) ? _state._id : (_session + '_' + String(++_id));
 }
 
 function createState(state={}, initial=false) {
