@@ -131,6 +131,10 @@ export default function run(options) {
 				request.scrolled = -1;
 				_options.swap(_request, _request = request);
 				_options.dispatch('app.request', 'pageview', endpoint);
+
+			} else {
+				request.scrolled = -1;
+				request.scrollTop = history.state('scrollTop', 0);
 			}
 
 		} else {
