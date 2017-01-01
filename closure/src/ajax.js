@@ -1,9 +1,6 @@
 
 goog.module('ajax');
 
-goog.require('uri');
-goog.require('form');
-
 goog.require('goog.events');
 goog.require('goog.net.XhrIo');
 goog.require('goog.net.EventType');
@@ -25,6 +22,16 @@ exports.post = function(endpoint, data, fn) {
 }
 
 
+exports.load = function(endpoint, fn) {
+	pageRequest(endpoint, 'GET', '', fn);
+}
+
+
+exports.submit = function(endpoint, method, data, fn) {
+	pageRequest(endpoint, method, data, fn);
+}
+
+
 function ajaxRequest(endpoint, method, data, fn) {
 	var request = new goog.net.XhrIo();
 
@@ -37,27 +44,8 @@ function ajaxRequest(endpoint, method, data, fn) {
 
 
 var _request;
-
-exports.load = function(endpoint, fn) {
-	if (_request) {
-		_request.abort();
-	}
-
-	bindRequest(_request = new goog.net.XhrIo(), fn);
-	_request.send(endpoint, 'GET', '', {
-		'X-Requested-With': 'XMLHttpRequest'
-	});
-}
-
-
-exports.submit = function($form, $submitter, fn) {
-	if (_request) {
-		_request.abort();
-	}
-
-	var endpoint = uri.createForm($form, $submitter);
-	var method = ($form.method||'GET').toUpperCase();
-	var data = method==='POST' ? form.postData($form, $submitter) : '';
+function pageRequest(endpoint, method, data, fn) {
+	_request && _request.abort();
 
 	bindRequest(_request = new goog.net.XhrIo(), fn);
 	_request.send(endpoint, method, data, {

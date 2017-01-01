@@ -282,11 +282,12 @@ function loadPage(endpoint, newPage, scrollTo) {
 
 
 function submitForm($form, $submitter, isAjax=false) {
-	const endpoint = closure.uri.createForm($form, $submitter);
 	const $element = $submitter||$form;
 
 	const formName = String($form.name);
 	const formId = closure.dom.createFormId($form);
+	const formEndpoint = closure.uri.createForm($form, $submitter);
+	const formMethod = ($form.method||'GET').toUpperCase();
 	const formData = closure.form.postData($form, $submitter);
 
 	const newPage = history.state('formId')!==formId;
@@ -302,19 +303,21 @@ function submitForm($form, $submitter, isAjax=false) {
 		}
 	}
 
+	const submitData = formMethod==='POST' ? formData : '';
+
 	let submitRequest;
 	if (isAjax) {
-		submitRequest = bindAjaxRequest($element, endpoint, scrollTo);
+		submitRequest = bindAjaxRequest($element, formEndpoint, scrollTo);
 
 	} else {
-		pushEndpoint(endpoint, { formId }, !newPage);
-		submitRequest = bindRequest($element, endpoint, newPage, scrollTo);
+		pushEndpoint(formEndpoint, { formId }, !newPage);
+		submitRequest = bindRequest($element, formEndpoint, newPage, scrollTo);
 	}
 
 	const foundRequest = _stack.findRequest($element);
 	const currentRequest = _stack.loadRequest();
 
-	closure.ajax.submit($form, $submitter, _options.onAjaxResponse(function(err, text, json) {
+	closure.ajax.submit(formEndpoint, formMethod, submitData, _options.onAjaxResponse(function(err, text, json) {
 		submitRequest(err, text, json);
 
 		if (currentRequest===_stack.loadRequest()) {
