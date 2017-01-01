@@ -272,7 +272,7 @@ function pushEndpoint(endpoint, state={}, replacing=null) {
 
 
 function loadAjax(endpoint, $element, scrollTo) {
-	closure.ajax.get(endpoint, _options.onAjaxResponse(bindAjaxRequest($element, endpoint, scrollTo)));
+	closure.ajax.load(endpoint, _options.onAjaxResponse(bindAjaxRequest($element, endpoint, scrollTo)));
 }
 
 
