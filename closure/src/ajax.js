@@ -62,12 +62,21 @@ function bindRequest(request, fn)
 {
 	request.setTimeoutInterval(10000);
 
+	var _handled = false;
+	var _handleResponse = function() {
+		if (_handled===false) {
+			_handled = true;
+
+			handleResponse.call(null, arguments);
+		}
+	}
+
 	goog.events.listen(request, goog.net.EventType.SUCCESS, function(e) {
-		handleResponse(e, null, fn);
+		_handleResponse(e, null, fn);
 	});
 
 	goog.events.listen(request, goog.net.EventType.TIMEOUT, function(e) {
-		handleResponse(e, 'Server did not respond in time.', fn);
+		_handleResponse(e, 'Server did not respond in time.', fn);
 	});
 
 	goog.events.listen(request, goog.net.EventType.ERROR, function(e) {
@@ -83,7 +92,7 @@ function bindRequest(request, fn)
 			error = 'Check your Internet connection.';
 		}
 
-		handleResponse(e, error, fn);
+		_handleResponse(e, error, fn);
 	});
 }
 
