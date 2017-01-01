@@ -7,6 +7,12 @@ goog.require('goog.net.EventType');
 goog.require('goog.net.Jsonp');
 
 
+exports.ABORT = 'abort';
+exports.ERROR = 'error';
+exports.TIMEOUT = 'timeout';
+exports.SUCCESS = 'success';
+
+
 exports.jsonp = function(endpoint, args, fn) {
 	(new goog.net.Jsonp(endpoint)).send(args, fn);
 };
@@ -62,65 +68,44 @@ function bindRequest(request, fn)
 {
 	request.setTimeoutInterval(10000);
 
-	var _handled = false;
-	var _handleResponse = function() {
-		if (_handled===false) {
-			_handled = true;
+	var handled = false;
+	var handleResponse = function(e, status, error) {
+		if (handled===false) {
+			handled = true;
 
-			handleResponse.call(null, arguments);
+			var response = {};
+			response['headers'] = e.target.getAllResponseHeaders();
+			response['error'] = error;
+			response['json'] = handleResponseJson(e.target);
+			response['html'] = e.target.getResponseText();
+
+			fn(status, response);
 		}
 	}
 
 	goog.events.listen(request, goog.net.EventType.SUCCESS, function(e) {
-		_handleResponse(e, null, fn);
+		handleResponse(e, exports.SUCCESS, null);
 	});
 
 	goog.events.listen(request, goog.net.EventType.TIMEOUT, function(e) {
-		_handleResponse(e, 'Server did not respond in time.', fn);
+		handleResponse(e, exports.TIMEOUT, 'Server did not respond in time.');
+	});
+
+	goog.events.listen(request, goog.net.EventType.ABORT, function(e) {
+		handleResponse(e, exports.ABORT, 'Request aborted.');
 	});
 
 	goog.events.listen(request, goog.net.EventType.ERROR, function(e) {
-
-		var error;
 		if (e.target.getStatus()>=500) {
-			error = 'Server responded with unexpected error.';
+			handleResponse(e, exports.ERROR, 'Server responded with unexpected error.');
 
 		} else if (e.target.getStatus()>=400) {
-			error = 'Server denied this request.';
+			handleResponse(e, exports.ERROR, 'Server denied this request.');
 
 		} else {
-			error = 'Check your Internet connection.';
+			handleResponse(e, exports.ERROR, 'Check your Internet connection.');
 		}
-
-		_handleResponse(e, error, fn);
 	});
-}
-
-
-/**
- * @param {Event}
- * @param {string}
- * @param {function}
- */
-function handleResponse(event, err, fn)
-{
-	event.target.getAllResponseHeaders();
-
-	fn(
-		err,
-		handleResponseText(event.target.getResponseText()),
-		handleResponseJson(event.target)
-	);
-}
-
-
-/**
- * @param {string}
- * @return {string}
- */
-function handleResponseText(text)
-{
-	return text;
 }
 
 

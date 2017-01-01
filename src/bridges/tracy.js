@@ -44,12 +44,10 @@ export default function bridgeTracy(options={}) {
 		}
 	}
 
-	options.onAjaxHtml = function(err, html, json) {
-		if (tracyStaticId && err && !html && !json) {
-			return "ERROR: " + err;
+	options.onAjaxResponse = function(status, response) {
+		if (tracyStaticId && status===closure.ajax.ERROR && !response.html && !response.json) {
+			response.html = "ERROR: " + err;
 		}
-
-		return html;
 	}
 
 	options.onBeforeSwap = function() {

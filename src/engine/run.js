@@ -371,7 +371,7 @@ function bindAjaxRequest($element, endpoint, scrollTo) {
  * @param {function}
  */
 function _bindRequest(requestnum, $element, endpoint, newPage, scrollTo, onError) {
-	const response = ajaxResponse($element, endpoint, newPage, scrollTo);
+	const onResponse = ajaxResponse($element, endpoint, newPage, scrollTo);
 
 	_pending = Math.max(_pending, 1);
 
@@ -380,12 +380,17 @@ function _bindRequest(requestnum, $element, endpoint, newPage, scrollTo, onError
 		_pending = 2;
 	}
 
-	return _options.onAjaxResponse(function(err, text, json) {
-		if (text || json) {
-			response(text, json);
+	return _options.onAjaxResponse(function(status, response) {
+		if (status===closure.ajax.ABORT) {
+			if (newPage && requestnum===_requestnum) {
+				history.cancelState();
+			}
 
-		} else if (err || json===undefined) {
-			onError(err);
+		} else if (response.html || response.json) {
+			onResponse(response.html, response.json);
+
+		} else if (response.error || response.json===undefined) {
+			onError(response.error);
 
 			if (newPage && requestnum===_requestnum) {
 				history.cancelState();
