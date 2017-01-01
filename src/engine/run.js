@@ -317,8 +317,8 @@ function submitForm($form, $submitter, isAjax=false) {
 	const foundRequest = _stack.findRequest($element);
 	const currentRequest = _stack.loadRequest();
 
-	closure.ajax.submit(formEndpoint, formMethod, submitData, function(err, text, json) {
-		submitRequest(err, text, json);
+	closure.ajax.submit(formEndpoint, formMethod, submitData, function(...response) {
+		submitRequest(...response);
 
 		if (currentRequest===_stack.loadRequest()) {
 			if (foundRequest) {
