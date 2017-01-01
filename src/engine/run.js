@@ -211,13 +211,13 @@ export function location(endpoint, isAjax=false) {
 export function ajaxGet($element, params) {
 	const foundRequest = _stack.findRequest($element);
 	const endpoint = foundRequest ? closure.uri.create(foundRequest.endpoint, params) : closure.uri.create(params);
-	closure.ajax.get(endpoint, _options.onAjaxResponse(bindAjaxRequest($element, endpoint, 0)));
+	closure.ajax.get(endpoint, bindAjaxRequest($element, endpoint, 0));
 }
 
 
 export function ajaxPost($element, endpoint, data) {
 	endpoint = closure.uri.create(endpoint);
-	closure.ajax.post(endpoint, data, _options.onAjaxResponse(bindAjaxRequest($element, endpoint, 0)));
+	closure.ajax.post(endpoint, data, bindAjaxRequest($element, endpoint, 0));
 }
 
 
@@ -272,12 +272,12 @@ function pushEndpoint(endpoint, state={}, replacing=null) {
 
 
 function loadAjax(endpoint, $element, scrollTo) {
-	closure.ajax.load(endpoint, _options.onAjaxResponse(bindAjaxRequest($element, endpoint, scrollTo)));
+	closure.ajax.load(endpoint, bindAjaxRequest($element, endpoint, scrollTo));
 }
 
 
 function loadPage(endpoint, newPage, scrollTo) {
-	closure.ajax.load(endpoint, _options.onAjaxResponse(bindRequest(document.body, endpoint, newPage, scrollTo)));
+	closure.ajax.load(endpoint, bindRequest(document.body, endpoint, newPage, scrollTo));
 }
 
 
@@ -317,7 +317,7 @@ function submitForm($form, $submitter, isAjax=false) {
 	const foundRequest = _stack.findRequest($element);
 	const currentRequest = _stack.loadRequest();
 
-	closure.ajax.submit(formEndpoint, formMethod, submitData, _options.onAjaxResponse(function(err, text, json) {
+	closure.ajax.submit(formEndpoint, formMethod, submitData, function(err, text, json) {
 		submitRequest(err, text, json);
 
 		if (currentRequest===_stack.loadRequest()) {
@@ -333,7 +333,7 @@ function submitForm($form, $submitter, isAjax=false) {
 			_stack.clearHistory();
 			_stack.loadRequest().formSubmitted[formId] = formData;
 		}
-	}));
+	});
 }
 
 
@@ -380,7 +380,7 @@ function _bindRequest(requestnum, $element, endpoint, newPage, scrollTo, onError
 		_pending = 2;
 	}
 
-	return function(err, text, json) {
+	return _options.onAjaxResponse(function(err, text, json) {
 		if (text || json) {
 			response(text, json);
 
@@ -397,7 +397,7 @@ function _bindRequest(requestnum, $element, endpoint, newPage, scrollTo, onError
 			_pushing = false;
 			_options.dispatch('app.request', 'stop')
 		}
-	}
+	})
 }
 
 
