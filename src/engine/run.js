@@ -303,7 +303,7 @@ function submitForm($form, $submitter, isAjax=false) {
 		}
 	}
 
-	const submitData = formMethod==='POST' ? formData : '';
+	const submitData = formMethod==='POST' ? _options.onFormData(formData) : '';
 
 	let submitRequest;
 	if (isAjax) {

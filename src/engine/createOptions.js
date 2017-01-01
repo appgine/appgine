@@ -39,5 +39,8 @@ export default function createOptions(options={}) {
 				return fn(_err, _html, _json);
 			}
 		},
+		onFormData(formData) {
+			return options.onFormData ? options.onFormData(formData) : formData;
+		},
 	}
 }
