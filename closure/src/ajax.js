@@ -6,6 +6,8 @@ goog.require('goog.net.XhrIo');
 goog.require('goog.net.EventType');
 goog.require('goog.net.Jsonp');
 
+var _request;
+
 
 exports.ABORT = 'abort';
 exports.ERROR = 'error';
@@ -38,6 +40,11 @@ exports.submit = function(endpoint, method, data, fn) {
 }
 
 
+exports.abort = function() {
+	_request && _request.abort();
+}
+
+
 function ajaxRequest(endpoint, method, data, fn) {
 	var request = new goog.net.XhrIo();
 
@@ -49,9 +56,8 @@ function ajaxRequest(endpoint, method, data, fn) {
 }
 
 
-var _request;
 function pageRequest(endpoint, method, data, fn) {
-	_request && _request.abort();
+	exports.abort();
 
 	bindRequest(_request = new goog.net.XhrIo(), fn);
 	_request.send(endpoint, method, data, {
