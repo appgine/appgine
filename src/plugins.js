@@ -10,21 +10,36 @@ import {
 import {
 	loader as _loader,
 	loaderGlobal as _loaderGlobal,
+} from 'plugin-macro-loader'
+
+import {
+	loader as _hotLoader,
+	loaderGlobal as _hotLoaderGlobal,
 } from 'plugin-macro-loader/webpack'
 
 
 export function loader(module, fn) {
-	return createLoader(_loader, module, fn);
+	if (fn===undefined) {
+		return createLoader(_loader, module);
+
+	} else {
+		return createLoader(_hotLoader.bind(null, module), fn);
+	}
 }
 
 
 export function loaderGlobal(module, fn) {
-	return createLoader(_loaderGlobal, module, fn);
+	if (fn===undefined) {
+		return createLoader(_loaderGlobal, module);
+
+	} else {
+		return createLoader(_hotLoaderGlobal.bind(null, module), fn);
+	}
 }
 
 
-function createLoader(loader, module, fn) {
-	loader(module, function(binders) {
+function createLoader(loader, fn) {
+	loader(function(binders) {
 		const _binders = {};
 		Object.keys(binders).map(function(key) {
 			_binders[key] = (...args) => patchHotReload(binders[key](...args));
