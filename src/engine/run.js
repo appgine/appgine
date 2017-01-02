@@ -90,6 +90,10 @@ export default function run(options) {
 	_options = createOptions(options);
 	_options.initHTML(document.documentElement);
 
+	if (_options.abortOnEscape) {
+		closure.shortcuthandler('esc', () => closure.ajax.abort());
+	}
+
 	const html = loadHtml(document.documentElement);
 
 	willUpdate(loadMain);
