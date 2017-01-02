@@ -46,7 +46,7 @@ export default function bridgeTracy(options={}) {
 
 	options.onAjaxResponse = function(status, response) {
 		if (tracyStaticId && status===closure.ajax.ERROR && !response.html && !response.json) {
-			response.html = "ERROR: " + err;
+			response.html = "ERROR: " + response.error;
 		}
 	}
 
