@@ -22,7 +22,8 @@ export default function createOptions(options={}) {
 			options.onAfterSwap && options.onAfterSwap();
 		},
 		dispatch(...args) {
-			return dispatch(...args);
+			dispatch(...args);
+			options.dispatch && options.dispatch(...args);
 		},
 		onRedirect(endpoint) {
 			window.location.href = endpoint;
