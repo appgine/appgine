@@ -7,6 +7,11 @@ import { addListener } from './api/channel'
 export default function(options={}) {
 	options = {...options, ...{}}
 
+	require('./plugins').loaderGlobal(module, function({ bindApi }) {
+		options.bindApi.channel && bindApi('channel', require('./api/channel'));
+		options.bindApi.targets && bindApi('targets', require('./api/targets'));
+	});
+
 	require('./plugins').loader(module, function({ bindApi, bindSystem }) {
 		bindApi('channel', require('./api/channel'));
 
