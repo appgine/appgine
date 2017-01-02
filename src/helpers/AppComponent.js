@@ -9,6 +9,11 @@ context.dispatch = dispatch;
 contextTypes.dispatch = React.PropTypes.func;
 
 
+export function setDispatch(dispatch) {
+	context.dispatch = dispatch;
+}
+
+
 export function addStore(name, store) {
 	context[name] = store;
 	contextTypes[name] = React.PropTypes.object;
