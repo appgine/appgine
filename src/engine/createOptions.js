@@ -7,6 +7,7 @@ import { dispatch } from '../api/channel'
 
 export default function createOptions(options={}) {
 	return {
+		dragAndDropClass: options.dragAndDropClass || '',
 		abortOnEscape: options.abortOnEscape===undefined || options.abortOnEscape,
 		initHTML($html) {
 			options.initHTML && options.initHTML($html);

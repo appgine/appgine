@@ -16,7 +16,10 @@ export default function(options={}) {
 		bindSystem(require('./system/submitForm'));
 		bindSystem(require('./system/shortcut.reload'));
 		bindSystem(require('./system/tabIndex'));
-		bindSystem(require('./system/dragAndDrop'), plugin => plugin('body-dragging'));
+
+		if (options.dragAndDropClass) {
+			bindSystem(require('./system/dragAndDrop'), plugin => plugin(options.dragAndDropClass));
+		}
 	});
 
 	addListener('app.event', 'click', onClick);
