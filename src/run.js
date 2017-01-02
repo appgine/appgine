@@ -9,26 +9,26 @@ export default function(options={}) {
 
 	require('./plugins').loaderGlobal(function({ bindApi }) {
 		if (options.bindApi.channel!==false) {
-			bindApi('channel', require('./api/channel'));
+			bindApi('channel', require('./api/channel').default);
 		}
 
 		if (options.bindApi.targets!==false) {
-			bindApi('targets', require('./api/targets'));
+			bindApi('targets', require('./api/targets').default);
 		}
 	});
 
 	require('./plugins').loader(function({ bindApi, bindSystem }) {
-		bindApi('channel', require('./api/channel'));
+		bindApi('channel', require('./api/channel').default);
 
-		bindSystem(require('./system/touchable'));
-		bindSystem(require('./system/clickBlur'));
-		bindSystem(require('./system/click'));
-		bindSystem(require('./system/submitForm'));
-		bindSystem(require('./system/shortcut.reload'));
-		bindSystem(require('./system/tabIndex'));
+		bindSystem(require('./system/touchable').default);
+		bindSystem(require('./system/clickBlur').default);
+		bindSystem(require('./system/click').default);
+		bindSystem(require('./system/submitForm').default);
+		bindSystem(require('./system/shortcut.reload').default);
+		bindSystem(require('./system/tabIndex').default);
 
 		if (options.dragAndDropClass) {
-			bindSystem(require('./system/dragAndDrop'), plugin => plugin(options.dragAndDropClass));
+			bindSystem(require('./system/dragAndDrop').default, plugin => plugin(options.dragAndDropClass));
 		}
 	});
 
