@@ -176,7 +176,7 @@ export function onClick(e, $link, endpoint, toTarget) {
 		e.preventDefault();
 
 		if (_pending===0 || toTarget==='_ajax' || endpoint!==history.getLink()) {
-			location($link, endpoint, toTarget==='_ajax');
+			loadEndpoint($link, endpoint, toTarget==='_ajax');
 		}
 	}
 }
@@ -196,19 +196,7 @@ export function onReload() {
 
 
 export function location($element, endpoint, isAjax=false) {
-	if (closure.uri.sameOrigin(endpoint)) {
-		endpoint = history.getCanonizedLink(endpoint);
-
-		if (isAjax) {
-			return loadAjax($element, endpoint, 0);
-
-		} else {
-			const newPage = pushEndpoint(endpoint);
-			return loadPage($element, endpoint, newPage, 0);
-		}
-	}
-
-	leave(endpoint);
+	loadEndpoint($element, endpoint, isAjax);
 }
 
 
@@ -222,6 +210,23 @@ export function ajaxGet($element, params) {
 export function ajaxPost($element, endpoint, data) {
 	endpoint = closure.uri.create(endpoint);
 	closure.ajax.post(endpoint, data, bindAjaxRequest($element, endpoint, 0));
+}
+
+
+function loadEndpoint($element, endpoint, isAjax) {
+	if (closure.uri.sameOrigin(endpoint)) {
+		endpoint = history.getCanonizedLink(endpoint);
+
+		if (isAjax) {
+			return loadAjax($element, endpoint, 0);
+
+		} else {
+			const newPage = pushEndpoint(endpoint);
+			return loadPage($element, endpoint, newPage, 0);
+		}
+	}
+
+	leave(endpoint);
 }
 
 
