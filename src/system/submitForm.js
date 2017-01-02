@@ -35,9 +35,11 @@ export default function create() {
 			return '';
 		})();
 
-		const _$form = e.target;
-		const _$submitter = ($submitter && closure.dom.contains(e.target, $submitter.target)) ? closure.dom.getSubmitter($submitter) : undefined;
-		dispatch('app.event', 'submit', e, _$form, _$submitter, toTarget);
+		if (!e.defaultPrevented) {
+			const _$form = e.target;
+			const _$submitter = ($submitter && closure.dom.contains(e.target, $submitter.target)) ? closure.dom.getSubmitter($submitter) : undefined;
+			dispatch('app.event', 'submit', e, _$form, _$submitter, toTarget);
+		}
 	}
 
 	const submit = HTMLFormElement.prototype.submit;

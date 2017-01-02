@@ -7,7 +7,7 @@ export default function create() {
 		const $link = closure.dom.getLink(e);
 		const href = $link && String($link.href||'');
 
-		if ($link && href) {
+		if ($link && href && !e.defaultPrevented) {
 			const toTarget = (function() {
 				if (e && (e.metaKey || e.ctrlKey)) {
 					return '_blank';
