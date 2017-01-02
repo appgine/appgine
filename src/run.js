@@ -5,14 +5,19 @@ import { addListener } from './api/channel'
 
 
 export default function(options={}) {
-	options = {...options, ...{}}
+	options = {...{bindApi: {}}, ...options}
 
-	require('./plugins').loaderGlobal(module, function({ bindApi }) {
-		options.bindApi.channel && bindApi('channel', require('./api/channel'));
-		options.bindApi.targets && bindApi('targets', require('./api/targets'));
+	require('./plugins').loaderGlobal(function({ bindApi }) {
+		if (options.bindApi.channel!==false) {
+			bindApi('channel', require('./api/channel'));
+		}
+
+		if (options.bindApi.targets!==false) {
+			bindApi('targets', require('./api/targets'));
+		}
 	});
 
-	require('./plugins').loader(module, function({ bindApi, bindSystem }) {
+	require('./plugins').loader(function({ bindApi, bindSystem }) {
 		bindApi('channel', require('./api/channel'));
 
 		bindSystem(require('./system/touchable'));

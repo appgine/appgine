@@ -7,10 +7,6 @@ import { dispatch } from '../api/channel'
 
 export default function createOptions(options={}) {
 	return {
-		bindApi: {
-			channel: !options.bindApi || options.bindApi.channel!==false,
-			targets: !options.bindApi || options.bindApi.targets!==false,
-		},
 		dragAndDropClass: options.dragAndDropClass || '',
 		abortOnEscape: options.abortOnEscape===undefined || options.abortOnEscape,
 		initHTML($html) {
