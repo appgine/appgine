@@ -24,7 +24,7 @@ var _pushing = false;
 onEachTick(function(screen, updated, done) {
 
 	if (_poping && _poping!==true) {
-		loadPage(closure.uri.create(_poping, {}, ''), true, history.state('scrollTop', 0));
+		loadPage(document.body, closure.uri.create(_poping, {}, ''), true, history.state('scrollTop', 0));
 		_poping = true;
 	}
 
@@ -158,7 +158,7 @@ export function onClickHash(e, $link, hash, toTarget) {
 		}
 
 		if (_stack.loadRequest() && _stack.loadRequest().shouldReloadForHash(hash)) {
-			loadPage(endpoint, false, 0);
+			loadPage($link, endpoint, false, 0);
 
 		} else {
 			scrollHashToView(hash, true);
@@ -172,7 +172,7 @@ export function onClick(e, $link, endpoint, toTarget) {
 		e.preventDefault();
 
 		if (_pending===0 || toTarget==='_ajax' || endpoint!==history.getLink()) {
-			location(endpoint, toTarget==='_ajax');
+			location($link, endpoint, toTarget==='_ajax');
 		}
 	}
 }
@@ -187,20 +187,21 @@ export function onSubmitForm(e, $form, $submitter, toTarget) {
 
 
 export function onReload() {
-	loadPage(closure.uri.create(history.getLink(), {}, ''), false, _stack.loadRequest().scrollTop);
+	loadPage(document.body, closure.uri.create(history.getLink(), {}, ''), false, _stack.loadRequest().scrollTop);
 }
 
 
-export function location(endpoint, isAjax=false) {
+export function location($element, endpoint, isAjax=false) {
 	if (closure.uri.sameOrigin(endpoint)) {
 		endpoint = history.getCanonizedLink(endpoint);
 
 		if (isAjax) {
-			return loadAjax(endpoint, document.body, 0);
+			return loadAjax($element, endpoint, 0);
 
 		} else {
 			pushEndpoint(endpoint);
 			return loadPage(endpoint, true, 0);
+			return loadPage($element, endpoint, true, 0);
 		}
 	}
 
@@ -240,7 +241,7 @@ function canonize(endpoint, newPage=false, scrollTo=0) {
 	if (closure.uri.sameOrigin(endpoint)) {
 		const _newPage = !closure.uri.isSame(endpoint) || newPage;
 		history.redirectState({}, endpoint);
-		return loadPage(endpoint, _newPage, scrollTo);
+		return loadPage(document.body, endpoint, _newPage, scrollTo);
 	}
 
 	leave(endpoint);
@@ -251,7 +252,7 @@ function redirect(endpoint, newPage=false, scrollTo=0) {
 	if (closure.uri.sameOrigin(endpoint)) {
 		const _newPage = !closure.uri.isSame(endpoint) || newPage;
 		pushEndpoint(endpoint);
-		return loadPage(endpoint, _newPage, scrollTo);
+		return loadPage(document.body, endpoint, _newPage, scrollTo);
 	}
 
 	leave(endpoint);
@@ -271,13 +272,13 @@ function pushEndpoint(endpoint, state={}, replacing=null) {
 }
 
 
-function loadAjax(endpoint, $element, scrollTo) {
+function loadAjax($element, endpoint, scrollTo) {
 	closure.ajax.load(endpoint, bindAjaxRequest($element, endpoint, scrollTo));
 }
 
 
-function loadPage(endpoint, newPage, scrollTo) {
-	closure.ajax.load(endpoint, bindRequest(document.body, endpoint, newPage, scrollTo));
+function loadPage($element, endpoint, newPage, scrollTo) {
+	closure.ajax.load(endpoint, bindRequest($element, endpoint, newPage, scrollTo));
 }
 
 
