@@ -199,9 +199,8 @@ export function location($element, endpoint, isAjax=false) {
 			return loadAjax($element, endpoint, 0);
 
 		} else {
-			pushEndpoint(endpoint);
-			return loadPage(endpoint, true, 0);
-			return loadPage($element, endpoint, true, 0);
+			const newPage = pushEndpoint(endpoint);
+			return loadPage($element, endpoint, newPage, 0);
 		}
 	}
 
@@ -263,11 +262,13 @@ function pushEndpoint(endpoint, state={}, replacing=null) {
 	if (_pushing || replacing || (closure.uri.isSame(endpoint) && replacing===null)) {
 		_pushing = true;
 		history.replaceState({...state, scrollTop: history.state('scrollTop', 0)}, endpoint);
+		return false;
 
 	} else {
 		_pushing = true;
 		_stack.clearForward();
 		history.pushState({...state}, endpoint);
+		return true;
 	}
 }
 
