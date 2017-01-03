@@ -102,7 +102,7 @@ function findListeners(...args) {
 function onPluginCheck($requestElement) {
 	return function($element, args) {
 		if ($requestElement && $element) {
-			return dom.contains($requestElement, $element);
+			return dom.contains($element, $requestElement);
 		}
 
 		return false;
