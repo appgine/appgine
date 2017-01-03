@@ -29,7 +29,7 @@ const api = {
 		state.push(createListener(api.onSubmit, this.$element, ...args));
 		return state;
 	},
-	destroy() {
+	destroy(state) {
 		state.forEach(listener => listener());
 	}
 }
