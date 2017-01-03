@@ -6,6 +6,7 @@ import createOptions from './createOptions'
 import { loadMain, update } from './plugins'
 import loadHtml from '../lib/loadHtml'
 import { scrollHashToView, scrollFormToView } from '../lib/scroll'
+import * as apiRequest from '../api/request'
 import { onEachTick } from '../tick'
 import { willUpdate, wasUpdated } from '../update'
 import * as history from './history'
@@ -24,7 +25,9 @@ var _pushing = false;
 onEachTick(function(screen, updated, done) {
 
 	if (_poping && _poping!==true) {
-		loadPage(document.body, closure.uri.create(_poping, {}, ''), true, history.state('scrollTop', 0));
+		const endpoint = closure.uri.create(_poping, {}, '');
+		const httpRequest = apiRequest.createHttpRequest(document.body, endpoint);
+		loadPage(httpRequest, document.body, endpoint, true, history.state('scrollTop', 0));
 		_poping = true;
 	}
 
@@ -152,8 +155,6 @@ export default function run(options) {
 
 export function onClickHash(e, $link, hash, toTarget) {
 	if (toTarget==='' || toTarget==='_ajax') {
-		e.preventDefault();
-
 		const endpoint = closure.uri.create('', {}, hash);
 
 		if (toTarget==='' && endpoint!==history.getLink()) {
@@ -162,71 +163,115 @@ export function onClickHash(e, $link, hash, toTarget) {
 		}
 
 		if (_stack.loadRequest() && _stack.loadRequest().shouldReloadForHash(hash)) {
-			loadPage($link, endpoint, false, 0);
+			const clickRequest = apiRequest.createClickRequest(e, $link, endpoint);
+
+			if (!e.defaultPrevented) {
+				e.preventDefault();
+				loadPage(clickRequest, $link, endpoint, false, 0);
+			}
 
 		} else {
+			e.preventDefault();
 			scrollHashToView(hash, true);
 		}
 	}
 }
 
 
-export function onClick(e, $link, endpoint, toTarget) {
-	if (toTarget==='' || toTarget==='_ajax') {
-		e.preventDefault();
+export function onClick(e, $link, toTarget) {
+	const endpoint = String($link.href||'');
 
-		if (_pending===0 || toTarget==='_ajax' || endpoint!==history.getLink()) {
-			loadEndpoint($link, endpoint, toTarget==='_ajax');
+	if (toTarget==='' || toTarget==='_ajax') {
+		if (closure.uri.sameOrigin(endpoint)) {
+			if (_pending===0 || toTarget==='_ajax' || endpoint!==history.getLink()) {
+				const clickRequest = apiRequest.createClickRequest(e, $link, endpoint);
+
+				if (!e.defaultPrevented) {
+					e.preventDefault();
+					loadEndpoint(clickRequest, $link, endpoint, toTarget==='_ajax');
+
+				} else {
+					clickRequest.prevented();
+				}
+
+			} else {
+				e.preventDefault();
+			}
+
+		} else {
+			e.preventDefault();
+			leave(endpoint);
 		}
 	}
 }
 
 
 export function onSubmitForm(e, $form, $submitter, toTarget) {
+	const endpoint = closure.uri.createForm($form, $submitter);
+
 	if ((toTarget==='' || toTarget==='_ajax') && 'FormData' in window) {
-		e.preventDefault();
-		submitForm($form, $submitter, toTarget==='_ajax');
+		if (closure.uri.sameOrigin(endpoint)) {
+			const submitRequest = apiRequest.createSubmitRequest(e, $form, $submitter, endpoint);
+
+			if (!e.defaultPrevented) {
+				e.preventDefault();
+				submitForm(submitRequest, $form, $submitter, toTarget==='_ajax');
+
+			} else {
+				submitRequest.prevented();
+			}
+		}
 	}
 }
 
 
 export function onReload() {
-	loadPage(document.body, closure.uri.create(history.getLink(), {}, ''), false, _stack.loadRequest().scrollTop);
+	const endpoint = closure.uri.create(history.getLink(), {}, '');
+	const httpRequest = apiRequest.createHttpRequest(document.body, endpoint);
+	loadPage(httpRequest, document.body, endpoint, false, _stack.loadRequest().scrollTop);
 }
 
 
 export function location($element, endpoint, isAjax=false) {
-	loadEndpoint($element, endpoint, isAjax);
+	endpoint = closure.uri.create(history.getLink(), {}, '');
+
+	if (closure.uri.sameOrigin(endpoint)) {
+		const httpRequest = apiRequest.createHttpRequest($element, endpoint);
+		loadEndpoint(httpRequest, $element, endpoint, isAjax);
+
+	} else {
+		leave(endpoint);
+	}
 }
 
 
 export function ajaxGet($element, params) {
 	const foundRequest = _stack.findRequest($element);
 	const endpoint = foundRequest ? closure.uri.create(foundRequest.endpoint, params) : closure.uri.create(params);
-	closure.ajax.get(endpoint, bindAjaxRequest($element, endpoint, 0));
+
+	const httpRequest = apiRequest.createHttpRequest($element, endpoint);
+	closure.ajax.get(endpoint, bindAjaxRequest(httpRequest, $element, endpoint, 0));
 }
 
 
 export function ajaxPost($element, endpoint, data) {
 	endpoint = closure.uri.create(endpoint);
-	closure.ajax.post(endpoint, data, bindAjaxRequest($element, endpoint, 0));
+
+	const httpRequest = apiRequest.createHttpRequest($element, endpoint, data);
+	closure.ajax.post(endpoint, data, bindAjaxRequest(httpRequest, $element, endpoint, 0));
 }
 
 
-function loadEndpoint($element, endpoint, isAjax) {
-	if (closure.uri.sameOrigin(endpoint)) {
-		endpoint = history.getCanonizedLink(endpoint);
+function loadEndpoint(apiRequest, $element, endpoint, isAjax) {
+	endpoint = history.getCanonizedLink(endpoint);
 
-		if (isAjax) {
-			return loadAjax($element, endpoint, 0);
+	if (isAjax) {
+		return loadAjax(apiRequest, $element, endpoint, 0);
 
-		} else {
-			const newPage = pushEndpoint(endpoint);
-			return loadPage($element, endpoint, newPage, 0);
-		}
+	} else {
+		const newPage = pushEndpoint(endpoint);
+		return loadPage(apiRequest, $element, endpoint, newPage, 0);
 	}
-
-	leave(endpoint);
 }
 
 
@@ -249,7 +294,8 @@ function canonize(endpoint, newPage=false, scrollTo=0) {
 	if (closure.uri.sameOrigin(endpoint)) {
 		const _newPage = !closure.uri.isSame(endpoint) || newPage;
 		history.redirectState({}, endpoint);
-		return loadPage(document.body, endpoint, _newPage, scrollTo);
+		const httpRequest = apiRequest.createHttpRequest(document.body, endpoint);
+		return loadPage(httpRequest, document.body, endpoint, _newPage, scrollTo);
 	}
 
 	leave(endpoint);
@@ -260,7 +306,8 @@ function redirect(endpoint, newPage=false, scrollTo=0) {
 	if (closure.uri.sameOrigin(endpoint)) {
 		const _newPage = !closure.uri.isSame(endpoint) || newPage;
 		pushEndpoint(endpoint);
-		return loadPage(document.body, endpoint, _newPage, scrollTo);
+		const httpRequest = apiRequest.createHttpRequest(document.body, endpoint);
+		return loadPage(httpRequest, document.body, endpoint, _newPage, scrollTo);
 	}
 
 	leave(endpoint);
@@ -282,17 +329,17 @@ function pushEndpoint(endpoint, state={}, replacing=null) {
 }
 
 
-function loadAjax($element, endpoint, scrollTo) {
-	closure.ajax.load(endpoint, bindAjaxRequest($element, endpoint, scrollTo));
+function loadAjax(apiRequest, $element, endpoint, scrollTo) {
+	closure.ajax.load(endpoint, bindAjaxRequest(apiRequest, $element, endpoint, scrollTo));
 }
 
 
-function loadPage($element, endpoint, newPage, scrollTo) {
-	closure.ajax.load(endpoint, bindRequest($element, endpoint, newPage, scrollTo));
+function loadPage(apiRequest, $element, endpoint, newPage, scrollTo) {
+	closure.ajax.load(endpoint, bindRequest(apiRequest, $element, endpoint, newPage, scrollTo));
 }
 
 
-function submitForm($form, $submitter, isAjax=false) {
+function submitForm(submitRequest, $form, $submitter, isAjax=false) {
 	const $element = $submitter||$form;
 
 	const formName = String($form.name);
@@ -316,20 +363,20 @@ function submitForm($form, $submitter, isAjax=false) {
 
 	const submitData = formMethod==='POST' ? _options.onFormData(formData) : '';
 
-	let submitRequest;
+	let bindSubmitRequest;
 	if (isAjax) {
-		submitRequest = bindAjaxRequest($element, formEndpoint, scrollTo);
+		bindSubmitRequest = bindAjaxRequest(submitRequest, $element, formEndpoint, scrollTo);
 
 	} else {
 		pushEndpoint(formEndpoint, { formId }, !newPage);
-		submitRequest = bindRequest($element, formEndpoint, newPage, scrollTo);
+		bindSubmitRequest = bindRequest(submitRequest, $element, formEndpoint, newPage, scrollTo);
 	}
 
 	const foundRequest = _stack.findRequest($element);
 	const currentRequest = _stack.loadRequest();
 
 	closure.ajax.submit(formEndpoint, formMethod, submitData, function(...response) {
-		submitRequest(...response);
+		bindSubmitRequest(...response);
 
 		if (currentRequest===_stack.loadRequest()) {
 			if (foundRequest) {
@@ -349,31 +396,34 @@ function submitForm($form, $submitter, isAjax=false) {
 
 
 /**
+ * @param {object}
  * @param {Element}
  * @param {string}
  * @param {mixed}
  */
-function bindAjaxRequest($element, endpoint, scrollTo) {
-	return _bindRequest(_pushing ? 0 : ++_requestnum, $element, endpoint, false, scrollTo, function(err) {
+function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
+	return _bindRequest(apiRequest, _pushing ? 0 : ++_requestnum, $element, endpoint, false, scrollTo, function(err) {
 		_options.onError('Failed to handle request.\n' + String(err||''));
 	});
 }
 
 
 /**
+ * @param {object}
  * @param {Element}
  * @param {string}
  * @param {bool}
  * @param {mixed}
  */
- function bindRequest($element, endpoint, newPage, scrollTo) {
-	return _bindRequest(++_requestnum, $element, endpoint, newPage, scrollTo, function(err) {
+ function bindRequest(apiRequest, $element, endpoint, newPage, scrollTo) {
+	return _bindRequest(apiRequest, ++_requestnum, $element, endpoint, newPage, scrollTo, function(err) {
 		_options.onError('Failed to load requested page.\n' + String(err||''));
 	});
 }
 
 
 /**
+ * @param {object}
  * @param {int}
  * @param {Element}
  * @param {string}
@@ -381,7 +431,7 @@ function bindAjaxRequest($element, endpoint, scrollTo) {
  * @param {mixed}
  * @param {function}
  */
-function _bindRequest(requestnum, $element, endpoint, newPage, scrollTo, onError) {
+function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrollTo, onError) {
 	const onResponse = ajaxResponse($element, endpoint, newPage, scrollTo);
 
 	_pending = Math.max(_pending, 1);
@@ -392,6 +442,9 @@ function _bindRequest(requestnum, $element, endpoint, newPage, scrollTo, onError
 	}
 
 	return _options.onAjaxResponse(function(status, response) {
+		apiRequest.onAjaxResponse(status, response);
+		apiRequest.end(status, response, requestnum===_requestnum);
+
 		if (status===closure.ajax.ABORT) {
 			if (newPage && requestnum===_requestnum) {
 				history.cancelState();

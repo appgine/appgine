@@ -15,6 +15,10 @@ export default function(options={}) {
 		if (options.bindApi.targets!==false) {
 			bindApi('targets', require('./api/targets').default);
 		}
+
+		if (options.bindApi.request!==false) {
+			bindApi('request', require('./api/request').default);
+		}
 	});
 
 	require('./plugins').loader(function({ bindApi, bindSystem }) {

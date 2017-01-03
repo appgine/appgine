@@ -23,7 +23,7 @@ export default function create() {
 				this.dispatch('app.event', 'clickHash', e, $link, $link.getAttribute('href').substr(1), toTarget);
 
 			} else {
-				this.dispatch('app.event', 'click', e, $link, href, toTarget);
+				this.dispatch('app.event', 'click', e, $link, toTarget);
 			}
 		}
 	}
