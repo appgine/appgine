@@ -161,7 +161,7 @@ function createRequest(_listeners) {
 
 	return {
 		prevented() { callListeners('prevented'); },
-		onAjaxResponse(status, response) { callListeners('onAjaxResponse', status, response); },
+		onResponse(status, response) { callListeners('onResponse', status, response); },
 		end(status, response, isLast) {
 			switch (status) {
 				case ajax.ABORT: callListeners('onAbort', response, isLast); break;

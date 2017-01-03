@@ -33,10 +33,10 @@ export default function createOptions(options={}) {
 		onError(err) {
 			return options.onError && options.onError(err);
 		},
-		onAjaxResponse(fn) {
+		onResponse(fn) {
 			return function(status, response) {
-				options.onAjaxResponse && options.onAjaxResponse(status, response);
-				status = (options.changeAjaxStatus && options.changeAjaxStatus(status, response)) || status;
+				options.onResponse && options.onResponse(status, response);
+				status = (options.changeResponseStatus && options.changeResponseStatus(status, response)) || status;
 
 				return fn(status, response);
 			}

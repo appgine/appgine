@@ -441,8 +441,8 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 		_pending = 2;
 	}
 
-	return _options.onAjaxResponse(function(status, response) {
-		apiRequest.onAjaxResponse(status, response);
+	return _options.onResponse(function(status, response) {
+		apiRequest.onResponse(status, response);
 		apiRequest.end(status, response, requestnum===_requestnum);
 
 		if (status===closure.ajax.ABORT) {
