@@ -27,8 +27,7 @@ export default function createOptions(options={}) {
 			options.dispatch && options.dispatch(...args);
 		},
 		onRedirect(endpoint) {
-			window.location.href = endpoint;
-			return false;
+			return options.onRedirect ? options.onRedirect(endpoint) : false;
 		},
 		onError(err) {
 			return options.onError && options.onError(err);

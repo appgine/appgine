@@ -198,9 +198,8 @@ export function onClick(e, $link, toTarget) {
 				e.preventDefault();
 			}
 
-		} else {
+		} else if (leave(endpoint)) {
 			e.preventDefault();
-			leave(endpoint);
 		}
 	}
 }
@@ -279,14 +278,18 @@ function leave(endpoint) {
 	const requestnum = ++_requestnum;
 	_options.dispatch('app.request', 'start', endpoint);
 
-	if (_options.redirect(endpoint)) {
+	if (_options.onRedirect(endpoint)) {
 		_options.dispatch('app.request', 'stop');
 
 		if (_pending) {
 			_pending = 0;
 			history.cancelState();
 		}
+
+		return true;
 	}
+
+	return false;
 }
 
 
