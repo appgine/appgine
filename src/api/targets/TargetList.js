@@ -125,7 +125,11 @@ export default class TargetList
 	}
 
 	findOne(target) {
-		return this.findAll(target)[0];
+		return this.findAll(target)[0] || null;
+	}
+
+	findElement(target) {
+		return this.findAllElement(target)[0] || null;
 	}
 
 	findAll(target='') {
@@ -137,6 +141,10 @@ export default class TargetList
 		}
 
 		return found;
+	}
+
+	findAllElement(target='') {
+		return this.findAll(target).map(target => target.$element);
 	}
 
 	first(target, createFn) {
