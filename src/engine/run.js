@@ -502,7 +502,7 @@ function ajaxResponse($element, endpoint, newPage, scrollTo) {
 		} else {
 			if (json!==undefined) {
 				willUpdate();
-				update((isCurrent && document) || (foundRequest && foundRequest.$fragment), $element, json);
+				update((isCurrent && document) || (foundRequest && foundRequest.$fragment) || $element.ownerDocument, $element, json);
 				wasUpdated();
 
 			} else if (text && isCurrent) {

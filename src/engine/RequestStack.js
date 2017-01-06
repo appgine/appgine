@@ -38,7 +38,8 @@ export default class RequestStack {
 			return this.loadRequest();
 
 		} else if ($element) {
-			return this._history
+			return Object.keys(this._history)
+				.map(pos => this._history[pos])
 				.filter(request => request.$fragment.contains($element))
 				.pop();
 		}
