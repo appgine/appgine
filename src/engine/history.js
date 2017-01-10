@@ -39,6 +39,9 @@ if (matched) {
 	mergeState(createState({}, true))
 }
 
+let requestTree = [_state._id];
+let requestTreePosition = 0;
+
 function createId(newId) {
 	return (_state && _state._id && newId) ? _state._id : (_session + '_' + String(++_id));
 }
@@ -95,6 +98,9 @@ popstate((e, link) => {
 		_state = window.history.state||{};
 		_link = closure.uri.change(link);
 		_origin = _state.origin || _link;
+
+		requestTreePosition = requestTree.lastIndexOf(_state._id, requestTreePosition-1);
+
 		dispatch('change');
 
 		if (_canceling) {
@@ -164,6 +170,7 @@ export function pushState(state={}, link) {
 
 	} else {
 		commitMergeState();
+		requestTree.splice(++requestTreePosition, requestTree.length, _state._id);
 		changeState(state, link, 'pushState', 'push');
 	}
 }
@@ -191,11 +198,17 @@ function changeState(state, link, method, invoke) {
 }
 
 export function changeId() {
-	return mergeState({_id: createId(true)});
+	const _id = createId(true);
+	requestTree[requestTreePosition] = _id;
+	return mergeState({ _id });
 }
 
 export function getCurrentPos() {
 	return _state._id||'';
+}
+
+export function getCurrentTree() {
+	return requestTree.slice(0, requestTreePosition+1);
 }
 
 export function getLength() {
