@@ -18,6 +18,7 @@ export default function createOptions(options={}) {
 			options.initFragment && options.initFragment($fragment);
 
 			const request = new Request(endpoint, $fragment, scrollTo);
+			options.initRequest && options.initRequest(request);
 
 			return request;
 		},
