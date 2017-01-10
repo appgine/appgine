@@ -2,6 +2,7 @@
 
 import createFragment from '../lib/createFragment'
 import swap from '../lib/swap'
+import Request from './Request'
 import { dispatch } from '../api/channel'
 
 
@@ -12,10 +13,13 @@ export default function createOptions(options={}) {
 		initHTML($html) {
 			options.initHTML && options.initHTML($html);
 		},
-		createFragment(html) {
+		createRequest(endpoint, html, scrollTo) {
 			const $fragment = createFragment(html);
 			options.initFragment && options.initFragment($fragment);
-			return $fragment;
+
+			const request = new Request(endpoint, $fragment, scrollTo);
+
+			return request;
 		},
 		swap(requestFrom, requestTo) {
 			options.onBeforeSwap && options.onBeforeSwap();

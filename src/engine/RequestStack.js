@@ -1,5 +1,4 @@
 
-import Request from './Request'
 import * as history from './history'
 
 
@@ -14,14 +13,13 @@ export default class RequestStack {
 	}
 
 
-	createRequest(endpoint, fragment, scrollTo) {
+	createRequest(request) {
 		var pos = history.getCurrentPos();
 
 		if (this._history[pos]) {
 			this._history[pos].dispose();
 		}
 
-		let request = new Request(endpoint, fragment, scrollTo);
 		this._history[pos] = request;
 
 		if (this._order.indexOf(pos)===-1) {

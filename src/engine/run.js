@@ -101,7 +101,7 @@ export default function run(options) {
 
 	willUpdate(loadMain);
 
-	_options.swap(null, _request = _stack.createRequest(closure.uri.create(), _options.createFragment(html), 0));
+	_options.swap(null, _request = _stack.createRequest(_options.createRequest(closure.uri.create(), html, 0)));
 
 	history.popstate(function(e, endpoint) {
 		if (_pending) {
@@ -131,7 +131,7 @@ export default function run(options) {
 				const [_swapUrl, _swapHtml, _swapScrollTo, _swapNewPage] = _swap;
 
 				_swapNewPage && history.changeId();
-				_options.swap(_request, _request = _stack.createRequest(_swapUrl, _options.createFragment(_swapHtml), _swapScrollTo));
+				_options.swap(_request, _request = _stack.createRequest(_options.createRequest(_swapUrl, _swapHtml, _swapScrollTo)));
 				_options.dispatch('app.request', 'pageview', endpoint);
 
 			} else if (request!==_request) {
@@ -507,7 +507,7 @@ function ajaxResponse($element, endpoint, newPage, scrollTo) {
 
 			} else if (text && isCurrent) {
 				newPage && history.changeId();
-				_options.swap(_request, _request = _stack.createRequest(endpoint, _options.createFragment(text), anchor.join('#')||scrollTo));
+				_options.swap(_request, _request = _stack.createRequest(_options.createRequest(endpoint, text, anchor.join('#')||scrollTo)));
 
 			} else if (text && foundRequest) {
 				foundRequest.willSwap(endpoint, text, anchor.join('#')||scrollTo, newPage);
