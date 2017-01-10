@@ -8,7 +8,8 @@ export default class RequestStack {
 	constructor(back=3, forward=1) {
 		this._back = Math.max(0, back);
 		this._forward = Math.max(0, forward);
-		this._history = {}
+		this._active = {};
+		this._history = {};
 		this._order = [];
 	}
 
@@ -16,11 +17,12 @@ export default class RequestStack {
 	createRequest(request) {
 		var pos = history.getCurrentPos();
 
-		if (this._history[pos]) {
-			this._history[pos].dispose();
+		if (this._active[pos]) {
+			this._active[pos].dispose();
 		}
 
 		request.start();
+		this._active[pos] = request;
 		this._history[pos] = request;
 
 		if (this._order.indexOf(pos)===-1) {
@@ -33,8 +35,8 @@ export default class RequestStack {
 
 
 	findRequest($element) {
-		const request = Object.keys(this._history)
-			.map(pos => this._history[pos])
+		const request = Object.keys(this._active)
+			.map(pos => this._active[pos])
 			.filter(request => $element && request.$fragment.contains($element))
 			.pop();
 
@@ -43,13 +45,13 @@ export default class RequestStack {
 
 
 	loadRequest() {
-		return this._history[history.getCurrentPos()];
+		return this._active[history.getCurrentPos()];
 	}
 
 
 	clear() {
 		const pos = history.getCurrentPos();
-		const order = this._order.filter(id => id==pos || this._history[id]);
+		const order = this._order.filter(id => id==pos || this._active[id]);
 		const index = order.indexOf(pos);
 
 		this._clear(order.filter((id, i) => i>index+this._forward));
@@ -70,8 +72,8 @@ export default class RequestStack {
 
 
 	_clear(keys) {
-		keys.filter(id => this._history[id]).forEach(id => this._history[id].dispose());
-		keys.filter(id => this._history[id]).forEach(id => delete this._history[id]);
+		keys.filter(id => this._active[id]).forEach(id => this._active[id].dispose());
+		keys.filter(id => this._active[id]).forEach(id => delete this._active[id]);
 	}
 
 }
