@@ -27,6 +27,13 @@ export default function bridgeLayers(options={}, render) {
 				$title.removeAttribute('layer-title');
 			}
 
+			Array.from($layer.querySelectorAll(':not([data-layer]) [layer-content] [layer-navigation]')).forEach(function($navigation) {
+				const route = $navigation.getAttribute('layer-navigation')||'';
+				$navigation.removeAttribute('layer-navigation');
+
+				$navigationList[route] = $navigation.cloneNode(true);
+			});
+
 			Array.from($layer.querySelectorAll(':not([data-layer]) [layer-navigation]')).forEach(function($navigation) {
 				const route = $navigation.getAttribute('layer-navigation')||'';
 				$navigation.parentNode.removeChild($navigation);
