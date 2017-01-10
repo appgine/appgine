@@ -29,7 +29,9 @@ export default class Request {
 		this.redirect = null;
 		this.canonize = null;
 		this.swap = null;
+	}
 
+	start() {
 		loadScripts(this.$fragment);
 		loadGlobal(this.$fragment);
 		reloadStatic(this.$fragment);

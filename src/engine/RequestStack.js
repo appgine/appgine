@@ -20,6 +20,7 @@ export default class RequestStack {
 			this._history[pos].dispose();
 		}
 
+		request.start();
 		this._history[pos] = request;
 
 		if (this._order.indexOf(pos)===-1) {
