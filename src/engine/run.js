@@ -21,6 +21,7 @@ var _request = null;
 var _poping = null;
 var _pushing = false;
 
+export const requestStack = _stack;
 
 onEachTick(function(screen, updated, done) {
 
