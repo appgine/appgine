@@ -45,6 +45,11 @@ export default class Request {
 	dispose() {
 		unloadAtomic(this.$fragment, this);
 		unloadScripts(this.$fragment);
+		this.$fragment = null;
+		this.formSubmitted = null;
+		this.redirect = null;
+		this.canonize = null;
+		this.swap = null;
 	}
 
 
