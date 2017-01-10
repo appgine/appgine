@@ -49,6 +49,11 @@ export default class RequestStack {
 	}
 
 
+	loadHistoryRequest(pos) {
+		return this._history[pos];
+	}
+
+
 	clear() {
 		const pos = history.getCurrentPos();
 		const order = this._order.filter(id => id==pos || this._active[id]);
