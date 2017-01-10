@@ -19,6 +19,10 @@ export default function(options={}) {
 		if (options.bindApi.request!==false) {
 			bindApi('request', require('./api/request').default);
 		}
+
+		if (options.bindApi.bus!==false) {
+			bindApi('bus', require('./api/bus').default);
+		}
 	});
 
 	require('./plugins').loader(function({ bindApi, bindSystem }) {
