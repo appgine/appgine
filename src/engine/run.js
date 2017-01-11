@@ -266,7 +266,7 @@ function loadEndpoint(apiRequest, $element, endpoint, isAjax) {
 	endpoint = history.getCanonizedLink(endpoint);
 
 	if (isAjax) {
-		return loadAjax(apiRequest, $element, endpoint, 0);
+		return loadAjax(apiRequest, $element, endpoint, false);
 
 	} else {
 		const newPage = pushEndpoint(endpoint);
@@ -354,26 +354,24 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false) {
 
 	const newPage = history.state('formId')!==formId;
 
-	const scrollTo = function() {
-		const $found = closure.dom.findForm(formName, formId);
-
-		if ($found) {
-			scrollFormToView($found, formName[0]==='#');
-
-		} else {
-			window.scrollTo(0, 0);
-		}
-	}
-
 	const submitData = formMethod==='POST' ? _options.onFormData(formData) : '';
 
 	let bindSubmitRequest;
 	if (isAjax) {
-		bindSubmitRequest = bindAjaxRequest(submitRequest, $element, formEndpoint, scrollTo);
+		bindSubmitRequest = bindAjaxRequest(submitRequest, $element, formEndpoint, false);
 
 	} else {
 		pushEndpoint(formEndpoint, { formId }, !newPage);
-		bindSubmitRequest = bindRequest(submitRequest, $element, formEndpoint, newPage, scrollTo);
+		bindSubmitRequest = bindRequest(submitRequest, $element, formEndpoint, newPage, function() {
+			const $found = closure.dom.findForm(formName, formId);
+
+			if ($found) {
+				scrollFormToView($found, formName[0]==='#');
+
+			} else {
+				window.scrollTo(0, 0);
+			}
+		});
 	}
 
 	const foundRequest = _stack.findRequest($element);
