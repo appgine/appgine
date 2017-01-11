@@ -7,6 +7,7 @@ import { loadMain, update } from './plugins'
 import loadHtml from '../lib/loadHtml'
 import { scrollHashToView, scrollFormToView } from '../lib/scroll'
 import * as apiRequest from '../api/request'
+import * as apiShortcut from '../api/shortcut'
 import { onEachTick } from '../tick'
 import { willUpdate, wasUpdated } from '../update'
 import * as history from './history'
@@ -95,7 +96,13 @@ export default function run(options) {
 	_options.initHTML(document.documentElement);
 
 	if (_options.abortOnEscape) {
-		closure.shortcuthandler('esc', () => closure.ajax.abort());
+		apiShortcut.listen('esc', function(e) {
+			if (_pending) {
+				e.stopPopagation();
+				e.preventDefault();
+				closure.ajax.abort();
+			}
+		});
 	}
 
 	const html = loadHtml(document.documentElement);

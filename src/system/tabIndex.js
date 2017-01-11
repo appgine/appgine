@@ -1,5 +1,5 @@
 
-import { dom, shortcuthandler } from '../closure'
+import { dom } from '../closure'
 
 
 export default function create() {
@@ -13,7 +13,7 @@ export default function create() {
 	this.listen('app.request', 'stop', onRequest);
 	onRequest();
 
-	return shortcuthandler('shift+tab', 'tab', (e, identifier) => {
+	this.onShortcut('shift+tab', 'tab', (e, identifier) => {
 		if (shouldHandleTabEvent) {
 			shouldHandleTabEvent = false;
 
