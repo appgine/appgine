@@ -84,13 +84,14 @@ function createFormFocus() {
 
 		if (closure.dom.isFormElement($active)) {
 			const formId = closure.dom.createFormId($active.form);
+			const formName = $active.form.name||null;
 			const inputName = $active.name;
 			const inputValue = $active.value;
 			const selectionStart = closure.selection.getStart($active);
 			const selectionEnd = closure.selection.getEnd($active);
 
 			return function(request) {
-				const $found = closure.dom.findForm(null, formId);
+				const $found = closure.dom.findForm(formName, formId);
 
 				if ($found && $found[inputName]) {
 					const $input = $found[inputName];
