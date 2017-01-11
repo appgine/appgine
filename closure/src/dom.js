@@ -78,6 +78,26 @@ exports.isFormElement = function($element) {
 	return exports.isFormTag($element) && $element.name && $element.form;
 }
 
+exports.shouldHaveFormId = function($form) {
+	for (i=0; i<$form.elements.length; i++) {
+		var $element = $form.elements[i];
+
+		if (String($element.tagName).toLowerCase()==='button') {
+			continue;
+
+		} else if (String($element.type).toLowerCase()==='hidden') {
+			continue;
+
+		} else if (String($element.type).toLowerCase()==='submit') {
+			continue;
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
 var md5;
 exports.createFormId = function($form) {
 	var names = [

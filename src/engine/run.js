@@ -347,12 +347,21 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false) {
 	const $element = $submitter||$form;
 
 	const formName = String($form.name);
-	const formId = closure.dom.createFormId($form);
+	const formId = closure.dom.shouldHaveFormId($form) ? closure.dom.createFormId($form) : null;
 	const formEndpoint = closure.uri.createForm($form, $submitter);
 	const formMethod = ($form.method||'GET').toUpperCase();
 	const formData = closure.form.postData($form, $submitter);
 
-	const newPage = history.state('formId')!==formId;
+	let newPage;
+	if (closure.uri.isSame(formEndpoint) && formId===null) {
+		newPage = false;
+
+	} else if (formId && history.state('formId')===formId) {
+		newPage = false;
+
+	} else {
+		newPage = true;
+	}
 
 	const submitData = formMethod==='POST' ? _options.onFormData(formData) : '';
 
