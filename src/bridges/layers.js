@@ -54,9 +54,33 @@ export default function bridgeLayers(options={}, render) {
 				$content.removeAttribute('layer-content');
 			}
 
-			const { $titles, $navigation } = createLayers(layerId, route, isAutoLayer);
+			let { $titles, $navigation } = createLayers(layerId, route, isAutoLayer);
+			let result = render($layer, $titles, $navigation, $content);
 
-			$layer.parentNode.replaceChild(render($layer, $titles, $navigation, $content) || $layer, $layer);
+			if (result instanceof Element) {
+				result = { $container: result };
+
+			} else {
+				result = result || {};
+			}
+
+			if (result.$navigation) {
+				$navigation = result.$navigation;
+			}
+
+			const navigationActive = String(result.navigationActive||'');
+			const toggleActive = String(result.toggleActive||'');
+			const pluginData = JSON.stringify([navigationActive, toggleActive]);
+
+			if ($navigation) {
+				$navigation.dataset.plugin = 'app.layers.navigation:'+pluginData+'$' + String($navigation.dataset.plugin||'');
+
+				if (result.$toggle) {
+					result.$toggle.dataset.target = 'toggle@app.layers.navigation';
+				}
+			}
+
+			$layer.parentNode.replaceChild(result.$container || $layer, $layer);
 		});
 	}
 
@@ -71,7 +95,6 @@ function createNavigation($element, remove) {
 	remove && $element.parentNode.removeChild($element);
 
 	const $navigation = $element.cloneNode(true);
-	$navigation.setAttribute('data-plugin', 'app.layers.navigation:$' + String($navigation.getAttribute('data-plugin')||''));
 	return { route, $navigation }
 }
 
@@ -85,11 +108,9 @@ function createLayers(layerId, route, isAutoLayer) {
 	let _isAutoLayer = isAutoLayer;
 
 	const requestTree = history.getCurrentTree();
-	requestTree.reverse();
-	requestTree.shift();
 
-	for (let requestId of requestTree) {
-		const request = requestStack.loadHistoryRequest(requestId);
+	for (let i=requestTree.length-2; i>=0; i--) {
+		const request = requestStack.loadHistoryRequest(requestTree[i]);
 
 		if (!request || !request._layers[layerId]) {
 			break;
@@ -102,7 +123,11 @@ function createLayers(layerId, route, isAutoLayer) {
 			break;
 		}
 
-		requestLayer.$title && $titles.push(requestLayer.$title.cloneNode(true));
+		if (requestLayer.$title) {
+			const $title = requestLayer.$title.cloneNode(true);
+			$title.dataset.target = 'title@app.layers.navigation:'+String(i)+'$';
+			$titles.push($title);
+		}
 
 		if (_first && requestNavigation) {
 			$navigation = requestNavigation.cloneNode(true);
