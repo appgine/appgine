@@ -203,7 +203,7 @@ export function changeId() {
 	return mergeState({ _id });
 }
 
-export function getCurrentPos() {
+export function getCurrentId() {
 	return _state._id||'';
 }
 

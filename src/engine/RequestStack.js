@@ -15,18 +15,18 @@ export default class RequestStack {
 
 
 	createRequest(request) {
-		var pos = history.getCurrentPos();
+		var id = history.getCurrentId();
 
-		if (this._active[pos]) {
-			this._active[pos].dispose();
+		if (this._active[id]) {
+			this._active[id].dispose();
 		}
 
 		request.start();
-		this._active[pos] = request;
-		this._history[pos] = request;
+		this._active[id] = request;
+		this._history[id] = request;
 
-		if (this._order.indexOf(pos)===-1) {
-			this._order.push(pos);
+		if (this._order.indexOf(id)===-1) {
+			this._order.push(id);
 		}
 
 		this.clear();
@@ -36,7 +36,7 @@ export default class RequestStack {
 
 	findRequest($element) {
 		const request = Object.keys(this._active)
-			.map(pos => this._active[pos])
+			.map(id => this._active[id])
 			.filter(request => $element && request.$fragment.contains($element))
 			.pop();
 
@@ -45,19 +45,19 @@ export default class RequestStack {
 
 
 	loadRequest() {
-		return this._active[history.getCurrentPos()];
+		return this._active[history.getCurrentId()];
 	}
 
 
-	loadHistoryRequest(pos) {
-		return this._history[pos];
+	loadHistoryRequest(id) {
+		return this._history[id];
 	}
 
 
 	clear() {
-		const pos = history.getCurrentPos();
-		const order = this._order.filter(id => id==pos || this._active[id]);
-		const index = order.indexOf(pos);
+		const id = history.getCurrentId();
+		const order = this._order.filter(id => id==id || this._active[id]);
+		const index = order.indexOf(id);
 
 		this._clear(order.filter((id, i) => i>index+this._forward));
 		this._clear(order.filter((id, i) => i<index-this._back));
@@ -65,13 +65,13 @@ export default class RequestStack {
 
 
 	clearForward() {
-		const index = this._order.indexOf(history.getCurrentPos());
+		const index = this._order.indexOf(history.getCurrentId());
 		this._clear(this._order.filter((id, i) => i>index));
 	}
 
 
 	clearHistory() {
-		const index = this._order.indexOf(history.getCurrentPos());
+		const index = this._order.indexOf(history.getCurrentId());
 		this._clear(this._order.filter((id, i) => i!==index));
 	}
 
