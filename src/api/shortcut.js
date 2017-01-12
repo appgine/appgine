@@ -9,7 +9,7 @@ const listenShortcutHandler = shortcuthandler(function(e, identifier) {
 
 	const listeners = findListeners(
 		[null, onShortcutCheck(identifier)],
-		[api.onPluginShortcut, onShortcutCheck(identifier), onPluginCheck($element)],
+		[api.onPluginShortcut, onShortcutCheck(identifier), onElementCheck, onPluginCheck($element)],
 		[api.onShortcut, onShortcutCheck(identifier), onElementCheck],
 		[api.onShortcut, onShortcutCheck(identifier), onNoElementCheck],
 	);
@@ -100,7 +100,7 @@ function findListeners(...args) {
 
 
 function onElementCheck($element) {
-	return !!$element;
+	return !!$element && document.contains($element);
 }
 
 
