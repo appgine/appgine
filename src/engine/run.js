@@ -162,7 +162,7 @@ export default function run(options) {
 
 
 export function onClickHash(e, $link, hash, toTarget) {
-	if (toTarget==='' || toTarget==='_ajax') {
+	if (toTarget==='' || toTarget==='_ajax' || toTarget==='_current') {
 		const endpoint = closure.uri.create('', {}, hash);
 
 		if (toTarget==='' && endpoint!==history.getLink()) {
@@ -189,14 +189,14 @@ export function onClickHash(e, $link, hash, toTarget) {
 export function onClick(e, $link, toTarget) {
 	const endpoint = String($link.href||'');
 
-	if (toTarget==='' || toTarget==='_ajax') {
+	if (toTarget==='' || toTarget==='_ajax' || toTarget==='_current') {
 		if (closure.uri.sameOrigin(endpoint)) {
 			if (_pending===0 || toTarget==='_ajax' || endpoint!==history.getLink()) {
 				const clickRequest = apiRequest.createClickRequest(e, $link, endpoint);
 
 				if (!e.defaultPrevented) {
 					e.preventDefault();
-					loadEndpoint(clickRequest, $link, endpoint, toTarget==='_ajax');
+					loadEndpoint(clickRequest, $link, endpoint, toTarget==='_ajax', toTarget==='_current'||null);
 
 				} else {
 					clickRequest.prevented();
@@ -216,13 +216,13 @@ export function onClick(e, $link, toTarget) {
 export function onSubmitForm(e, $form, $submitter, toTarget) {
 	const endpoint = closure.uri.createForm($form, $submitter);
 
-	if ((toTarget==='' || toTarget==='_ajax') && 'FormData' in window) {
+	if ((toTarget==='' || toTarget==='_ajax' || toTarget==='_current') && 'FormData' in window) {
 		if (closure.uri.sameOrigin(endpoint)) {
 			const submitRequest = apiRequest.createSubmitRequest(e, $form, $submitter, endpoint);
 
 			if (!e.defaultPrevented) {
 				e.preventDefault();
-				submitForm(submitRequest, $form, $submitter, toTarget==='_ajax');
+				submitForm(submitRequest, $form, $submitter, toTarget==='_ajax', toTarget==='_current');
 
 			} else {
 				submitRequest.prevented();
@@ -269,14 +269,14 @@ export function ajaxPost($element, endpoint, data) {
 }
 
 
-function loadEndpoint(apiRequest, $element, endpoint, isAjax) {
+function loadEndpoint(apiRequest, $element, endpoint, isAjax, toCurrent=null) {
 	endpoint = history.getCanonizedLink(endpoint);
 
 	if (isAjax) {
 		return loadAjax(apiRequest, $element, endpoint, false);
 
 	} else {
-		const newPage = pushEndpoint(endpoint);
+		const newPage = pushEndpoint(endpoint, {}, toCurrent);
 		return loadPage(apiRequest, $element, endpoint, newPage, 0);
 	}
 }
@@ -350,7 +350,7 @@ function loadPage(apiRequest, $element, endpoint, newPage, scrollTo) {
 }
 
 
-function submitForm(submitRequest, $form, $submitter, isAjax=false) {
+function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=false) {
 	const $element = $submitter||$form;
 
 	const formName = String($form.name);
@@ -360,7 +360,10 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false) {
 	const formData = closure.form.postData($form, $submitter);
 
 	let newPage;
-	if (closure.uri.isSame(formEndpoint) && formId===null) {
+	if (toCurrent) {
+		newPage = false;
+
+	} else if (closure.uri.isSame(formEndpoint) && formId===null) {
 		newPage = false;
 
 	} else if (formId && history.state('formId')===formId) {
