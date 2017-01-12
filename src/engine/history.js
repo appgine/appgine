@@ -219,8 +219,17 @@ export function getLength() {
 	return _supported ? window.history.length : 1;
 }
 
-export function back() {
-	_supported ? window.history.back() : null;
+export function back(back=-1) {
+	if (typeof back==='string') {
+		if (_requestTree.indexOf(back)!==-1) {
+			back = _requestTree.lastIndexOf(back, _state._position) - _state._position;
+		}
+
+	} else if (typeof back==='number') {
+		back = back - _state._position;
+	}
+
+	_supported ? window.history.go(back) : null;
 }
 
 export function go(...args) {
