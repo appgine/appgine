@@ -38,7 +38,7 @@ if (matched) {
 
 } else {
 	_session = closure.string.getRandomString();
-	mergeState(createState({}, true))
+	mergeState(createState({}, false, true))
 }
 
 _requestTree[_state._position] = _state._id;
@@ -51,10 +51,10 @@ function createStateId() {
 	return _session + '_' + String(++_id);
 }
 
-function createState(state={}, initial=false) {
+function createState(state={}, increment=false, initial=false) {
 	return {...state,
 		_id: getStateId(),
-		_position: initial ? 0 : _state._position+1,
+		_position: initial ? 0 : (_state._position + (increment ? 1 : 0)),
 		initial: initial,
 	};
 }
@@ -164,7 +164,7 @@ export function cancelState() {
 
 export function replaceState(state={}, link) {
 	closure.uri.isSame(link) && _link!==_origin && (state.origin = _origin);
-	changeState(state, link, 'replaceState', 'replace');
+	changeState(createState(state, false), link, 'replaceState', 'replace');
 }
 
 export function pushState(state={}, link) {
@@ -174,19 +174,19 @@ export function pushState(state={}, link) {
 
 	} else {
 		commitMergeState();
-		changeState(state, link, 'pushState', 'push');
+		changeState(createState(state, true), link, 'pushState', 'push');
 		_requestTree.splice(_state._position, _requestTree.length, _state._id);
 	}
 }
 
 export function redirectState(state={}, link) {
-	changeState({...state, origin: _origin}, link, 'replaceState', 'replace');
+	changeState(createState({...state, origin: _origin}, false), link, 'replaceState', 'replace');
 }
 
 function changeState(state, link, method, invoke) {
 	_firstlink = null;
 	_merging = false;
-	_state = createState(state);
+	_state = state;
 	_link = closure.uri.change(link);
 	_origin = _state.origin || _link;
 
