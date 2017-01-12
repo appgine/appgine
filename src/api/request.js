@@ -81,7 +81,13 @@ function findListeners(...args) {
 	for (let listener of listeners) {
 		listener: {
 			for (let [type, typeArgs, ...filters] of args) {
-				if (listener.type===type) {
+				if (listener.type!==type) {
+					continue;
+
+				} else if (listener.$element && document.contains(listener.$element)===false) {
+					continue;
+
+				} else {
 					for (let filter of filters) {
 						if (!filter(listener.$element, listener.args)) {
 							break listener;
