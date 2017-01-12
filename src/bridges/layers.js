@@ -5,6 +5,14 @@ import { requestStack } from '../engine/run'
 
 
 export default function bridgeLayers(options={}, render) {
+	require('../plugins').loader(function({ bind, bindApi }) {
+		bindApi('request', require('../api/request').default);
+		bindApi('targets', require('../api/targets').default);
+		bindApi('shortcut', require('../api/shortcut').default);
+
+		bind('app.layers.navigation', require('./layers.plugin').default);
+	});
+
 	const { initRequest } = options;
 
 	options.initRequest = function(request) {
@@ -27,18 +35,13 @@ export default function bridgeLayers(options={}, render) {
 				$title.removeAttribute('layer-title');
 			}
 
-			Array.from($layer.querySelectorAll(':not([data-layer]) [layer-content] [layer-navigation]')).forEach(function($navigation) {
-				const route = $navigation.getAttribute('layer-navigation')||'';
-				$navigation.removeAttribute('layer-navigation');
-
-				$navigationList[route] = $navigation.cloneNode(true);
+			Array.from($layer.querySelectorAll(':not([data-layer]) [layer-content] [layer-navigation]')).forEach(function($element) {
+				const { route, $navigation } = createNavigation($element, false);
+				$navigationList[route] = $navigation;
 			});
 
-			Array.from($layer.querySelectorAll(':not([data-layer]) [layer-navigation]')).forEach(function($navigation) {
-				const route = $navigation.getAttribute('layer-navigation')||'';
-				$navigation.parentNode.removeChild($navigation);
-				$navigation.removeAttribute('layer-navigation');
-
+			Array.from($layer.querySelectorAll(':not([data-layer]) [layer-navigation]')).forEach(function($element) {
+				const { route, $navigation } = createNavigation($element, true);
 				$navigationList[route] = $navigation;
 			});
 
@@ -58,6 +61,18 @@ export default function bridgeLayers(options={}, render) {
 	}
 
 	return options;
+}
+
+
+function createNavigation($element, remove) {
+	const route = $element.getAttribute('layer-navigation')||'';
+	$element.removeAttribute('layer-navigation');
+
+	remove && $element.parentNode.removeChild($element);
+
+	const $navigation = $element.cloneNode(true);
+	$navigation.setAttribute('data-plugin', 'app.layers.navigation:$' + String($navigation.getAttribute('data-plugin')||''));
+	return { route, $navigation }
 }
 
 
