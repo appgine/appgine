@@ -28,6 +28,8 @@ let _state = window.history.state||{};
 let _link = closure.uri.change(window.location.href);
 let _origin = _state.origin || _link;
 
+let _requestTree = [];
+
 const matched = String(_state._id).match(/^(.*)_([0-9]+)$/);
 
 if (matched) {
@@ -39,16 +41,20 @@ if (matched) {
 	mergeState(createState({}, true))
 }
 
-let requestTree = [_state._id];
-let requestTreePosition = 0;
+_requestTree[_state._position] = _state._id;
 
-function createId(newId) {
-	return (_state && _state._id && newId) ? _state._id : (_session + '_' + String(++_id));
+function getStateId() {
+	return (_state && _state._id) || createStateId();
+}
+
+function createStateId() {
+	return _session + '_' + String(++_id);
 }
 
 function createState(state={}, initial=false) {
 	return {...state,
-		_id: createId(false),
+		_id: getStateId(),
+		_position: initial ? 0 : _state._position+1,
 		initial: initial,
 	};
 }
@@ -98,8 +104,6 @@ popstate((e, link) => {
 		_state = window.history.state||{};
 		_link = closure.uri.change(link);
 		_origin = _state.origin || _link;
-
-		requestTreePosition = requestTree.lastIndexOf(_state._id, requestTreePosition-1);
 
 		dispatch('change');
 
@@ -170,8 +174,8 @@ export function pushState(state={}, link) {
 
 	} else {
 		commitMergeState();
-		requestTree.splice(++requestTreePosition, requestTree.length, _state._id);
 		changeState(state, link, 'pushState', 'push');
+		_requestTree.splice(_state._position, _requestTree.length, _state._id);
 	}
 }
 
@@ -198,8 +202,8 @@ function changeState(state, link, method, invoke) {
 }
 
 export function changeId() {
-	const _id = createId(true);
-	requestTree[requestTreePosition] = _id;
+	const _id = createStateId(true);
+	_requestTree[_state._position] = _id;
 	return mergeState({ _id });
 }
 
@@ -208,7 +212,7 @@ export function getCurrentId() {
 }
 
 export function getCurrentTree() {
-	return requestTree.slice(0, requestTreePosition+1);
+	return _requestTree.slice(0, _state._position+1);
 }
 
 export function getLength() {
