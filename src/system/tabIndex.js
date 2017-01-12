@@ -13,7 +13,7 @@ export default function create() {
 	this.listen('app.request', 'stop', onRequest);
 	onRequest();
 
-	this.onShortcut('shift+tab', 'tab', (e, identifier) => {
+	this.onShortcut('shift+tab', 'tab', (e, { identifier }) => {
 		if (shouldHandleTabEvent) {
 			shouldHandleTabEvent = false;
 

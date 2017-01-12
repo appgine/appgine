@@ -14,20 +14,14 @@ const listenShortcutHandler = shortcuthandler(function(e, identifier) {
 		[api.onShortcut, onShortcutCheck(identifier), onNoElementCheck],
 	);
 
-	const preventDefault = e.preventDefault;
-
 	let stopped = false;
-	let prevented = false;
 	e.stopPopagation = function() { stopped = true; }
-	e.preventDefault = function() { prevented = true; preventDefault.call(this); };
 
 	for (let i=0; i<listeners.length; i++) {
 		if (stopped===false) {
-			listeners[i].handler(e, identifier, $element);
+			listeners[i].handler(e, { identifier, $element });
 		}
 	}
-
-	return prevented;
 });
 
 
