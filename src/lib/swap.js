@@ -99,12 +99,10 @@ function createFormFocus() {
 					$input.focus();
 					closure.selection.setCursorAtEnd($input);
 
-					if (request.formSubmitted[formId]) {
-						if (request.formSubmitted[formId].get(inputName)===$input.value) {
-							$input.value = inputValue;
-							closure.selection.setStart($input, selectionStart);
-							closure.selection.setEnd($input, selectionEnd);
-						}
+					if ($input.value) {
+						$input.value = inputValue;
+						closure.selection.setStart($input, selectionStart);
+						closure.selection.setEnd($input, selectionEnd);
 					}
 				}
 			}

@@ -393,24 +393,13 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 		});
 	}
 
-	const foundRequest = _stack.findRequest($element);
 	const currentRequest = _stack.loadRequest();
 
 	closure.ajax.submit(formEndpoint, formMethod, submitData, function(...response) {
 		bindSubmitRequest(...response);
 
-		if (currentRequest===_stack.loadRequest()) {
-			if (foundRequest) {
-				foundRequest.formSubmitted[formId] = formData;
-			}
-
-			if (_pushing) {
-				_stack.clearHistory();
-			}
-
-		} else {
+		if (currentRequest!==_stack.loadRequest() || _pushing) {
 			_stack.clearHistory();
-			_stack.loadRequest().formSubmitted[formId] = formData;
 		}
 	});
 }
