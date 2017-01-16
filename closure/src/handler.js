@@ -30,9 +30,14 @@ exports.createHandler = function(fn) {
 
 	handler = new goog.ui.KeyboardShortcutHandler(window)
 	handler.setAlwaysPreventDefault(false);
+	handler.setAllShortcutsAreGlobal(true);
 
 	goog.events.listen(handler, goog.ui.KeyboardShortcutHandler.EventType.SHORTCUT_TRIGGERED, function(e) {
-		return fn(e, e.identifier);
+		handler.setAllShortcutsAreGlobal(false);
+		var isValid = handler.isValidShortcut_(e);
+		handler.setAllShortcutsAreGlobal(true);
+
+		return fn(e, e.identifier, isValid);
 	});
 
 	return function(shortcut) {

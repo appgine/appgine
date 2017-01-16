@@ -4,13 +4,16 @@ import { dom, shortcuthandler } from '../closure'
 
 const listeners = [];
 
-const listenShortcutHandler = shortcuthandler(function(e, identifier) {
+const listenShortcutHandler = shortcuthandler(function(e, identifier, isValid) {
 	const $element = document.activeElement;
 
 	const listeners = findListeners(
-		[null, onShortcutCheck(identifier)],
+		[listenValid, isValid, onShortcutCheck(identifier)],
+		[listen, onShortcutCheck(identifier)],
 		[api.onPluginShortcut, onShortcutCheck(identifier), onElementCheck, onPluginCheck($element)],
+		[api.onValidShortcut, isValid, onShortcutCheck(identifier), onElementCheck],
 		[api.onShortcut, onShortcutCheck(identifier), onElementCheck],
+		[api.onValidShortcut, isValid, onShortcutCheck(identifier), onNoElementCheck],
 		[api.onShortcut, onShortcutCheck(identifier), onNoElementCheck],
 	);
 
@@ -19,7 +22,7 @@ const listenShortcutHandler = shortcuthandler(function(e, identifier) {
 
 	for (let i=0; i<listeners.length; i++) {
 		if (stopped===false) {
-			listeners[i].handler(e, { identifier, $element });
+			listeners[i].handler(e, { identifier, $element, isValid });
 		}
 	}
 });
@@ -28,6 +31,10 @@ const listenShortcutHandler = shortcuthandler(function(e, identifier) {
 const api = {
 	onPluginShortcut(state=[], ...args) {
 		state.push(createListener(api.onPluginShortcut, this.$element, ...args));
+		return state;
+	},
+	onValidShortcut(state=[], ...args) {
+		state.push(createListener(api.onValidShortcut, this.$element, ...args));
 		return state;
 	},
 	onShortcut(state=[], ...args) {
@@ -43,7 +50,11 @@ export default api;
 
 
 export function listen(...shortcuts) {
-	return createListener(null, null, ...shortcuts);
+	return createListener(listen, null, ...shortcuts);
+}
+
+export function listenValid(...shortcuts) {
+	return createListener(listenValid, null, ...shortcuts);
 }
 
 
@@ -76,7 +87,13 @@ function findListeners(...args) {
 
 					if (listener.type===type) {
 						for (let filter of filters) {
-							if (!filter(listener.$element, listener.shortcuts)) {
+							if (typeof filter==='function') {
+								if (!filter(listener.$element, listener.shortcuts)) {
+									break filter;
+								}
+							}
+
+							if (!filter) {
 								break filter;
 							}
 						}
