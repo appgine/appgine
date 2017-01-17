@@ -21,7 +21,8 @@ export default function bridgeLayers(options={}, render) {
 		request._layers = {};
 
 		Array.from(request.$fragment.querySelectorAll('[data-layer]')).forEach(function($layer) {
-			const [layerId, route] = ($layer.getAttribute('data-layer')||'').split('#').concat("");
+			const dataLayer = $layer.getAttribute('data-layer')||'';
+			const [layerId, route] = dataLayer.split('#').concat("");
 			const isAutoLayer = $layer.hasAttribute('layer-auto') && $layer.getAttribute('layer-auto')!=="0";
 
 			$layer.removeAttribute('data-layer');
@@ -54,7 +55,7 @@ export default function bridgeLayers(options={}, render) {
 				$content.removeAttribute('layer-content');
 			}
 
-			let { $titles, $navigation } = createLayers(layerId, route, isAutoLayer);
+			let { $titles, $navigation } = createLayers(request, layerId);
 			let result = render($layer, $titles, $navigation, $content);
 
 			if (result instanceof Element) {
@@ -68,19 +69,18 @@ export default function bridgeLayers(options={}, render) {
 				$navigation = result.$navigation;
 			}
 
-			const navigationActive = String(result.navigationActive||'');
-			const toggleActive = String(result.toggleActive||'');
-			const pluginData = JSON.stringify([navigationActive, toggleActive]);
-
 			if ($navigation) {
-				$navigation.dataset.plugin = 'app.layers.navigation:'+pluginData+'$' + String($navigation.dataset.plugin||'');
+				const pluginData = JSON.stringify([String(result.navigationActive||''), String(result.toggleActive||'')]);
+				$navigation.setAttribute('data-plugin', 'app.layers.navigation:'+pluginData+'$' + String($navigation.getAttribute('data-plugin')||''));
 
 				if (result.$toggle) {
-					result.$toggle.dataset.target = 'toggle@app.layers.navigation';
+					result.$toggle.setAttribute('data-target', 'toggle@app.layers.navigation');
 				}
 			}
 
-			$layer.parentNode.replaceChild(result.$container || $layer, $layer);
+			const $newLayer = result.$container || $layer;
+			$newLayer.setAttribute('data-layer', dataLayer);
+			$layer.parentNode.replaceChild($newLayer, $layer);
 		});
 	}
 
@@ -99,28 +99,43 @@ function createNavigation($element, remove) {
 }
 
 
-function createLayers(layerId, route, isAutoLayer) {
+function createLayers(request, layerId) {
+	return _createLayers(request, layerId, history.getCurrentTree());
+}
+
+
+function _createLayers(request, layerId, requestTree) {
 	let $navigation = null;
 	const $titles = [];
 
 	let _first = true;
-	let _route = route;
-	let _isAutoLayer = isAutoLayer;
-
-	const requestTree = history.getCurrentTree();
+	let _route = request._layers[layerId].route;
+	let _isAutoLayer = request._layers[layerId].isAutoLayer;
 
 	for (let i=requestTree.length-2; i>=0; i--) {
-		const request = requestStack.loadHistoryRequest(requestTree[i]);
+		const historyRequest = requestStack.loadHistoryRequest(requestTree[i]);
 
-		if (!request || !request._layers[layerId]) {
+		if (!historyRequest || !historyRequest._layers[layerId]) {
 			break;
 		}
 
-		const requestLayer = request._layers[layerId];
+		const requestLayer = historyRequest._layers[layerId];
 		const requestNavigation = findRequestNavigation(requestLayer, _route);
 
-		if (!_isAutoLayer && !requestNavigation) {
-			break;
+		if (request.endpoint===historyRequest.endpoint) {
+			return _createLayers(request, layerId, requestTree.slice(0, i+1));
+		}
+
+		if (!requestNavigation) {
+			if (requestLayer.isAutoLayer) {
+				_first = false;
+				_route = requestLayer.route;
+				_isAutoLayer = requestLayer.isAutoLayer;
+				continue;
+
+			} else if (!_isAutoLayer) {
+				break;
+			}
 		}
 
 		if (requestLayer.$title) {
