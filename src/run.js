@@ -37,7 +37,11 @@ export default function(options={}) {
 		bindSystem(require('./system/clickBlur').default);
 		bindSystem(require('./system/click').default);
 		bindSystem(require('./system/submitForm').default);
-		bindSystem(require('./system/shortcut.reload').default);
+
+		if (options.reload===undefined || options.reload) {
+			bindSystem(require('./system/shortcut.reload').default(options.reload));
+		}
+
 		bindSystem(require('./system/tabIndex').default);
 
 		if (options.dragAndDropClass) {
