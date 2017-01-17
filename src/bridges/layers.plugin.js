@@ -28,8 +28,8 @@ export default function create($element, [ navigationActive, toggleActive ]) {
 
 	$element.addEventListener('click', onNavigationClick);
 
-	this.onShortcut('left', function(e) {});
-	this.onShortcut('right', function(e) {});
+	this.onValidShortcut('left', function(e) {});
+	this.onValidShortcut('right', function(e) {});
 	this.onShortcut('esc', function(e) {
 		e.stopPopagation();
 		e.preventDefault();
