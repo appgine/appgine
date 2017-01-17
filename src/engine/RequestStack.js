@@ -34,13 +34,13 @@ export default class RequestStack {
 	}
 
 
-	findRequest($element) {
+	findRequest($element, need=true) {
 		const request = Object.keys(this._active)
 			.map(id => this._active[id])
 			.filter(request => $element && request.$fragment.contains($element))
 			.pop();
 
-		return request || this.loadRequest();
+		return request || ((need || document.contains($element)) && this.loadRequest()) || false;
 	}
 
 
