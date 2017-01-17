@@ -442,7 +442,7 @@ function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
  * @param {function}
  */
 function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrollTo, onError) {
-	const onResponse = ajaxResponse($element, endpoint, newPage, scrollTo);
+	const onResponse = ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo);
 
 	_pending = Math.max(_pending, 1);
 
@@ -480,7 +480,7 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 }
 
 
-function ajaxResponse($element, endpoint, newPage, scrollTo) {
+function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 	const [, ...anchor] = endpoint.split('#');
 	const foundRequest = _stack.findRequest($element);
 
@@ -488,10 +488,12 @@ function ajaxResponse($element, endpoint, newPage, scrollTo) {
 		const isCurrent = foundRequest===_stack.loadRequest();
 
 		if (json && json.reload) {
+			apiRequest.onResponseLeave(closure.uri.create());
 			leave(closure.uri.create());
 
 		} else if (json && json.canonize) {
 			if (isCurrent) {
+				apiRequest.onResponseCanonize(json.canonize);
 				canonize(json.canonize, newPage, scrollTo);
 
 			} else if (foundRequest) {
@@ -500,6 +502,7 @@ function ajaxResponse($element, endpoint, newPage, scrollTo) {
 
 		} else if (json && json.redirect) {
 			if (isCurrent) {
+				apiRequest.onResponseRedirect(json.canonize);
 				redirect(json.redirect, newPage, scrollTo);
 
 			} else if (foundRequest) {
@@ -508,11 +511,13 @@ function ajaxResponse($element, endpoint, newPage, scrollTo) {
 
 		} else {
 			if (json!==undefined) {
+				apiRequest.onResponseUpdate();
 				willUpdate();
 				update((isCurrent && document) || (foundRequest && foundRequest.$fragment) || $element.ownerDocument, $element, json);
 				wasUpdated();
 
 			} else if (text && isCurrent) {
+				apiRequest.onResponseSwap(foundRequest);
 				newPage && history.changeId();
 				_options.swap(_request, _request = _stack.createRequest(_options.createRequest(endpoint, text, anchor.join('#')||scrollTo)));
 

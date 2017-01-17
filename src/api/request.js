@@ -168,6 +168,11 @@ function createRequest(_listeners) {
 	return {
 		prevented() { callListeners('prevented'); },
 		onResponse(status, response) { callListeners('onResponse', status, response); },
+		onResponseLeave(endpoint) { callListeners('onResponseLeave', endpoint); },
+		onResponseCanonize(endpoint) { callListeners('onResponseCanonize', endpoint); },
+		onResponseRedirect(endpoint) { callListeners('onResponseRedirect', endpoint); },
+		onResponseUpdate() { callListeners('onResponseUpdate'); },
+		onResponseSwap(request) { callListeners('onResponseSwap', request); },
 		end(status, response, isLast) {
 			switch (status) {
 				case ajax.ABORT: callListeners('onAbort', response, isLast); break;
