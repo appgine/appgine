@@ -10,7 +10,8 @@ export default function bridgeLayers(options={}, render) {
 		bindApi('targets', require('../api/targets').default);
 		bindApi('shortcut', require('../api/shortcut').default);
 
-		bind('app.layers.navigation', require('./layers.plugin').default);
+		bind('app.layers', require('./layers.plugin').createLayer);
+		bind('app.layers.navigation', require('./layers.plugin').createNavigation);
 	});
 
 	const { initRequest } = options;
@@ -80,6 +81,7 @@ export default function bridgeLayers(options={}, render) {
 
 			const $newLayer = result.$container || $layer;
 			$newLayer.setAttribute('data-layer', dataLayer);
+			$newLayer.setAttribute('data-plugin', 'app.layers:'+String(layerId)+'$' + String($newLayer.getAttribute('data-plugin')||''));
 			$layer.parentNode.replaceChild($newLayer, $layer);
 		});
 	}
@@ -115,16 +117,21 @@ function _createLayers(request, layerId, requestTree) {
 	for (let i=requestTree.length-2; i>=0; i--) {
 		const historyRequest = requestStack.loadHistoryRequest(requestTree[i]);
 
-		if (!historyRequest || !historyRequest._layers[layerId]) {
+		if (!historyRequest) {
 			break;
 		}
 
 		const requestLayer = historyRequest._layers[layerId];
-		const requestNavigation = findRequestNavigation(requestLayer, _route);
+		const requestActive = (historyRequest._layersActive||{})[layerId];
 
-		if (request.endpoint===historyRequest.endpoint) {
+		if (!requestLayer || requestActive===false) {
+			break;
+
+		} else if (request.endpoint===historyRequest.endpoint) {
 			return _createLayers(request, layerId, requestTree.slice(0, i+1));
 		}
+
+		const requestNavigation = findRequestNavigation(requestLayer, _route);
 
 		if (!requestNavigation) {
 			if (requestLayer.isAutoLayer) {

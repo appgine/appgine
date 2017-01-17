@@ -1,9 +1,24 @@
 
 import * as closure from '../closure'
 import * as history from '../engine/history'
+import { requestStack } from '../engine/run'
 
 
-export default function create($element, [ navigationActive, toggleActive ]) {
+export function createLayer($element, layerId) {
+	this.onRequest(function($target) {
+		const willBeActive = $element.contains($target) || requestStack.findRequest($target, false)===false;
+
+		return {
+			onResponseSwap(request) {
+				request._layersActive = request._layersActive || {};
+				request._layersActive[layerId] = willBeActive;
+			}
+		}
+	});
+}
+
+
+export function createNavigation($element, [ navigationActive, toggleActive ]) {
 	let toggled = true;
 	closure.classes.enable($element, navigationActive, toggled);
 
