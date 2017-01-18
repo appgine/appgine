@@ -40,12 +40,12 @@ export default class RequestStack {
 			.filter(request => $element && request.$fragment.contains($element))
 			.pop();
 
-		return request || ((need || document.contains($element)) && this.loadRequest()) || false;
+		return request || (need || document.contains($element)) && this.loadRequest();
 	}
 
 
 	loadRequest() {
-		return this._active[history.getCurrentId()];
+		return this._active[history.getCurrentId()] || false;
 	}
 
 
