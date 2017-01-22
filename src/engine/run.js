@@ -517,7 +517,10 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 				wasUpdated();
 
 			} else if (text && isCurrent) {
-				apiRequest.onResponseSwap(foundRequest);
+				if (foundRequest) {
+					apiRequest.onResponseSwap(foundRequest);
+				}
+
 				newPage && history.changeId();
 				_options.swap(_request, _request = _stack.createRequest(_options.createRequest(endpoint, text, anchor.join('#')||scrollTo)));
 
