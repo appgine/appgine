@@ -5,6 +5,39 @@ import { requestStack } from '../engine/run'
 
 
 export function createLayer($element, layerId) {
+	const targets = this.createTargets();
+
+	this.onShortcut('esc', function(e) {
+		e.stopPopagation();
+		e.preventDefault();
+
+		let back = -1;
+		let $back = null;
+		targets.findAll('title').forEach(function({ $element, data }) {
+			if (data>back) {
+				back = data;
+				$back = $element;
+			}
+		});
+
+		$back && $back.click();
+	});
+
+	targets.every('title', function($target, { data }) {
+		function onTitleClick(e) {
+			e.stopPropagation();
+			e.preventDefault();
+
+			history.back(data);
+		}
+
+		$target.addEventListener('click', onTitleClick);
+
+		return function() {
+			$target.removeEventListener('click', onTitleClick);
+		}
+	});
+
 	this.onRequest(function($target) {
 		const willBeActive = $element.contains($target) || requestStack.findRequest($target, false)===false;
 
@@ -45,24 +78,12 @@ export function createNavigation($element, [ navigationActive, toggleActive ]) {
 
 	this.onValidShortcut('left', function(e) {});
 	this.onValidShortcut('right', function(e) {});
+
 	this.onShortcut('esc', function(e) {
-		e.stopPopagation();
-		e.preventDefault();
-
 		if (toggled) {
+			e.stopPropagation();
+			e.preventDefault();
 			toggle();
-
-		} else {
-			let back = -1;
-			let $back = null;
-			targets.findAll('title').forEach(function({ $element, data }) {
-				if (data>back) {
-					back = data;
-					$back = $element;
-				}
-			});
-
-			$back && $back.click();
 		}
 	});
 
@@ -72,21 +93,6 @@ export function createNavigation($element, [ navigationActive, toggleActive ]) {
 
 		return function() {
 			$target.removeEventListener('click', toggle);
-		}
-	});
-
-	targets.every('title', function($target, { data }) {
-		function onTitleClick(e) {
-			e.stopPropagation();
-			e.preventDefault();
-
-			history.back(data);
-		}
-
-		$target.addEventListener('click', onTitleClick);
-
-		return function() {
-			$target.removeEventListener('click', onTitleClick);
 		}
 	});
 
