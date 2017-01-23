@@ -8,7 +8,7 @@ export function createLayer($element, layerId) {
 	const targets = this.createTargets();
 
 	this.onShortcut('esc', function(e) {
-		e.stopPopagation();
+		e.stopPropagation();
 		e.preventDefault();
 
 		let back = -1;

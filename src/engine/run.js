@@ -98,7 +98,7 @@ export default function run(options) {
 	if (_options.abortOnEscape) {
 		apiShortcut.listen('esc', function(e) {
 			if (_pending) {
-				e.stopPopagation();
+				e.stopPropagation();
 				e.preventDefault();
 				closure.ajax.abort();
 			}
