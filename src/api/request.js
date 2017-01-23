@@ -1,32 +1,33 @@
 
 import { ajax, dom } from '../closure'
+import createListeners from './createListeners'
 
 
-const listeners = [];
+const listeners = createListeners();
 
 const api = {
 	onPluginRequest(state=[], ...args) {
-		state.push(createListener(api.onPluginRequest, this.$element, ...args));
+		state.push(listeners.create(api.onPluginRequest, this.$element, ...args));
 		return state;
 	},
 	onPluginClick(state=[], ...args) {
-		state.push(createListener(api.onPluginClick, this.$element, ...args));
+		state.push(listeners.create(api.onPluginClick, this.$element, ...args));
 		return state;
 	},
 	onPluginSubmit(state=[], ...args) {
-		state.push(createListener(api.onPluginSubmit, this.$element, ...args));
+		state.push(listeners.create(api.onPluginSubmit, this.$element, ...args));
 		return state;
 	},
 	onRequest(state=[], ...args) {
-		state.push(createListener(api.onRequest, this.$element, ...args));
+		state.push(listeners.create(api.onRequest, this.$element, ...args));
 		return state;
 	},
 	onClick(state=[], ...args) {
-		state.push(createListener(api.onClick, this.$element, ...args));
+		state.push(listeners.create(api.onClick, this.$element, ...args));
 		return state;
 	},
 	onSubmit(state=[], ...args) {
-		state.push(createListener(api.onSubmit, this.$element, ...args));
+		state.push(listeners.create(api.onSubmit, this.$element, ...args));
 		return state;
 	},
 	destroy(state) {
@@ -37,71 +38,28 @@ const api = {
 export default api;
 
 export function createClickRequest(e, $link, endpoint) {
-	return createRequest(findListeners(
-		[api.onPluginClick, [e, $link, endpoint], onPluginCheck($link)],
-		[api.onClick, [e, $link, endpoint]],
-		[api.onPluginRequest, [$link, endpoint, ''], onPluginCheck($link)],
-		[api.onRequest, [$link, endpoint, '']]
+	return createRequest(listeners.find(
+		[[e, $link, endpoint], api.onPluginClick, onPluginCheck($link)],
+		[[e, $link, endpoint], api.onClick],
+		[[$link, endpoint, ''], api.onPluginRequest, onPluginCheck($link)],
+		[[$link, endpoint, ''], api.onRequest]
 	));
 }
 
 export function createSubmitRequest(e, $form, $submitter, endpoint, data) {
-	return createRequest(findListeners(
-		[api.onPluginSubmit, [e, $form, $submitter, endpoint, data], onPluginCheck($form), onFormCheck($form, $submitter)],
-		[api.onSubmit, [e, $form, $submitter, endpoint, data], onFormCheck($form, $submitter)],
-		[api.onPluginRequest, [$form, endpoint, data], onPluginCheck($form)],
-		[api.onRequest, [$form, endpoint, data]]
+	return createRequest(listeners.find(
+		[[e, $form, $submitter, endpoint, data], api.onPluginSubmit, onPluginCheck($form), onFormCheck($form, $submitter)],
+		[[e, $form, $submitter, endpoint, data], api.onSubmit, onFormCheck($form, $submitter)],
+		[[$form, endpoint, data], api.onPluginRequest, onPluginCheck($form)],
+		[[$form, endpoint, data], api.onRequest]
 	));
 }
 
 export function createHttpRequest($element, endpoint, data) {
-	return createRequest(findListeners(
-		[api.onPluginRequest, [$element, endpoint, data], onPluginCheck($element)],
-		[api.onRequest, [$element, endpoint, data]]
+	return createRequest(listeners.find(
+		[[$element, endpoint, data], api.onPluginRequest, onPluginCheck($element)],
+		[[$element, endpoint, data], api.onRequest]
 	));
-}
-
-
-function createListener(type, $element, ...args) {
-	const handler = args.pop();
-	const listener = { type, $element, args, handler };
-	listeners.push(listener);
-
-	return function() {
-		if (listeners.indexOf(listener)!==-1) {
-			listeners.splice(listeners.indexOf(listener), 1)
-		}
-	}
-}
-
-
-function findListeners(...args) {
-	const _listeners = [];
-
-	for (let listener of listeners) {
-		listener: {
-			for (let [type, typeArgs, ...filters] of args) {
-				if (listener.type!==type) {
-					continue;
-
-				} else if (listener.$element && document.contains(listener.$element)===false) {
-					continue;
-
-				} else {
-					for (let filter of filters) {
-						if (!filter(listener.$element, listener.args)) {
-							break listener;
-						}
-					}
-
-					_listeners.push({ type, typeArgs, listener});
-					break listener;
-				}
-			}
-		}
-	}
-
-	return _listeners;
 }
 
 
@@ -154,7 +112,7 @@ function createRequest(_listeners) {
 
 	const callListeners = function(method, ...args) {
 		for (let { result, listener } of _listeners) {
-			if (result && result[method] && listeners.indexOf(listener)!==-1) {
+			if (result && result[method] && listeners.contains(listener)) {
 				try {
 					result[method](...args);
 
