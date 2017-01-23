@@ -68,21 +68,21 @@ export default function createListeners(onArgs) {
 			}
 
 			_listeners.sort(function(a, b) {
-				if (a.useCapture && b.useCapture) {
+				if (a.listener.useCapture && b.listener.useCapture) {
 					[b, a] = [a, b];
 
-				} else if (a.useCapture || b.useCapture) {
-					return a.useCapture ? -1 : 1;
+				} else if (a.listener.useCapture || b.listener.useCapture) {
+					return a.listener.useCapture ? -1 : 1;
 				}
 
-				if (a.$element && b.$element) {
-					return closure.dom.compareNodeOrder(b.$element, a.$element);
+				if (a.listener.$element && b.listener.$element) {
+					return closure.dom.compareNodeOrder(b.listener.$element, a.listener.$element);
 
-				} else if (a.$element || b.$element) {
-					return a.$element ? -1 : 1;
+				} else if (a.listener.$element || b.listener.$element) {
+					return a.listener.$element ? -1 : 1;
 				}
 
-				return a.index-b.index;
+				return a.listener.index-b.listener.index;
 			});
 
 			return _listeners;
