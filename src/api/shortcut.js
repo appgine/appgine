@@ -25,7 +25,7 @@ const listenShortcutHandler = shortcuthandler(function(e, identifier, isValid) {
 
 	for (let i=0; i<found.length; i++) {
 		if (stopped===false) {
-			found[i].handler(e, { identifier, $element, isValid });
+			found[i].listener.handler(e, { identifier, $element, isValid });
 		}
 	}
 });

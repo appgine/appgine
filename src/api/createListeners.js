@@ -39,6 +39,12 @@ export default function createListeners(onArgs) {
 					for (let j=0; j<args.length; j++) {
 						filter: {
 							let [type, ...filters] = args[j];
+							let typeArgs = [];
+
+							if (Array.isArray(type)) {
+								typeArgs = type;
+								[type, ...filters] = filters;
+							}
 
 							if (listener.type===type) {
 								for (let filter of filters) {
@@ -53,7 +59,7 @@ export default function createListeners(onArgs) {
 									}
 								}
 
-								_listeners.push(listener);
+								_listeners.push({ type, typeArgs, listener });
 								break listener;
 							}
 						}
