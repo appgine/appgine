@@ -28,6 +28,9 @@ export default function createListeners(onArgs) {
 				}
 			}
 		},
+		contains(listener) {
+			return listeners.indexOf(listener)!==-1;
+		},
 		find(...args) {
 			const _listeners = [];
 
