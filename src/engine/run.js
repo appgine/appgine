@@ -301,24 +301,24 @@ function leave(endpoint) {
 }
 
 
-function canonize(endpoint, newPage=false, scrollTo=0) {
+function canonize($element, endpoint, newPage=false, scrollTo=0) {
 	if (closure.uri.sameOrigin(endpoint)) {
 		const _newPage = !closure.uri.isSame(endpoint) || newPage;
 		history.redirectState({}, endpoint);
-		const httpRequest = apiRequest.createHttpRequest(document.body, endpoint);
-		return loadPage(httpRequest, document.body, endpoint, _newPage, scrollTo);
+		const httpRequest = apiRequest.createHttpRequest($element||document.body, endpoint);
+		return loadPage(httpRequest, $element||document.body, endpoint, _newPage, scrollTo);
 	}
 
 	leave(endpoint);
 }
 
 
-function redirect(endpoint, newPage=false, scrollTo=0) {
+function redirect($element, endpoint, newPage=false, scrollTo=0) {
 	if (closure.uri.sameOrigin(endpoint)) {
 		const _newPage = !closure.uri.isSame(endpoint) || newPage;
 		pushEndpoint(endpoint);
-		const httpRequest = apiRequest.createHttpRequest(document.body, endpoint);
-		return loadPage(httpRequest, document.body, endpoint, _newPage, scrollTo);
+		const httpRequest = apiRequest.createHttpRequest($element||document.body, endpoint);
+		return loadPage(httpRequest, $element||document.body, endpoint, _newPage, scrollTo);
 	}
 
 	leave(endpoint);
@@ -494,19 +494,19 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 		} else if (json && json.canonize) {
 			if (isCurrent) {
 				apiRequest.onResponseCanonize(json.canonize);
-				canonize(json.canonize, newPage, scrollTo);
+				canonize($element, json.canonize, newPage, scrollTo);
 
 			} else if (foundRequest) {
-				foundRequest.willCanonize(json.canonize, newPage, scrollTo);
+				foundRequest.willCanonize($element, json.canonize, newPage, scrollTo);
 			}
 
 		} else if (json && json.redirect) {
 			if (isCurrent) {
 				apiRequest.onResponseRedirect(json.canonize);
-				redirect(json.redirect, newPage, scrollTo);
+				redirect($element, json.redirect, newPage, scrollTo);
 
 			} else if (foundRequest) {
-				foundRequest.willRedirect(json.redirect, newPage, scrollTo);
+				foundRequest.willRedirect($element, json.redirect, newPage, scrollTo);
 			}
 
 		} else {
