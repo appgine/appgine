@@ -32,38 +32,42 @@ export default class NodeList
 
 			findPlugins($node).forEach(plugin => {
 				const { $element, api, name } = plugin;
-				const apiTargets = api('targets');
+				const apiTargetsList = api('targets');
 
-				if (apiTargets) {
+				if (apiTargetsList) {
 					plugins.push(plugin);
 
 					this.targets.forEach(targetList => targetList.forEach(([id, target]) => {
 						if (target.name===name) {
-							apiTargets.addTarget(id, target);
+							apiTargetsList.forEach(apiTargets => apiTargets.addTarget(id, target));
 
 						} else if (target.pluginName==='this' && contains($element, target.$element)) {
-							apiTargets.addTarget(id, target);
+							apiTargetsList.forEach(apiTargets => apiTargets.addTarget(id, target));
 						}
 					}));
 
 					this.$nodeList.forEach($node => {
-						findPluginTargets(apiTargets, $node).forEach(target => {
-							const id = ++targetId;
-							targets.push([id, target]);
-							apiTargets.addTarget(id, target);
-						});
+						apiTargetsList.forEach(apiTargets => {
+							findPluginTargets(apiTargets, $node).forEach(target => {
+								const id = ++targetId;
+								targets.push([id, target]);
+								apiTargets.addTarget(id, target);
+							});
+						})
 					});
 				}
 			});
 
 			this.plugins.forEach(pluginList => pluginList.forEach(({ api }) => {
-				const apiTargets = api('targets');
+				const apiTargetsList = api('targets');
 
-				if (apiTargets) {
-					findPluginTargets(apiTargets, $node).forEach(target => {
-						const id = ++targetId;
-						targets.push([id, target]);
-						apiTargets.addTarget(id, target);
+				if (apiTargetsList) {
+					apiTargetsList.forEach(apiTargets => {
+						findPluginTargets(apiTargets, $node).forEach(target => {
+							const id = ++targetId;
+							targets.push([id, target]);
+							apiTargets.addTarget(id, target);
+						});
 					});
 				}
 			}));
@@ -76,10 +80,10 @@ export default class NodeList
 
 				this.plugins.forEach(pluginList => pluginList.forEach(({ $element, api, name }) => {
 					if (target.name===name) {
-						api('targets').addTarget(id, target);
+						(api('targets')||[]).forEach(apiTargets => apiTargets.addTarget(id, target));
 
 					} else if (target.pluginName==='this' && contains($element, target.$element)) {
-						api('targets').addTarget(id, target);
+						(api('targets')||[]).forEach(apiTargets => apiTargets.addTarget(id, target));
 					}
 				}));
 			});
@@ -94,7 +98,7 @@ export default class NodeList
 		if (index!==-1) {
 			this.targets[index].forEach(([id, target]) => {
 				this.plugins.forEach(pluginList => pluginList.forEach(({ api }) => {
-					api('targets').removeTarget(id);
+					(api('targets')||[]).forEach(apiTargets => apiTargets.removeTarget(id));
 				}));
 			});
 

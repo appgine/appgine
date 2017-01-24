@@ -69,7 +69,9 @@ export function reloadTargets(fn)
 export function completeTargets()
 {
 	findPlugins(document).
-		map(({ api }) => api('targets')).
-		filter(targets => targets && targets.completeTargets).
-		forEach(targets => targets.completeTargets());
+		map(({ api }) => api('targets')||[]).
+		forEach(apiTargetsList => apiTargetsList.
+			filter(targets => targets && targets.completeTargets).
+			forEach(targets => targets.completeTargets())
+		);
 }

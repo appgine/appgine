@@ -3,10 +3,12 @@ import TargetList from './TargetList'
 
 
 export default {
-	createTargets(state, ...args) {
+	initialState: [],
+	createTargets(state=[], ...args) {
 		const fn = args.pop() || function() {};
-		state = new TargetList(...args);
-		fn(state);
-		return state;
+		const api = new TargetList(...args);
+		state.push(api);
+		fn(api);
+		return api;
 	}
 }
