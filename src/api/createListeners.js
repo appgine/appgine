@@ -17,7 +17,8 @@ export default function createListeners(onArgs) {
 				handler = args.pop();
 			}
 
-			onArgs && onArgs(...args);
+			const onArgsResult = onArgs && onArgs(...args);
+			args = onArgsResult===undefined ? args : onArgsResult;
 
 			const listener = { type, $element, index, args, handler, useCapture };
 			listeners.push(listener);

@@ -5,6 +5,7 @@ import createListeners from './createListeners'
 const listeners = createListeners(function(...args) {
 	args = args.map(shortcut => String(shortcut).toLowerCase());
 	args.forEach(shortcut => listenShortcutHandler(shortcut));
+	return args;
 });
 
 
