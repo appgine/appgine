@@ -398,7 +398,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 	closure.ajax.submit(formEndpoint, formMethod, submitData, function(...response) {
 		bindSubmitRequest(...response);
 
-		if (currentRequest!==_stack.loadRequest() || _pushing) {
+		if (currentRequest!==_stack.loadRequest() || formMethod!=='GET' || _pushing) {
 			_stack.clearHistory();
 		}
 	});
