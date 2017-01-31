@@ -20,6 +20,7 @@ export default function bridgeLayers(options={}, render) {
 		initRequest && initRequest(request);
 
 		request._layers = {};
+		request._layersActive = {};
 
 		Array.from(request.$fragment.querySelectorAll('[data-layer]')).forEach(function($layer) {
 			const dataLayer = $layer.getAttribute('data-layer')||'';

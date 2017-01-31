@@ -43,7 +43,6 @@ export function createLayer($element, layerId) {
 
 		return {
 			onResponseSwap(request) {
-				request._layersActive = request._layersActive || {};
 				request._layersActive[layerId] = willBeActive;
 			}
 		}
