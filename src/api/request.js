@@ -40,25 +40,25 @@ export default api;
 export function createClickRequest(e, $link, endpoint) {
 	return createRequest(listeners.find(
 		[[e, $link, endpoint], api.onPluginClick, onPluginCheck($link)],
-		[[e, $link, endpoint], api.onClick],
+		[[e, $link, endpoint], api.onClick, onElementCheck],
 		[[$link, endpoint, ''], api.onPluginRequest, onPluginCheck($link)],
-		[[$link, endpoint, ''], api.onRequest]
+		[[$link, endpoint, ''], api.onRequest, onElementCheck]
 	));
 }
 
 export function createSubmitRequest(e, $form, $submitter, endpoint, data) {
 	return createRequest(listeners.find(
 		[[e, $form, $submitter, endpoint, data], api.onPluginSubmit, onPluginCheck($form), onFormCheck($form, $submitter)],
-		[[e, $form, $submitter, endpoint, data], api.onSubmit, onFormCheck($form, $submitter)],
+		[[e, $form, $submitter, endpoint, data], api.onSubmit, onElementCheck, onFormCheck($form, $submitter)],
 		[[$form, endpoint, data], api.onPluginRequest, onPluginCheck($form)],
-		[[$form, endpoint, data], api.onRequest]
+		[[$form, endpoint, data], api.onRequest, onElementCheck]
 	));
 }
 
 export function createHttpRequest($element, endpoint, data) {
 	return createRequest(listeners.find(
 		[[$element, endpoint, data], api.onPluginRequest, onPluginCheck($element)],
-		[[$element, endpoint, data], api.onRequest]
+		[[$element, endpoint, data], api.onRequest, onElementCheck]
 	));
 }
 
@@ -71,6 +71,11 @@ function onPluginCheck($requestElement) {
 
 		return false;
 	}
+}
+
+
+function onElementCheck($element) {
+	return !$element || document.contains($element);
 }
 
 
