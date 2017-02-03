@@ -3,16 +3,17 @@ import { dom } from '../closure'
 
 
 const listeners = [];
+let unique = {};
 
 export default {
-	busListen(state=[], type, action, fn) {
+	initialState: [],
+	busListen(state, type, action, fn) {
 		state.push(createListener(this.$element, type, action, fn));
-		return state;
 	},
 	busDispatch(state, type, action, ...args) {
 		dispatch(this.$element, type, action, ...args);
 	},
-	bus(state=[], type, action, fn) {
+	bus(state, type, action, fn) {
 		const $busElement = this.$element;
 
 		state.push(createListener($busElement, function(_type, _action, ..._args) {
@@ -33,12 +34,10 @@ export default {
 
 			} else {
 				if ((type===undefined || type===_type) && (action===undefined || action===_action)) {
-					dispatch($busElement, _type, _action, ..._args);
+					_dispatch(_type, _action, ..._args);
 				}
 			}
 		}));
-
-		return state;
 	},
 	destroy(state) {
 		state.forEach(listener => listener());
@@ -47,11 +46,21 @@ export default {
 
 
 export function dispatch($element, type, action, ...args) {
+	setTimeout(() => { unique = {}; }, 0);
+	const key = JSON.stringify([type, action, ...args]);
+	unique[key] = unique[key] || [];
+	unique[key].push($element);
+
 	listeners.
 		filter(listener => listener.type===null || listener.type===type).
 		filter(listener => listener.action===null || listener.action===action).
-		filter(listener => dom.contains(listener.$element, $element) || dom.contains($element, listener.$element))
-		forEach(listener => listener.fn(type, action, ...args));
+		filter(listener => (unique[key]||[]).indexOf(listener.$element)===-1).
+		filter(listener => dom.contains(listener.$element, $element) || dom.contains($element, listener.$element)).
+		forEach(function(listener) {
+			unique[key] = unique[key] || [];
+			unique[key].push(listener.$element);
+			listener.fn(type, action, ...args);
+		});
 }
 
 
