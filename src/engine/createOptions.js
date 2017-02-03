@@ -23,9 +23,9 @@ export default function createOptions(options={}) {
 			return request;
 		},
 		swap(requestFrom, requestTo) {
-			options.onBeforeSwap && options.onBeforeSwap();
+			options.onBeforeSwap && options.onBeforeSwap(requestFrom, requestTo);
 			swap(requestFrom, requestTo);
-			options.onAfterSwap && options.onAfterSwap();
+			options.onAfterSwap && options.onAfterSwap(requestFrom, requestTo);
 		},
 		dispatch(...args) {
 			dispatch(...args);
