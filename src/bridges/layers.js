@@ -21,6 +21,7 @@ export default function bridgeLayers(options={}, render) {
 
 		request._layers = {};
 		request._layersActive = {};
+		request._layersDefinition = {};
 
 		Array.from(request.$fragment.querySelectorAll('[data-layer]')).forEach(function($layer) {
 			const dataLayer = $layer.getAttribute('data-layer')||'';
@@ -57,7 +58,10 @@ export default function bridgeLayers(options={}, render) {
 				$content.removeAttribute('layer-content');
 			}
 
-			let { $titles, $navigation } = createLayers(request, layerId);
+			const layersChain = createLayersChain(request, layerId);
+			let $titles = createLayersTitle(layersChain);
+			let $navigation = createLayersNavigation(layersChain);
+
 			let result = render($layer, $titles, $navigation, $content);
 
 			if (result instanceof Element) {
@@ -84,6 +88,10 @@ export default function bridgeLayers(options={}, render) {
 			$newLayer.setAttribute('data-layer', dataLayer);
 			$newLayer.setAttribute('data-plugin', 'app.layers:'+String(layerId)+'$' + String($newLayer.getAttribute('data-plugin')||''));
 			$layer.parentNode.replaceChild($newLayer, $layer);
+
+			request._layersDefinition[layerId] = {
+				layersChain, result
+			};
 		});
 	}
 
@@ -102,8 +110,8 @@ function createNavigation($element, remove) {
 }
 
 
-function createLayers(request, layerId) {
-	const requestChain = createLayersChain(request, layerId, history.getCurrentTree().slice(0, -1));
+function createLayersChain(request, layerId) {
+	const requestChain = createRequestChain(request, layerId, history.getCurrentTree().slice(0, -1));
 
 	let chain = [];
 	let chainNav = [];
@@ -147,43 +155,52 @@ function createLayers(request, layerId) {
 					chain.push(last, i);
 
 				} else {
-					chain = [];
+					chain = [i];
 				}
 			}
 		}
 	}
 
+	return chain.map(i => ({
+		request: requestChain[i],
+		navigation: chainNav[i]!==undefined && requestChain[chainNav[i]],
+	}));
+}
+
+
+function createLayersTitle(layersChain) {
 	const $titles = [];
-	let $navigation = null;
 
-	for (let i=0; i<chain.length-1; i++) {
-		const { back, requestLayer } = requestChain[chain[i]];
-
+	for (let { request: { back, requestLayer } } of layersChain.slice(0, -1)) {
 		let $title = null;
 		if (requestLayer.$title) {
 			$title = requestLayer.$title.cloneNode(true);
 			$title.dataset.target = 'title@app.layers:'+String(back)+'$';
-		}
-
-		$titles.push($title);
-	}
-
-	const chainLast = chain[chain.length-1];
-
-	if (chainNav[chainLast]!==undefined) {
-		const navigationLayer = requestChain[chainNav[chainLast]].requestLayer;
-		const navigationRoute = findRequestNavigation(navigationLayer, requestChain[chainLast].requestLayer.route);
-
-		if (navigationRoute) {
-			$navigation = navigationLayer.$navigationList[navigationRoute].cloneNode(true);
+			$titles.push($title);
 		}
 	}
 
-	return { $titles, $navigation };
+	return $titles;
 }
 
 
-function createLayersChain(request, layerId, requestTree) {
+function createLayersNavigation(layersChain) {
+	const layer = layersChain[layersChain.length-1];
+
+	if (layer && layer.navigation) {
+		const navigationLayer = layer.navigation.requestLayer;
+		const navigationRoute = findRequestNavigation(navigationLayer, layer.request.requestLayer.route);
+
+		if (navigationRoute) {
+			return navigationLayer.$navigationList[navigationRoute].cloneNode(true);
+		}
+	}
+
+	return null;
+}
+
+
+function createRequestChain(request, layerId, requestTree) {
 	if (!request) {
 		return [];
 	}
@@ -199,7 +216,7 @@ function createLayersChain(request, layerId, requestTree) {
 		const historyActive = (historyRequest._layersActive||{})[layerId];
 
 		if (historyLayer && historyActive!==false) {
-			return createLayersChain(historyRequest, layerId, requestTree).concat(requestChain);
+			return createRequestChain(historyRequest, layerId, requestTree).concat(requestChain);
 		}
 	}
 
@@ -226,26 +243,33 @@ function isRouteValid(requestRoute, navigationRoute) {
 	navigationRoute = navigationRoute.replace(/\s+$/, '');
 
 	const requestRouteParts = requestRoute.split(':');
+	const requestRouteAction = ':'+requestRouteParts.pop();
+	const navigationAction = navigationRoute.match(/:([a-z][^:]*)?$/)!==null ? "" : requestRouteAction;
 
 	const routes = [];
 	if (navigationRoute[0]===":") {
-		routes.push(navigationRoute.substr(1));
+		routes.push(navigationRoute.substr(1) + navigationAction);
 
 	} else {
 		for (let i=0; i<requestRouteParts.length; i++) {
-			routes.push([].concat(requestRouteParts.slice(0, i+1), navigationRoute).join(':'));
+			routes.push([].concat(requestRouteParts.slice(0, i+1), navigationRoute).join(':') + navigationAction);
 		}
 	}
 
 	if (routes.indexOf(requestRoute)!==-1) {
 		return true;
-	}
 
-	for (let i=0; i<requestRouteParts.length; i++) {
-		const requestRouteAsterisk = [].concat(requestRouteParts.slice(0, i), '*', requestRouteParts.slice(i+1)).join(':');
+	} else if (navigationRoute.indexOf('*')!==-1) {
+		for (let i=0; i<requestRouteParts.length; i++) {
+			const requestRouteAsterisk = [].concat(
+				requestRouteParts.slice(0, i),
+				'*',
+				requestRouteParts.slice(i+1)
+			).join(':') + requestRouteAction;
 
-		if (routes.indexOf(requestRouteAsterisk)!==-1) {
-			return true;
+			if (routes.indexOf(requestRouteAsterisk)!==-1) {
+				return true;
+			}
 		}
 	}
 
