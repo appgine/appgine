@@ -78,14 +78,6 @@ export function createNavigation($element, [ navigationActive, toggleActive ]) {
 	this.onValidShortcut('left', function(e) {});
 	this.onValidShortcut('right', function(e) {});
 
-	this.onShortcut('esc', function(e) {
-		if (toggled) {
-			e.stopPropagation();
-			e.preventDefault();
-			toggle();
-		}
-	});
-
 	const targets = this.createTargets();
 	targets.every('toggle', function($target) {
 		$target.addEventListener('click', toggle);
