@@ -180,6 +180,7 @@ function createLayersTitle(layersChain) {
 		}
 	}
 
+	$titles.reverse();
 	return $titles;
 }
 
