@@ -14,7 +14,45 @@ export default function bridgeLayers(options={}, render) {
 		bind('app.layers.navigation', require('./layers.plugin').createNavigation);
 	});
 
-	const { initRequest } = options;
+	const { initRequest, onAfterSwap } = options;
+
+	function runAnimation(animation) {
+		animation && closure.animation.animateOnce(animation[0], animation[1]);
+	}
+
+	options.onAfterSwap = function(requestFrom, requestTo) {
+		onAfterSwap && onAfterSwap(requestFrom, requestTo);
+
+		if (requestFrom && requestTo) {
+			for (let layerId of Object.keys(requestFrom._layersDefinition)) {
+				const layerFrom = requestFrom._layersDefinition[layerId];
+				const layerTo = requestTo._layersDefinition[layerId];
+
+				if (layerFrom && layerTo) {
+					const chainFrom = layerFrom.layersChain;
+					const chainTo = layerTo.layersChain;
+
+					const { animations={} } = layerTo.result;
+
+					if (chainTo.length>chainFrom.length) {
+						runAnimation(animations.newLayer);
+						runAnimation(animations.newNavigation);
+
+					} else if (chainTo.length===chainFrom.length) {
+						if (requestFrom._layers[layerId].routeId===requestTo._layers[layerId].routeId) {
+							runAnimation(animations.samePage);
+
+						} else {
+							runAnimation(animations.sameLayer);
+						}
+
+					} else {
+						runAnimation(animations.oldLayer);
+					}
+				}
+			}
+		}
+	}
 
 	options.initRequest = function(request) {
 		initRequest && initRequest(request);
