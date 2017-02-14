@@ -377,7 +377,13 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 
 	let bindSubmitRequest;
 	if (isAjax) {
-		bindSubmitRequest = bindAjaxRequest(submitRequest, $element, formEndpoint, false);
+		bindSubmitRequest = bindAjaxRequest(submitRequest, $element, formEndpoint, function() {
+			const $found = closure.dom.findForm(formName, formId);
+
+			if ($found && formName[0]==='#') {
+				scrollFormToView($found, true);
+			}
+		});
 
 	} else {
 		pushEndpoint(formEndpoint, { formId }, !newPage);
