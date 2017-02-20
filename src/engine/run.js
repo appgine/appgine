@@ -240,7 +240,7 @@ export function onReload() {
 
 
 export function location($element, endpoint, isAjax=false) {
-	endpoint = closure.uri.create(history.getLink(), {}, '');
+	endpoint = closure.uri.create(endpoint, {}, '');
 
 	if (closure.uri.sameOrigin(endpoint)) {
 		const httpRequest = apiRequest.createHttpRequest($element, endpoint);
