@@ -17,11 +17,11 @@ exports = function(src, timeout, fn) {
 function ImageLoader(src, timeout, fn) {
 	this.src = src;
 	this.fn = goog.isFunction(timeout) ? timeout : fn;
-	this.progress = false;
+	this.progress = 0;
+	this.timeoutTime = timeout && goog.isNumber(timeout) && parseInt(timeout, 10);
 
-	if (timeout && goog.isNumber(timeout)) {
-		var self = this;
-		this.timeout = setTimeout(this.timeout.bind(this), timeout);
+	if (this.timeoutTime) {
+		setTimeout(this.timeout.bind(this), this.timeoutTime);
 		this.loadXhr();
 
 	} else {
@@ -37,7 +37,7 @@ ImageLoader.prototype.loadXhr = function() {
 	this.xhr.onload = this.loadImage.bind(this);
 	this.xhr.onerror = this.loadImage.bind(this);
 	this.xhr.onprogress = function(e) {
-		if (e.loaded>0) self.progress = true;
+		self.progress = self.progress || e.loaded>0 && 1;
 	};
 
 	this.xhr.open('GET', this.src, true);
@@ -47,7 +47,6 @@ ImageLoader.prototype.loadXhr = function() {
 
 ImageLoader.prototype.loadImage = function() {
 	this.image = new Image();
-
 	this.image.onload = this.onLoad.bind(this);
 	this.image.onerror = this.onLoad.bind(this);
 	this.image.src = this.src;
@@ -55,16 +54,20 @@ ImageLoader.prototype.loadImage = function() {
 
 
 ImageLoader.prototype.onLoad = function(e) {
-	this.fn.apply(null, [e.target.naturalWidth||0, e.target.naturalHeight||0]);
+	this.fn && this.fn(e.target.naturalWidth||0, e.target.naturalHeight||0, false);
 	this.dispose();
 }
 
 
 ImageLoader.prototype.timeout = function() {
-	if (this.progress===false && this.xhr) {
-		this.xhr.abort();
+	if (this.xhr) {
+		if (this.progress===1) {
+			this.progress = 2;
+			setTimeout(this.timeout.bind(this), this.timeoutTime/2);
 
-		if (!this.image) {
+		} else {
+			this.xhr.abort();
+			this.fn && this.fn(0, 0, true);
 			this.dispose();
 		}
 	}
@@ -81,6 +84,8 @@ ImageLoader.prototype.abort = function() {
 
 
 ImageLoader.prototype.dispose = function() {
+	this.fn = null;
+
 	if (this.xhr) {
 		this.xhr.onload = this.xhr.onerror = this.xhr.onprogress = null;
 		this.xhr = null;
