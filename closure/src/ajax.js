@@ -7,13 +7,16 @@ goog.require('goog.net.EventType');
 goog.require('goog.net.Jsonp');
 
 var _request;
-
+var _timeout = 10e3;
 
 exports.ABORT = 'abort';
 exports.ERROR = 'error';
 exports.TIMEOUT = 'timeout';
 exports.SUCCESS = 'success';
 
+exports.setTimeout = function(timeout) {
+	_timeout = parseInt(timeout, 10);
+}
 
 exports.jsonp = function(endpoint, args, fn) {
 	(new goog.net.Jsonp(endpoint)).send(args, fn);
@@ -72,7 +75,7 @@ function pageRequest(endpoint, method, data, fn) {
  */
 function bindRequest(request, fn)
 {
-	request.setTimeoutInterval(10000);
+	request.setTimeoutInterval(_timeout);
 
 	var handled = false;
 	var handleResponse = function(e, status, error) {

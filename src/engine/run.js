@@ -95,6 +95,10 @@ export default function run(options) {
 	_options = createOptions(options);
 	_options.initHTML(document.documentElement);
 
+	if (_options.timeout) {
+		closure.ajax.setTimeout(_options.timeout);
+	}
+
 	if (_options.abortOnEscape) {
 		apiShortcut.listen('esc', function(e) {
 			if (_pending) {
