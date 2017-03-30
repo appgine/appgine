@@ -75,7 +75,7 @@ function pageRequest(endpoint, method, data, fn) {
  */
 function bindRequest(request, fn)
 {
-	request.setTimeoutInterval(_timeout);
+	_timeout>0 && request.setTimeoutInterval(_timeout);
 
 	var handled = false;
 	var handleResponse = function(e, status, error) {
