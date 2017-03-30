@@ -8,6 +8,7 @@ import { dispatch } from '../api/channel'
 
 export default function createOptions(options={}) {
 	return {
+		timeout: options.timeout ? Math.max(0, parseInt(options.timeout, 10)) : undefined,
 		dragAndDropClass: options.dragAndDropClass || '',
 		abortOnEscape: options.abortOnEscape===undefined || options.abortOnEscape,
 		initHTML($html) {
