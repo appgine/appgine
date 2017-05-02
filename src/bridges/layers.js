@@ -65,6 +65,8 @@ export default function bridgeLayers(options={}, render) {
 			const dataLayer = $layer.getAttribute('data-layer')||'';
 			const [layerId, route, routeId] = dataLayer.split('#').concat("", "");
 			const isAutoLayer = $layer.hasAttribute('layer-auto') && $layer.getAttribute('layer-auto')!=="0";
+			const endpoint = request.endpoint;
+			const endpointArgs = closure.uri.getQueryKeys(endpoint);
 
 			$layer.removeAttribute('data-layer');
 			$layer.removeAttribute('layer-auto');
@@ -87,7 +89,7 @@ export default function bridgeLayers(options={}, render) {
 				$navigationList[route] = $navigation;
 			});
 
-			request._layers[layerId] = { route, routeId, isAutoLayer, $title, $navigationList };
+			request._layers[layerId] = { route, routeId, isAutoLayer, endpoint, endpointArgs, $title, $navigationList };
 
 			const $content = $layer.querySelector(':not([data-layer]) [layer-content]');
 
@@ -155,7 +157,8 @@ function createLayersChain(request, layerId) {
 	let chainNav = [];
 
 	for (let i=0; i<requestChain.length; i++) {
-		const { isAutoLayer, route, routeId } = requestChain[i].requestLayer;
+		const requestLayer = requestChain[i].requestLayer;
+		const { isAutoLayer, route, routeId } = requestLayer;
 
 		for (let j=0; j<chain.length; j++) {
 			const { route: _route, routeId: _routeId } = requestChain[chain[j]].requestLayer;
@@ -172,14 +175,14 @@ function createLayersChain(request, layerId) {
 			chain.push(i);
 
 		} else {
-			const navigationRoute = findRequestNavigation(requestChain[last].requestLayer, route);
+			const navigationRoute = findRequestNavigation(requestChain[last].requestLayer, requestLayer);
 
 			if (navigationRoute) {
 				chainNav[i] = last;
 				chain.push(last, i);
 
 			} else if (chainNav[last]!==undefined && chainNav[last]!==last) {
-				const sharedNavigationRoute = findRequestNavigation(requestChain[chainNav[last]].requestLayer, route);
+				const sharedNavigationRoute = findRequestNavigation(requestChain[chainNav[last]].requestLayer, requestLayer);
 
 				if (sharedNavigationRoute) {
 					chainNav[i] = chainNav[last];
@@ -228,7 +231,7 @@ function createLayersNavigation(layersChain) {
 
 	if (layer && layer.navigation) {
 		const navigationLayer = layer.navigation.requestLayer;
-		const navigationRoute = findRequestNavigation(navigationLayer, layer.request.requestLayer.route);
+		const navigationRoute = findRequestNavigation(navigationLayer, layer.request.requestLayer);
 
 		if (navigationRoute) {
 			return navigationLayer.$navigationList[navigationRoute].cloneNode(true);
@@ -263,23 +266,40 @@ function createRequestChain(request, layerId, requestTree) {
 }
 
 
-function findRequestNavigation(requestLayer, route) {
-	for (let navigationRoute of Object.keys(requestLayer.$navigationList)) {
-		if (isRouteValid(route, navigationRoute)) {
+function findRequestNavigation({ $navigationList }, { route, endpointArgs }) {
+	const navigationRoutes = Object.keys($navigationList);
+
+	navigationRoutes.sort(function(a, b) {
+		return b.length-a.length;
+	});
+
+	for (let navigationRoute of navigationRoutes) {
+		if (isRouteValid(route, endpointArgs, navigationRoute)) {
 			return navigationRoute;
 		}
 	}
 }
 
 
-function isRouteValid(requestRoute, navigationRoute) {
+function isRouteValid(requestRoute, requestArgs, navigationKey) {
 	requestRoute = String(requestRoute||'');
 	requestRoute = requestRoute.replace(/^\s*:+/, '');
 	requestRoute = requestRoute.replace(/\s+$/, '');
 
-	navigationRoute = String(navigationRoute||'');
+	navigationKey = String(navigationKey||'');
+	navigationKey = navigationKey.replace(/^\s+/, '');
+	navigationKey = navigationKey.replace(/\s+$/, '');
+
+	let [navigationRoute, ...navigationArgs] = String(navigationKey||'').split('?');
+
 	navigationRoute = navigationRoute.replace(/^\s+/, '');
 	navigationRoute = navigationRoute.replace(/\s+$/, '');
+
+	const missingArgs = navigationArgs.join('&').split('&').filter(arg => arg && requestArgs.indexOf(arg)===-1);
+
+	if (missingArgs.length) {
+		return false;
+	}
 
 	const requestRouteParts = requestRoute.split(':');
 	const requestRouteAction = ':'+requestRouteParts.pop();
