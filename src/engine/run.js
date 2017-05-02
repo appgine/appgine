@@ -288,10 +288,10 @@ function loadEndpoint(apiRequest, $element, endpoint, isAjax, toCurrent=null) {
 
 function leave(endpoint) {
 	const requestnum = ++_requestnum;
-	_options.dispatch('app.request', 'start', endpoint);
+	_options.dispatch('app.request', 'start', endpoint, { requestnum });
 
 	if (_options.onRedirect(endpoint)) {
-		_options.dispatch('app.request', 'stop');
+		_options.dispatch('app.request', 'stop', { requestnum });
 
 		if (_pending) {
 			_pending = 0;
@@ -454,12 +454,8 @@ function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
 function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrollTo, onError) {
 	const onResponse = ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo);
 
-	_pending = Math.max(_pending, 1);
-
-	if (_pending===1) {
-		_options.dispatch('app.request', 'start', endpoint);
-		_pending = 2;
-	}
+	_pending = 1;
+	_options.dispatch('app.request', 'start', endpoint, { $element, requestnum });
 
 	return _options.onResponse(function(status, response) {
 		apiRequest.onResponse(status, response);
@@ -484,8 +480,9 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 		if (requestnum===_requestnum) {
 			_pending = 0;
 			_pushing = false;
-			_options.dispatch('app.request', 'stop')
 		}
+
+		_options.dispatch('app.request', 'stop', { $element, requestnum });
 	})
 }
 
