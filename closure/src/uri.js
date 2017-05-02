@@ -28,6 +28,11 @@ exports.getPart = function(location, part) {
 	});
 }
 
+exports.getQueryKeys = function(location) {
+	var uri = createUri(location);
+	return uri.getQueryData().getKeys();
+}
+
 exports.sameOrigin = function(location) {
 	return $location.hostname===exports.getPart(location, 'hostname')[0];
 }
