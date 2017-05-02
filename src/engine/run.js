@@ -512,7 +512,7 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 
 		} else if (json && json.redirect) {
 			if (isCurrent) {
-				apiRequest.onResponseRedirect(json.canonize);
+				apiRequest.onResponseRedirect(json.redirect);
 				redirect($element, json.redirect, newPage, scrollTo);
 
 			} else if (foundRequest) {
