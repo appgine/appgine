@@ -12,6 +12,10 @@ export default function(options={}) {
 			bindApi('channel', require('./api/channel').default);
 		}
 
+		if (options.bindApi.method!==false) {
+			bindApi('method', require('./api/method').default);
+		}
+
 		if (options.bindApi.targets!==false) {
 			bindApi('targets', require('./api/targets').default);
 		}
