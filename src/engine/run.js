@@ -322,7 +322,7 @@ function redirect($element, endpoint, newPage=false, scrollTo=0) {
 		const _newPage = !closure.uri.isSame(endpoint) || newPage;
 		pushEndpoint(endpoint);
 		const httpRequest = apiRequest.createHttpRequest($element||document.body, endpoint);
-		return loadPage(httpRequest, $element||document.body, endpoint, _newPage, scrollTo);
+		return loadPage(httpRequest, $element||document.body, endpoint, _newPage, (_newPage>newPage && scrollTo===false) ? 0 : scrollTo);
 	}
 
 	leave(endpoint);
