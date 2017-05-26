@@ -64,11 +64,12 @@ export default function bridgeLayers(options={}, render) {
 		Array.from(request.$fragment.querySelectorAll('[data-layer]')).forEach(function($layer) {
 			const dataLayer = $layer.getAttribute('data-layer')||'';
 			const [layerId, route, routeId] = dataLayer.split('#').concat("", "");
-			const isAutoLayer = $layer.hasAttribute('layer-auto') && $layer.getAttribute('layer-auto')!=="0";
+			const layerMode = parseInt($layer.getAttribute('layer-auto') || $layer.getAttribute('layer-mode'), 10) || 0;
 			const endpoint = request.endpoint;
 			const endpointArgs = closure.uri.getQueryKeys(endpoint);
 
 			$layer.removeAttribute('data-layer');
+			$layer.removeAttribute('layer-mode');
 			$layer.removeAttribute('layer-auto');
 
 			const $navigationList = {};
@@ -89,7 +90,7 @@ export default function bridgeLayers(options={}, render) {
 				$navigationList[route] = $navigation;
 			});
 
-			request._layers[layerId] = { route, routeId, isAutoLayer, endpoint, endpointArgs, $title, $navigationList };
+			request._layers[layerId] = { route, routeId, layerMode, endpoint, endpointArgs, $title, $navigationList };
 
 			const $content = $layer.querySelector(':not([data-layer]) [layer-content]');
 
@@ -155,10 +156,11 @@ function createLayersChain(request, layerId) {
 
 	let chain = [];
 	let chainNav = [];
+	let inLayerAutoMode = false;
 
 	for (let i=0; i<requestChain.length; i++) {
 		const requestLayer = requestChain[i].requestLayer;
-		const { isAutoLayer, route, routeId } = requestLayer;
+		const { layerMode, route, routeId } = requestLayer;
 
 		for (let j=0; j<chain.length; j++) {
 			const { route: _route, routeId: _routeId } = requestChain[chain[j]].requestLayer;
@@ -171,7 +173,10 @@ function createLayersChain(request, layerId) {
 
 		const last = chain.pop();
 
-		if (last===undefined) {
+		if (layerMode<0) {
+			chain = [];
+
+		} else if (last===undefined) {
 			chain.push(i);
 
 		} else {
@@ -191,15 +196,23 @@ function createLayersChain(request, layerId) {
 			}
 
 			if (chain.indexOf(i)===-1) {
-				if (isAutoLayer) {
+				if (layerMode>0) {
 					chainNav[i] = undefined;
-					chain.push(last, i);
+
+					if (inLayerAutoMode) {
+						chain.push(i);
+
+					} else {
+						chain.push(last, i);
+					}
 
 				} else {
 					chain = [i];
 				}
 			}
 		}
+
+		inLayerAutoMode = layerMode>0;
 	}
 
 	return chain.map(i => ({
