@@ -15,10 +15,17 @@ exports = function(endpoint, onSelect, onUpdate) {
 	return function create($element, $container) {
 		var instance = new AutoComplete($element, $container, endpoint, onSelect, onUpdate);
 		instance.defaultValue = $element.value;
+		instance.disposed = false;
 
-		return function() {
-			$element.value = instance.defaultValue;
-			instance.dispose();
+		return function(keepValue) {
+			if (instance.disposed===false) {
+				instance.disposed = true;
+				instance.dispose();
+
+				if (!keepValue) {
+					$element.value = instance.defaultValue;
+				}
+			}
 		}
 	}
 }
@@ -80,6 +87,11 @@ function AutoComplete($element, $container, endpoint, onSelect, onUpdate) {
   };
 
   this._onUpdate = onUpdate;
+
+  if ($element.form && $element.form.hasAttribute('action')) {
+  	this.setAutoHilite(false);
+  	this.setAllowFreeSelect(true);
+  }
 };
 goog.inherits(AutoComplete, goog.ui.ac.AutoComplete);
 
