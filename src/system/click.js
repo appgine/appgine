@@ -5,25 +5,30 @@ import closure from '../closure'
 export default function create() {
 	const onClick = e => {
 		const $link = closure.dom.getLink(e);
-		const href = $link && String($link.href||'');
 
-		if ($link && href && !e.defaultPrevented) {
-			const toTarget = (function() {
-				if (e && (e.metaKey || e.ctrlKey)) {
-					return '_blank';
+		if ($link) {
+			if ($link.protocol==='http:' || $link.protocol==='https:') {
+				const href = String($link.href||'');
 
-				} else if (e.target && e.target.getAttribute('target')) {
-					return e.target.getAttribute('target');
+				if (href && !e.defaultPrevented) {
+					const toTarget = (function() {
+						if (e && (e.metaKey || e.ctrlKey)) {
+							return '_blank';
+
+						} else if ($link.getAttribute('target')) {
+							return $link.getAttribute('target');
+						}
+
+						return '';
+					})();
+
+					if ($link.getAttribute('href')[0]==='#') {
+						this.dispatch('app.event', 'clickHash', e, $link, $link.getAttribute('href').substr(1), toTarget);
+
+					} else {
+						this.dispatch('app.event', 'click', e, $link, toTarget);
+					}
 				}
-
-				return '';
-			})();
-
-			if ($link.getAttribute('href')[0]==='#') {
-				this.dispatch('app.event', 'clickHash', e, $link, $link.getAttribute('href').substr(1), toTarget);
-
-			} else {
-				this.dispatch('app.event', 'click', e, $link, toTarget);
 			}
 		}
 	}
