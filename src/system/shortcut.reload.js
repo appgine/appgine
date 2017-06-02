@@ -6,7 +6,7 @@ export default function createPlugin(reload) {
 	}
 
 	return function create() {
-		this.onValidShortcut(...reload, e => {
+		this.onShortcut(...reload, e => {
 			e.preventDefault();
 			this.dispatch('app.event', 'reload');
 		});
