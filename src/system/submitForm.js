@@ -44,7 +44,15 @@ export default function create() {
 
 	const submit = HTMLFormElement.prototype.submit;
 	HTMLFormElement.prototype.submit = function() {
-		const event = new Event('submit', {bubbles: true, cancelable: true, target: this, srcElement: this});
+		let event = null;
+		try {
+			event = new Event('submit', {bubbles: true, cancelable: true, target: this, srcElement: this});
+
+		} catch (e) {
+			event = document.createEvent('Event');
+			event.initEvent('submit', true, true);
+		}
+
 		this.dispatchEvent(event);
 
 		if (!event.defaultPrevented) {
