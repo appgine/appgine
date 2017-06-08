@@ -98,10 +98,12 @@ goog.inherits(AutoComplete, goog.ui.ac.AutoComplete);
 
 AutoComplete.prototype.renderRows = function(rows, opt_options)
 {
-	AutoComplete.category = '';
-	goog.ui.ac.AutoComplete.prototype.renderRows.call(this, rows, opt_options);
+	if (!this.isDisposed()) {
+		AutoComplete.category = '';
+		goog.ui.ac.AutoComplete.prototype.renderRows.call(this, rows, opt_options);
 
-	this._onUpdate && this._onUpdate(this.token_);
+		this._onUpdate && this._onUpdate(this.token_);
+	}
 };
 
 
