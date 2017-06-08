@@ -36,15 +36,28 @@ export function scrollNodeToView($node, animated, onEnd) {
 
 export function scrollFormToView($form, top=false) {
 	if ($form && $form.tagName.toLowerCase()==='form') {
+		let $parent = $form;
+		do {
+			const styles = window.getComputedStyle($parent, null);
+			if (String(styles.position||'').toLowerCase()==='fixed') {
+				const screen = closure.rect.fromScreen()
+				return window.scrollTo(
+					Math.min(screen.left, parseInt(styles.left||0, 10)),
+					Math.min(screen.top, parseInt(styles.top||0, 10))
+				);
+			}
+
+		} while ($parent = $parent.parentNode);
+
 		if (top) {
-			scrollNodeToView($form)
+			return scrollNodeToView($form)
 
 		} else {
 			const fixedOffset = findHeaderBottom();
 			const [left, top, right, bottom] = findNodeOffset($form);
 			const screen = closure.rect.fromScreen()
 
-			window.scrollTo(
+			return window.scrollTo(
 				screen.left+screen.width < left ? left : Math.min(screen.left, left),
 				screen.top+screen.height < top ? Math.min(top-fixedOffset, bottom-screen.height) : Math.min(screen.top, top-fixedOffset)
 			);
