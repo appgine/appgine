@@ -40,7 +40,7 @@ function eachFormData($form, $submitter, fn) {
 
 	var els = $form.elements;
 	for (var el, i = 0; el = els[i]; i++) {
-		if (el.type.toLowerCase()==='file' && el.files.length) {
+		if (String(el.type||'').toLowerCase()==='file' && el.files.length) {
 			fn(el.name, el.files[0], true);
 		}
 	}

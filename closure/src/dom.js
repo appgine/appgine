@@ -47,7 +47,7 @@ exports.getAncestor = function(target, matcher) {
 
 exports.getSubmitter = function(target) {
 	return goog.dom.getAncestor(target.target || target, function($node) {
-		return String($node.type).toLowerCase()==='submit';
+		return String($node.type||'').toLowerCase()==='submit';
 	}, true);
 }
 
@@ -81,14 +81,13 @@ exports.isFormElement = function($element) {
 exports.shouldHaveFormId = function($form) {
 	for (i=0; i<$form.elements.length; i++) {
 		var $element = $form.elements[i];
+		var tagName = String($element.tagName).toLowerCase();
+		var type = String($element.type||'').toLowerCase();
 
-		if (String($element.tagName).toLowerCase()==='button') {
+		if (tagName==='button') {
 			continue;
 
-		} else if (String($element.type).toLowerCase()==='hidden') {
-			continue;
-
-		} else if (String($element.type).toLowerCase()==='submit') {
+		} else if (type==='hidden' || type==='submit') {
 			continue;
 		}
 
