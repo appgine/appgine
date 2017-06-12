@@ -96,7 +96,7 @@ function createFormFocus() {
 				if ($found && $found[inputName]) {
 					const $input = $found[inputName];
 
-					$input.focus();
+					$input.focus && $input.focus();
 					closure.selection.setCursorAtEnd($input);
 
 					if ($input.value) {
