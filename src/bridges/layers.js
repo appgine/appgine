@@ -212,7 +212,7 @@ function createLayersChain(request, layerId) {
 			}
 		}
 
-		inLayerAutoMode = layerMode>0;
+		inLayerAutoMode = layerMode>0 && last;
 	}
 
 	return chain.map(i => ({
