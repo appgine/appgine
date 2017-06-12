@@ -406,11 +406,11 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 	const currentRequest = _stack.loadRequest();
 
 	closure.ajax.submit(formEndpoint, formMethod, submitData, function(...response) {
-		bindSubmitRequest(...response);
-
-		if (currentRequest!==_stack.loadRequest() || formMethod!=='GET' || _pushing) {
-			_stack.clearHistory();
+		if (formMethod!=='GET' || _pushing) {
+			_stack.clearHistory(true);
 		}
+
+		bindSubmitRequest(...response);
 	});
 }
 

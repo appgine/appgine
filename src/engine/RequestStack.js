@@ -11,6 +11,7 @@ export default class RequestStack {
 		this._active = {};
 		this._history = {};
 		this._order = [];
+		this._clearPending = [];
 	}
 
 
@@ -20,6 +21,9 @@ export default class RequestStack {
 		if (this._active[id]) {
 			this._active[id].dispose();
 		}
+
+		this._clear(this._clearPending);
+		this._clearPending = [];
 
 		request.start();
 		this._active[id] = request;
@@ -71,7 +75,11 @@ export default class RequestStack {
 
 
 	clearHistory() {
-		const index = this._order.indexOf(history.getCurrentId());
+		const id = history.getCurrentId();
+		const index = this._order.indexOf(id);
+
+		this._clear(this._clearPending);
+		this._clearPending = [id];
 		this._clear(this._order.filter((id, i) => i!==index));
 	}
 
