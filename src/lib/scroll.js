@@ -47,7 +47,7 @@ export function scrollFormToView($form, top=false) {
 				);
 			}
 
-		} while ($parent = $parent.parentNode);
+		} while (($parent = $parent.parentNode) && ($parent instanceof Element));
 
 		if (top) {
 			return scrollNodeToView($form)
