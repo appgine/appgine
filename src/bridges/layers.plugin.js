@@ -7,10 +7,7 @@ import { requestStack } from '../engine/run'
 export function createLayer($element, layerId) {
 	const targets = this.createTargets();
 
-	this.onShortcut('esc', function(e) {
-		e.stopPropagation();
-		e.preventDefault();
-
+	function exit() {
 		let back = -1;
 		let $back = null;
 		targets.findAll('title').forEach(function({ $element, data }) {
@@ -21,6 +18,12 @@ export function createLayer($element, layerId) {
 		});
 
 		$back && $back.click();
+	}
+
+	this.onShortcut('esc', function(e) {
+		e.stopPropagation();
+		e.preventDefault();
+		exit();
 	});
 
 	targets.every('title', function($target, { data }) {
@@ -44,6 +47,24 @@ export function createLayer($element, layerId) {
 		return {
 			onResponseSwap(request) {
 				request._layersActive[layerId] = willBeActive;
+			}
+		}
+	});
+
+	this.onPluginSubmit(function() {
+		const current = requestStack.loadRequest();
+		let redirected = false;
+
+		return {
+			onResponseRedirect() {
+				if (current._layers[layerId] && current._layers[layerId].layerExit && targets.findOne('title')) {
+					return redirected = true;
+				}
+			},
+			onComplete(isLast) {
+				if (isLast && redirected) {
+					exit();
+				}
 			}
 		}
 	});

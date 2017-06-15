@@ -116,35 +116,40 @@ function createRequest(_listeners) {
 	}
 
 	const callListeners = function(method, ...args) {
+		let ret = false;
 		for (let { result, listener } of _listeners) {
 			if (result && result[method] && listeners.contains(listener)) {
 				try {
-					result[method](...args);
+					if (result[method](...args)) {
+						ret = true;
+					}
 
 				} catch(e) {
 					console.error(e);
 				}
 			}
 		}
+
+		return ret;
 	}
 
 	return {
 		prevented() { callListeners('prevented'); },
-		onResponse(status, response) { callListeners('onResponse', status, response); },
-		onResponseLeave(endpoint) { callListeners('onResponseLeave', endpoint); },
-		onResponseCanonize(endpoint) { callListeners('onResponseCanonize', endpoint); },
-		onResponseRedirect(endpoint) { callListeners('onResponseRedirect', endpoint); },
-		onResponseUpdate() { callListeners('onResponseUpdate'); },
-		onResponseSwap(request) { callListeners('onResponseSwap', request); },
-		end(status, response, isLast) {
+		onResponse(status, response, isLast) {
+			callListeners('onResponse', status, response, isLast);
+
 			switch (status) {
 				case ajax.ABORT: callListeners('onAbort', response, isLast); break;
 				case ajax.TIMEOUT: callListeners('onTimeout', response, isLast); break;
 				case ajax.ERROR: callListeners('onError', response, isLast); break;
 				case ajax.SUCCESS: callListeners('onSuccess', response, isLast); break;
 			}
-
-			callListeners('onComplete', status, response, isLast);
 		},
+		onResponseLeave(endpoint) { return callListeners('onResponseLeave', endpoint); },
+		onResponseCanonize(endpoint) { return callListeners('onResponseCanonize', endpoint); },
+		onResponseRedirect(endpoint) { return callListeners('onResponseRedirect', endpoint); },
+		onResponseUpdate() { return callListeners('onResponseUpdate'); },
+		onResponseSwap(request) { return callListeners('onResponseSwap', request); },
+		onComplete(isLast) { callListeners('onComplete', isLast); },
 	}
 }

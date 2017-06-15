@@ -458,11 +458,11 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 	_options.dispatch('app.request', 'start', endpoint, { $element, requestnum });
 
 	return _options.onResponse(function(status, response) {
-		apiRequest.onResponse(status, response);
-		apiRequest.end(status, response, requestnum===_requestnum);
+		const isLast = requestnum===_requestnum;
+		apiRequest.onResponse(status, response, isLast);
 
 		if (status===closure.ajax.ABORT) {
-			if (newPage && requestnum===_requestnum) {
+			if (newPage && isLast) {
 				history.cancelState();
 			}
 
@@ -472,16 +472,17 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 		} else if (response.error || response.json===undefined) {
 			onError(response.error);
 
-			if (newPage && requestnum===_requestnum) {
+			if (newPage && isLast) {
 				history.cancelState();
 			}
 		}
 
-		if (requestnum===_requestnum) {
+		if (isLast) {
 			_pending = 0;
 			_pushing = false;
 		}
 
+		apiRequest.onComplete(isLast)
 		_options.dispatch('app.request', 'stop', { $element, requestnum });
 	})
 }
@@ -495,13 +496,15 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 		const isCurrent = foundRequest===_stack.loadRequest();
 
 		if (json && json.reload) {
-			apiRequest.onResponseLeave(closure.uri.create());
-			leave(closure.uri.create());
+			if (apiRequest.onResponseLeave(closure.uri.create())!==true) {
+				leave(closure.uri.create());
+			}
 
 		} else if (json && json.canonize) {
 			if (isCurrent) {
-				apiRequest.onResponseCanonize(json.canonize);
-				canonize($element, json.canonize, newPage, scrollTo);
+				if (apiRequest.onResponseCanonize(json.canonize)!==true) {
+					canonize($element, json.canonize, newPage, scrollTo);
+				}
 
 			} else if (foundRequest) {
 				foundRequest.willCanonize($element, json.canonize, newPage, scrollTo);
@@ -509,8 +512,9 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 
 		} else if (json && json.redirect) {
 			if (isCurrent) {
-				apiRequest.onResponseRedirect(json.redirect);
-				redirect($element, json.redirect, newPage, scrollTo);
+				if (apiRequest.onResponseRedirect(json.redirect)!==true) {
+					redirect($element, json.redirect, newPage, scrollTo);
+				}
 
 			} else if (foundRequest) {
 				foundRequest.willRedirect($element, json.redirect, newPage, scrollTo);

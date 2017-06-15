@@ -65,6 +65,7 @@ export default function bridgeLayers(options={}, render) {
 			const dataLayer = $layer.getAttribute('data-layer')||'';
 			const [layerId, route, routeId] = dataLayer.split('#').concat("", "");
 			const layerMode = parseInt($layer.getAttribute('layer-auto') || $layer.getAttribute('layer-mode'), 10) || 0;
+			const layerExit = parseInt($layer.getAttribute('layer-exit'), 10) || 0;
 			const endpoint = request.endpoint;
 			const endpointArgs = closure.uri.getQueryKeys(endpoint);
 
@@ -90,7 +91,7 @@ export default function bridgeLayers(options={}, render) {
 				$navigationList[route] = $navigation;
 			});
 
-			request._layers[layerId] = { route, routeId, layerMode, endpoint, endpointArgs, $title, $navigationList };
+			request._layers[layerId] = { route, routeId, layerMode, layerExit, endpoint, endpointArgs, $title, $navigationList };
 
 			const $content = $layer.querySelector(':not([data-layer]) [layer-content]');
 
