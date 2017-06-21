@@ -14,7 +14,10 @@ exports.isMethod = function($form, method) {
 exports.postData = function($form, $submitter) {
 	var data = new FormData();
 	eachFormData($form, $submitter, function(name, value) {
-		data.append(name, value);
+		value = Array.isArray(value) ? value : [value];
+		value.forEach(function(value) {
+			data.append(name, value);
+		});
 	});
 
 	return data;
@@ -25,7 +28,7 @@ exports.queryData = function($form, $submitter) {
 	var query = new goog.Uri.QueryData();
 	eachFormData($form, $submitter, function(name, value, isFile) {
 		if (!isFile) {
-			query.add(name, value);
+			query.setValues(name, value);
 		}
 	});
 
