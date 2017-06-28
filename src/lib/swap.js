@@ -1,5 +1,6 @@
 
 import { swapDocument, load, loadStatic, unload, unloadStatic } from '../engine/plugins'
+import createFormFocus from './swap/createFormFocus'
 
 import { willUpdate } from '../update'
 import closure from '../closure'
@@ -75,39 +76,4 @@ export default function swap(from, into) {
 			}
 		});
 	});
-}
-
-
-function createFormFocus() {
-	if (document.activeElement) {
-		const $active = document.activeElement;
-
-		if (closure.dom.isFormElement($active)) {
-			const formId = closure.dom.createFormId($active.form);
-			const formName = $active.form.name||null;
-			const inputName = $active.name;
-			const inputValue = $active.value;
-			const selectionStart = closure.selection.getStart($active);
-			const selectionEnd = closure.selection.getEnd($active);
-
-			return function(request) {
-				const $found = closure.dom.findForm(formName, formId);
-
-				if ($found && $found[inputName]) {
-					const $input = $found[inputName];
-
-					$input.focus && $input.focus();
-					closure.selection.setCursorAtEnd($input);
-
-					if ($input.value) {
-						$input.value = inputValue;
-						closure.selection.setStart($input, selectionStart);
-						closure.selection.setEnd($input, selectionEnd);
-					}
-				}
-			}
-		}
-	}
-
-	return function() {};
 }
