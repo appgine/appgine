@@ -87,6 +87,10 @@ onEachTick(function(screen, updated, done) {
 	}
 });
 
+export function option(name) {
+	return _options[name];
+}
+
 export function isRequestCurrent() {
 	return _request===_stack.loadRequest();
 }
