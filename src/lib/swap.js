@@ -32,6 +32,11 @@ export default function swap(from, into) {
 
 			const $nextFragment = createFragment(loadHtml($into.querySelector('body')));
 
+			Array.from($nextFragment.querySelectorAll('noscript[data-render]')).forEach(function($noscript) {
+				$textarea.innerHTML = String($noscript.textContent||'').replace(/&amp;/g, '&');
+				$noscript.outerHTML = $textarea.value;
+			});
+
 			const $staticList = [];
 			Array.from($nextFragment.querySelectorAll('[data-static]')).forEach(function($static) {
 				const attr = $static.getAttribute('data-static');
