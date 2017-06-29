@@ -28,6 +28,7 @@ exports.queryData = function($form, $submitter) {
 	var query = new goog.Uri.QueryData();
 	eachFormData($form, $submitter, function(name, value, isFile) {
 		if (!isFile) {
+			value = Array.isArray(value) ? value : [value];
 			query.setValues(name, value);
 		}
 	});
