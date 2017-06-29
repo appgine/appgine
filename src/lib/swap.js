@@ -12,6 +12,8 @@ import loadTitle from './loadTitle'
 import { CSS_RELOAD } from '../options'
 import { option } from '../engine/run'
 
+const $textarea = document.createElement('textarea');
+
 
 export default function swap(from, into) {
 	const { $fragment: $into, scrolled, scrollTop } = into;
