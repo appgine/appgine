@@ -1,6 +1,7 @@
 
 goog.module('blur');
 
+goog.require('dispose');
 goog.require('goog.events');
 goog.require('goog.events.KeyCodes');
 goog.require('goog.events.EventType');
@@ -21,19 +22,30 @@ exports.fromElement = function($el) {
 	}
 }
 
-
-goog.events.listen(window, goog.events.EventType.KEYDOWN, function(e) {
+function onKeyDown(e) {
 	if (e.keyCode===goog.events.KeyCodes.ENTER) {
 		_enter = true;
 	}
-});
+}
 
-goog.events.listen(window, goog.events.EventType.KEYUP, function(e) {
+function onKeyUp(e) {
 	if (e.keyCode===goog.events.KeyCodes.ENTER) {
 		_enter = false;
 	}
-});
+}
 
-goog.events.listen(window, goog.events.EventType.BLUR, function(e) {
+function onBlur(e) {
 	_enter = false;
+}
+
+
+goog.events.listen(window, goog.events.EventType.KEYDOWN, onKeyDown);
+goog.events.listen(window, goog.events.EventType.KEYUP, onKeyUp);
+goog.events.listen(window, goog.events.EventType.BLUR, onBlur);
+
+
+dispose.register(function() {
+	goog.events.unlisten(window, goog.events.EventType.KEYDOWN, onKeyDown);
+	goog.events.unlisten(window, goog.events.EventType.KEYUP, onKeyUp);
+	goog.events.unlisten(window, goog.events.EventType.BLUR, onBlur);
 });

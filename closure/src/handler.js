@@ -1,6 +1,7 @@
 
 goog.module('handler');
 
+goog.require('dispose');
 goog.require('goog.array');
 goog.require('goog.events');
 goog.require('goog.events.KeyHandler');
@@ -32,6 +33,10 @@ exports.createHandler = function(fn) {
 		handler.setAllShortcutsAreGlobal(true);
 
 		return fn(e, e.identifier, isValid);
+	});
+
+	dispose.register(function() {
+		handler.dispose();
 	});
 
 	return function(shortcut) {

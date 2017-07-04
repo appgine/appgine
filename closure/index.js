@@ -22,6 +22,7 @@ goog.dom.getDocumentScroll_ = function(doc) {
 	);
 }
 
+exports.dispose = goog.require('dispose').dispose;
 
 exports.cloneObject = goog.cloneObject;
 exports.getUid = goog.getUid;
