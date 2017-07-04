@@ -24,6 +24,12 @@ export default class TargetList
 	}
 
 
+	destroy() {
+		this.uncompleteTargets();
+		Object.keys(this._targets).forEach(id => this.removeTarget(id));
+	}
+
+
 	addTarget(id, targetObj) {
 		const { $element, target, data } = targetObj;
 		const state = {};

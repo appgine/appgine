@@ -10,5 +10,9 @@ export default {
 		state.push(api);
 		fn(api);
 		return api;
-	}
+	},
+	destroy(state) {
+		state.forEach(targets => targets.destroy());
+		state.splice(0, state.length);
+	},
 }
