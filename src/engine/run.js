@@ -411,7 +411,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 
 	closure.ajax.submit(formEndpoint, formMethod, submitData, function(...response) {
 		if (formMethod!=='GET' || _pushing) {
-			_stack.clearHistory(true);
+			_stack.clearHistory();
 		}
 
 		bindSubmitRequest(...response);
