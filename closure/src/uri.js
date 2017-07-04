@@ -75,7 +75,7 @@ exports.createReport = function(location, params) {
  * @param {string}
  * @return {goog.Uri}
  */
-createUri = function(location, params, hash) {
+function createUri(location, params, hash) {
 	if (location && typeof location === 'object') {
 		params = location;
 		location = $location.href;
