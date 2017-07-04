@@ -20,6 +20,7 @@ Kefir.stream(emitter => { _mergeEmitter = emitter; })
 	.onValue(commitMergeState);
 
 const _events = {};
+const _popstateListeners = [];
 let _canceling = false;
 let _session = '';
 let _id = 0;
@@ -85,11 +86,17 @@ export function state(key, defval) {
 
 export function popstate(fn) {
 	const popstate = e => fn(e, window.location.href);
+	const dispose = function() {
+		_supported && window.removeEventListener('popstate', popstate);
+
+		if (_popstateListeners.indexOf(dispose)!==-1) {
+			_popstateListeners.splice(_popstateListeners.indexOf(dispose), 1);
+		}
+	}
 
 	_supported && window.addEventListener('popstate', popstate);
-	return function() {
-		_supported && window.removeEventListener('popstate', popstate);
-	}
+
+	return _popstateListeners.push(dispose);
 }
 
 popstate((e, link) => {
@@ -235,4 +242,8 @@ export function back(back=-1) {
 export function go(...args) {
 	_firstlink = null;
 	_supported ? window.history.go(...args) : null;
+}
+
+export function destroy() {
+	_popstateListeners.filter(_ => true).forEach(popstate => popstate());
 }
