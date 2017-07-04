@@ -8,7 +8,8 @@ import {
 	findPlugins,
 	load, unload,
 	loadScripts, unloadScripts,
-	loadGlobal, loadSystem,
+	loadGlobal, unloadGlobal,
+	loadSystem, unloadSystem,
 	updatePlugins, updatePlugin,
 	querySelectorAll, resolveDataAttribute, contains,
 } from 'plugin-macro-loader/lib/loader'
@@ -37,6 +38,15 @@ export function loadMain()
 	loadGlobal(document);
 	loadStatic(document);
 	unloadScripts(document);
+}
+
+
+export function unloadMain()
+{
+	unloadScripts(document);
+	unloadStatic(document);
+	unloadGlobal(document);
+	unloadSystem();
 }
 
 
