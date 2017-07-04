@@ -8,12 +8,6 @@ goog.require('goog.events.KeyHandler.EventType');
 goog.require('goog.ui.KeyboardShortcutHandler');
 goog.require('goog.ui.KeyboardShortcutHandler.EventType');
 
-
-exports.keycut = function($element, handle, capture) {
-	goog.events.listen(new goog.events.KeyHandler($element), goog.events.KeyHandler.EventType.KEY, handle, capture);
-}
-
-
 exports.shortcut = function() {
 	var register, args;
 

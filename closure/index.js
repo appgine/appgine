@@ -63,7 +63,6 @@ exports.ajax = goog.require('ajax');
 exports.form = goog.require('form');
 exports.autocomplete = goog.require('autocomplete');
 exports.scroll = goog.require('scroll');
-exports.keyhandler = goog.require('handler').keycut;
 exports.shortcuthandler = goog.require('handler').shortcut;
 exports.blur = goog.require('blur');
 exports.uri = goog.require('uri');
