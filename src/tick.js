@@ -14,10 +14,14 @@ let ticks = [];
 let ticking = false;
 let updated = false;
 
+const stream_scroll = Kefir.fromEvents(window, 'scroll');
+const stream_resize = Kefir.fromEvents(window, 'resize');
+const stream_interval = Kefir.interval(300);
+
 const stream1 = Kefir.merge([
-	Kefir.fromEvents(window, 'scroll'),
-	Kefir.fromEvents(window, 'resize').throttle(100).onValue(() => ticks.forEach(tick => tick.updated = true)),
-	Kefir.interval(300),
+	stream_scroll,
+	stream_resize.throttle(100).onValue(() => ticks.forEach(tick => tick.updated = true)),
+	stream_interval,
 	Kefir.stream(emitter => onUpdated(() => {
 		updated = true;
 		ticks.forEach(tick => tick.updated = true);
@@ -96,4 +100,13 @@ function isDone() {
 		.filter(tick => tick.updated);
 
 	return updated.length === 0 && !isUpdating();
+}
+
+
+export function destroy()
+{
+	stream_scroll._emitEnd();
+	stream_resize._emitEnd();
+	stream_interval._emitEnd();
+	stream1._emitEnd();
 }
