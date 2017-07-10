@@ -75,18 +75,22 @@ export default class RequestStack {
 
 
 	clearHistory() {
-		const id = history.getCurrentId();
-		const index = this._order.indexOf(id);
-
 		this._clear(this._clearPending);
-		this._clearPending = [id];
-		this._clear(this._order.filter((id, i) => i!==index));
+		this._clearPending = [history.getCurrentId()];
+		this._clear(this._order);
 	}
 
 
-	_clear(keys) {
-		keys.filter(id => this._active[id]).forEach(id => this._active[id].dispose());
-		keys.filter(id => this._active[id]).forEach(id => delete this._active[id]);
+	_clear(keys, force=false) {
+		keys = keys.
+			filter(id => this._active[id]).
+			filter(id => force || id!==history.getCurrentId());
+
+		keys.forEach(id => this._active[id].dispose());
+		keys.forEach(id => delete this._active[id]);
+	}
+
+
 	}
 
 }
