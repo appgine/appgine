@@ -103,7 +103,7 @@ function isDone() {
 }
 
 
-export function destroy()
+export function dispose()
 {
 	stream_scroll._emitEnd();
 	stream_resize._emitEnd();

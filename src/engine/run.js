@@ -3,13 +3,13 @@ import RequestStack from './RequestStack'
 
 import createOptions from './createOptions'
 
-import { loadMain, update } from './plugins'
+import { loadMain, update, unload, unloadMain } from './plugins'
 import loadHtml from '../lib/loadHtml'
 import createFragment from '../lib/createFragment'
 import { scrollHashToView, scrollFormToView } from '../lib/scroll'
 import * as apiRequest from '../api/request'
 import * as apiShortcut from '../api/shortcut'
-import { onEachTick } from '../tick'
+import * as tick from '../tick'
 import { willUpdate, wasUpdated } from '../update'
 import * as history from './history'
 
@@ -25,7 +25,7 @@ var _pushing = false;
 
 export const requestStack = _stack;
 
-onEachTick(function(screen, updated, done) {
+tick.onEachTick(function(screen, updated, done) {
 
 	if (_poping && _poping!==true) {
 		const endpoint = closure.uri.create(_poping, {}, '');
@@ -563,3 +563,14 @@ function internalSwapRequest(requestInto) {
 	_options.swap(_request, _request=requestInto);
 }
 
+
+function internalDispose() {
+	_request = null;
+	_stack.dispose();
+	unload(document);
+	unloadMain();
+	history.dispose();
+	tick.dispose();
+	closure.dispose();
+	delete window.googNamespace;
+}

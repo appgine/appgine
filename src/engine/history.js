@@ -244,6 +244,6 @@ export function go(...args) {
 	_supported ? window.history.go(...args) : null;
 }
 
-export function destroy() {
+export function dispose() {
 	_popstateListeners.filter(_ => true).forEach(popstate => popstate());
 }
