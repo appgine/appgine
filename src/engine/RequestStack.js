@@ -91,6 +91,10 @@ export default class RequestStack {
 	}
 
 
+	dispose() {
+		this._clear(this._order, true);
+		this._active = {};
+		this._history = {};
 	}
 
 }
