@@ -555,7 +555,45 @@ function internalSwap(url, html, scrollTo)
 	const $fragment = createFragment(html);
 	const requestInto = () => _stack.createRequest(_options.createRequest(url, $fragment, scrollTo));
 
-	internalSwapRequest(requestInto());
+	const $appgineNext = $fragment.querySelector('script[data-appgine]')
+	const $appginePrev = document.querySelector('script[data-appgine]');
+
+	if ($appgineNext && $appginePrev && $appgineNext.getAttribute('src')!==$appginePrev.getAttribute('src')) {
+		setTimeout(function() {
+			Array.from(document.querySelectorAll('script[data-appgine]')).
+				forEach($script => $script.parentNode.removeChild($script));
+
+			const $script = document.createElement('script');
+			$script.onerror = () => internalSwapRequest(requestInto());
+			$script.onload = () => {
+				if (typeof window.appgine!=='function') {
+					internalSwapRequest(requestInto());
+
+				} else {
+					internalDispose();
+
+					const $lastHead = document.createElement('head');
+					const $lastBody = document.createElement('body');
+					Array.from(document.head.childNodes).forEach($child => $lastHead.appendChild($child));
+					Array.from(document.body.childNodes).forEach($child => $lastBody.appendChild($child));
+					Array.from($fragment.querySelector('head').childNodes).forEach($child => document.head.appendChild($child));
+					Array.from($fragment.querySelector('body').childNodes).forEach($child => document.body.appendChild($child));
+
+					window.appgine(scrollTo);
+				}
+			}
+
+			Array.from($appgineNext.attributes).
+				filter(attr => ['onload', 'onerror'].indexOf(attr.name)===-1).
+				forEach(attr => $script.setAttribute(attr.name, attr.value));
+
+			while (!(document.querySelector('head') || document.documentElement).appendChild);
+			(document.querySelector('head') || document.documentElement).appendChild($script);
+		}, 0);
+
+	} else {
+		internalSwapRequest(requestInto());
+	}
 }
 
 

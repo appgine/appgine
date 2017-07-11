@@ -59,5 +59,14 @@ export default function(options={}) {
 	addListener('app.event', 'submit', onSubmitForm);
 	addListener('app.event', 'reload', onReload);
 
-	ready(() => run(options, scrollTop()));
+	if (window.appgine) {
+		window.appgine = function(scrollTo) {
+			window.appgine = true;
+			run(options, scrollTo);
+		}
+
+	} else {
+		window.appgine = true;
+		ready(() => run(options, scrollTop()));
+	}
 }
