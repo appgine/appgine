@@ -2,6 +2,7 @@
 import ready from './lib/ready'
 import run, { onClick, onClickHash, onSubmitForm, onReload } from './engine/run'
 import { addListener } from './api/channel'
+import { scrollTop } from './closure'
 
 
 export default function(options={}) {
@@ -58,5 +59,5 @@ export default function(options={}) {
 	addListener('app.event', 'submit', onSubmitForm);
 	addListener('app.event', 'reload', onReload);
 
-	ready(() => run(options));
+	ready(() => run(options, scrollTop()));
 }

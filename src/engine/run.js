@@ -5,6 +5,7 @@ import createOptions from './createOptions'
 
 import { loadMain, update } from './plugins'
 import loadHtml from '../lib/loadHtml'
+import createFragment from '../lib/createFragment'
 import { scrollHashToView, scrollFormToView } from '../lib/scroll'
 import * as apiRequest from '../api/request'
 import * as apiShortcut from '../api/shortcut'
@@ -95,7 +96,7 @@ export function isRequestCurrent() {
 	return _request===_stack.loadRequest();
 }
 
-export default function run(options) {
+export default function run(options, scrollTo=0) {
 	_options = createOptions(options);
 	_options.initHTML(document.documentElement);
 
@@ -113,11 +114,9 @@ export default function run(options) {
 		});
 	}
 
-	const html = loadHtml(document.documentElement);
-
 	willUpdate(loadMain);
 
-	_options.swap(null, _request = _stack.createRequest(_options.createRequest(closure.uri.create(), html, 0)));
+	internalSwap(closure.uri.create(), loadHtml(document.documentElement), scrollTo);
 
 	history.popstate(function(e, endpoint) {
 		if (_pending) {
@@ -147,12 +146,12 @@ export default function run(options) {
 				const [_swapUrl, _swapHtml, _swapScrollTo, _swapNewPage] = _swap;
 
 				_swapNewPage && history.changeId();
-				_options.swap(_request, _request = _stack.createRequest(_options.createRequest(_swapUrl, _swapHtml, _swapScrollTo)));
+				internalSwap(_swapUrl, _swapHtml, _swapScrollTo);
 				_options.dispatch('app.request', 'pageview', endpoint);
 
 			} else if (request!==_request) {
 				request.scrolled = -1;
-				_options.swap(_request, _request = request);
+				internalSwapRequest(request);
 				_options.dispatch('app.request', 'pageview', endpoint);
 
 			} else {
@@ -537,7 +536,7 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 				}
 
 				newPage && history.changeId();
-				_options.swap(_request, _request = _stack.createRequest(_options.createRequest(endpoint, text, anchor.join('#')||scrollTo)));
+				internalSwap(endpoint, text, anchor.join('#')||scrollTo);
 
 			} else if (text && foundRequest) {
 				foundRequest.willSwap(endpoint, text, anchor.join('#')||scrollTo, newPage);
@@ -549,3 +548,18 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 		}
 	}
 }
+
+
+function internalSwap(url, html, scrollTo)
+{
+	const $fragment = createFragment(html);
+	const requestInto = () => _stack.createRequest(_options.createRequest(url, $fragment, scrollTo));
+
+	internalSwapRequest(requestInto());
+}
+
+
+function internalSwapRequest(requestInto) {
+	_options.swap(_request, _request=requestInto);
+}
+
