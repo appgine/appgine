@@ -13,7 +13,7 @@ exports.addRemove = goog.dom.classes.addRemove;
 exports.swap = function(selector, $from, $into) {
 	goog.dom.classes.addRemove(
 		document.querySelector(selector),
-		goog.dom.classes.get($from.querySelector(selector)),
-		goog.dom.classes.get($into.querySelector(selector))
+		$from ? goog.dom.classes.get($from.querySelector(selector)) : [],
+		$into ? goog.dom.classes.get($into.querySelector(selector)) : []
 	);
 }

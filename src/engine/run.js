@@ -100,6 +100,8 @@ export default function run(options, scrollTo=0) {
 	_options = createOptions(options);
 	_options.initHTML(document.documentElement);
 
+	const html = loadHtml(document.documentElement);
+
 	if (_options.timeout) {
 		closure.ajax.setTimeout(_options.timeout);
 	}
@@ -116,7 +118,7 @@ export default function run(options, scrollTo=0) {
 
 	willUpdate(loadMain);
 
-	internalSwap(closure.uri.create(), loadHtml(document.documentElement), scrollTo);
+	internalSwap(closure.uri.create(), html, scrollTo);
 
 	history.popstate(function(e, endpoint) {
 		if (_pending) {

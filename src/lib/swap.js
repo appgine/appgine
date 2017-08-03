@@ -68,7 +68,7 @@ export default function swap(from, into) {
 			Array.from(document.body.childNodes).forEach($child => $lastBody.appendChild($child));
 			Array.from($nextFragment.querySelector('body').childNodes).forEach($child => document.body.appendChild($child));
 
-			closure.classes.swap('body', from ? from.$fragment : document, $into);
+			closure.classes.swap('body', from && from.$fragment || null, $into);
 
 			if (from) {
 				const $from = from.$fragment;
