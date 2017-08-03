@@ -505,6 +505,14 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 				leave(closure.uri.create());
 			}
 
+		} else if (json && json.refresh) {
+			if (isCurrent) {
+				canonize($element, json.refresh, newPage, scrollTo);
+
+			} else if (foundRequest) {
+				foundRequest.willCanonize($element, json.refresh, newPage, scrollTo);
+			}
+
 		} else if (json && json.canonize) {
 			if (isCurrent) {
 				if (apiRequest.onResponseCanonize(json.canonize)!==true) {
