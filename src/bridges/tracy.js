@@ -51,7 +51,7 @@ export default function bridgeTracy(options={}) {
 	}
 
 	options.onBeforeSwap = function() {
-		onBeforeSwap && onBeforeSwap();
+		onBeforeSwap && onBeforeSwap(...arguments);
 
 		const $tracy = document.getElementById('tracy-bs-toggle');
 		if ($tracy) {
