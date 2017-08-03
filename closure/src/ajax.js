@@ -1,6 +1,7 @@
 
 goog.module('ajax');
 
+goog.require('goog.object');
 goog.require('goog.events');
 goog.require('goog.net.XhrIo');
 goog.require('goog.net.EventType');
@@ -8,6 +9,7 @@ goog.require('goog.net.Jsonp');
 
 var _request;
 var _timeout = 10e3;
+var _headers = {};
 
 exports.ABORT = 'abort';
 exports.ERROR = 'error';
@@ -16,6 +18,15 @@ exports.SUCCESS = 'success';
 
 exports.setTimeout = function(timeout) {
 	_timeout = parseInt(timeout, 10);
+}
+
+exports.setHeader = function(name, value) {
+	if (value===undefined) {
+		delete _headers[name];
+
+	} else {
+		_headers[name] = value;
+	}
 }
 
 exports.jsonp = function(endpoint, args, fn) {
@@ -52,10 +63,10 @@ function ajaxRequest(endpoint, method, data, fn) {
 	var request = new goog.net.XhrIo();
 
 	bindRequest(request, fn);
-	request.send(endpoint, method, data, {
+	request.send(endpoint, method, data, Object.assign({}, _headers, {
 		'X-Requested-With': 'XMLHttpRequest',
 		'Is-Ajax': 1
-	});
+	}));
 }
 
 
@@ -63,9 +74,9 @@ function pageRequest(endpoint, method, data, fn) {
 	exports.abort();
 
 	bindRequest(_request = new goog.net.XhrIo(), fn);
-	_request.send(endpoint, method, data, {
+	_request.send(endpoint, method, data, Object.assign({}, _headers, {
 		'X-Requested-With': 'XMLHttpRequest'
-	});
+	}));
 }
 
 
