@@ -49,6 +49,7 @@ exports.browser.isAndroidBrowser = goog.labs.userAgent.browser.isAndroidBrowser;
 
 exports.string = goog.require('string');
 exports.base64 = goog.require('base64');
+exports.md5 = goog.require('md5');
 exports.array = goog.require('array');
 exports.style = goog.require('style');
 exports.object = goog.require('object');
