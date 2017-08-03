@@ -14,7 +14,7 @@ export default function createFormFocus() {
 			const selectionStart = selection.getStart($active);
 			const selectionEnd = selection.getEnd($active);
 
-			return function(request) {
+			return function() {
 				const $found = dom.findForm(formName, formId);
 
 				if ($found && $found[inputName]) {
@@ -23,7 +23,7 @@ export default function createFormFocus() {
 					$input.focus && $input.focus();
 					selection.setCursorAtEnd($input);
 
-					if ($input.value) {
+					if ($input.hasAttribute('value')) {
 						$input.value = inputValue;
 						selection.setStart($input, selectionStart);
 						selection.setEnd($input, selectionEnd);

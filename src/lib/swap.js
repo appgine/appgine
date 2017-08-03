@@ -82,7 +82,7 @@ export default function swap(from, into) {
 			unloadStatic($lastBody);
 			unload($lastBody);
 
-			formFocus(into);
+			formFocus();
 
 			if (scrolled===-1) {
 				window.scrollTo(0, scrollTop);
