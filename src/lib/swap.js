@@ -1,16 +1,12 @@
 
 import { swapDocument, load, loadStatic, unload, unloadStatic } from '../engine/plugins'
 import createFormFocus from './swap/createFormFocus'
-import cssReload from './swap/cssReload'
 
 import { willUpdate } from '../update'
 import closure from '../closure'
 import createFragment from './createFragment'
 import loadHtml from './loadHtml'
 import loadTitle from './loadTitle'
-
-import { CSS_RELOAD } from '../options'
-import { option } from '../engine/run'
 
 const $textarea = document.createElement('textarea');
 
@@ -21,8 +17,6 @@ export default function swap(from, into) {
 	willUpdate(function() {
 		swapDocument(function() {
 			document.title = loadTitle($into);
-
-			cssReload($into, option(CSS_RELOAD));
 
 			const formFocus = createFormFocus();
 
