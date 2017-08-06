@@ -19,56 +19,58 @@ function transformWithSearch(href, search) {
 	].join('');
 }
 
-let $loaded = null;
-let $loading = [];
-let pending = null;
+let loaded = null;
+let loading = [];
 let swaplist = [];
+let pending = null;
 
 export default function bridgeCssReload(options={}, transform=defaultTransform) {
 	const { onBeforeSwap } = options;
 
 	options.onBeforeSwap = function(requestFrom, requestTo) {
-		if ($loaded===null) {
-			$loaded = Array.from(document.head.querySelectorAll('link[rel*=stylesheet]'));
+		if (loaded===null) {
+			loaded = [];
 
-			$loaded.forEach(function($link) {
+			Array.from(document.head.querySelectorAll('link[rel*=stylesheet]')).forEach(function($link) {
 				const cssid = buildLinkMD5($link, transform($link.getAttribute('href')))
 				const swapid = buildLinkMD5($link, transformWithSearch($link.getAttribute('href'), false))
-				$link.setAttribute('data-appgine-cssid', cssid);
-				$link.setAttribute('data-appgine-swapid', swapid);
+				loaded.push({ $link, cssid, swapid });
 			});
 		}
 
 		onBeforeSwap && onBeforeSwap(...arguments);
 		const { $fragment } = requestTo;
 
-		let $enabled = [];
-		let $swapped = [];
+		let enabled = [];
+		let swapped = [];
 		Array.from($fragment.querySelectorAll('link[rel*=stylesheet]')).forEach(function($link) {
 			if (transform($link.getAttribute('href'))) {
 				const cssid = buildLinkMD5($link, transform($link.getAttribute('href')));
 				const swapid = buildLinkMD5($link, transformWithSearch($link.getAttribute('href'), false));
 
-				let $exists = null;
-				let $swap = null;
+				let exists = null;
+				let swap = null;
 
-				[].concat($loaded, $loading).forEach(function($link) {
-					if ($link.getAttribute('data-appgine-cssid')===cssid) {
-						$exists = $link;
+				[].concat(loaded, loading).forEach(function(item) {
+					if (item.cssid===cssid) {
+						exists = item;
 					}
 				});
 
-				$loaded.forEach(function($link) {
-					if ($link.getAttribute('data-appgine-swapid')===swapid && !$link.disabled) {
-						$swap = $link;
+				loaded.forEach(function(item) {
+					if (item.swapid===swapid && !item.$link.disabled) {
+						swap = item;
 					}
 				});
 
-				if ($exists===null) {
-					$exists = createCssElement($link.cloneNode(true), function($exists) {
-						swaplist = swaplist.filter(([$link, $swap]) => {
-							if ($link===$exists) {
-								$swap.disabled = true;
+				if (exists===null) {
+					exists = {$link: createCssElement($link), cssid, swapid};
+					loading.push(exists);
+
+					addLoadedHandlers(exists, function(item) {
+						swaplist = swaplist.filter(([swap1, swap2]) => {
+							if (swap1===item) {
+								swap2.$link.disabled = true;
 								return false;
 							}
 
@@ -76,31 +78,27 @@ export default function bridgeCssReload(options={}, transform=defaultTransform) 
 						});
 					});
 
-					$exists.setAttribute('data-appgine-cssid', cssid);
-					$exists.setAttribute('data-appgine-swapid', swapid);
-
-					$loaded.indexOf($exists)===-1 && $loading.push($exists);
-					document.head.appendChild($exists);
+					document.head.appendChild(exists.$link);
 				}
 
-				if ($swap && $swap!==$exists && $loading.indexOf($exists)!==-1) {
-					$swapped.push($swap);
-					swaplist.push([$exists, $swap]);
+				if (swap && swap!==exists && loading.indexOf(exists)!==-1) {
+					swapped.push(swap);
+					swaplist.push([exists, swap]);
 				}
 
 				$link.disabled = true;
-				$exists.disabled = false;
-				$enabled.push($exists);
+				exists.$link.disabled = false;
+				enabled.push(exists);
 			}
 		});
 
-		[].concat($loaded, $loading).forEach(function($link) {
-			if ($enabled.indexOf($link)===-1 && $swapped.indexOf($link)===-1) {
-				$link.disabled = true;
+		[].concat(loaded, loading).forEach(function(item) {
+			if (enabled.indexOf(item)===-1 && swapped.indexOf(item)===-1) {
+				item.$link.disabled = true;
 			}
 		});
 
-		swaplist = swaplist.filter(([$link, $swap]) => !$link.disabled && !$swap.disabled && $enabled.indexOf($swap)===-1);
+		swaplist = swaplist.filter(([swap1, swap2]) => !swap1.$link.disabled && !swap2.$link.disabled && enabled.indexOf(swap2)===-1);
 
 		clearTimeout(pending);
 		pending = setTimeout(loadCssStylesheet, 10);
@@ -121,9 +119,26 @@ function buildLinkMD5($link, href) {
 }
 
 
-function createCssElement($link, cb) {
+function createCssElement($link) {
+	if (browser.isFirefox()) {
+		const $style = document.createElement('style');
+		$style.textContent = '@import "' + $link.href + '"';
+
+		for (let attr of $link.attributes) {
+			$style.setAttribute(attr.name, attr.value);
+		}
+
+		return $style;
+	}
+
+	return $link.cloneNode(true);
+}
+
+
+function addLoadedHandlers(item, cb) {
+	const { $link } = item;
+
 	let done = false;
-	let $element = $link;
 	function onDone(e) {
 		if (!browser.isFirefox() || e===true) {
 			$link.onload = null;
@@ -135,64 +150,51 @@ function createCssElement($link, cb) {
 
 			if (done===false) {
 				done = true;
-				cb($element);
+				cb(item);
 			}
 		}
 	}
 
-	if (browser.isFirefox()) {
-		const $style = document.createElement('style');
-		$style.textContent = '@import "' + $link.href + '"';
-		$style.onload = onDone;
+	$link.onload = onDone;
 
-		for (let attr of $link.attributes) {
-			$style.setAttribute(attr.name, attr.value);
+	$link.onreadystatechange = function() {
+		const state = $link.readyState;
+		if (state === 'loaded' || state === 'complete') {
+			onDone(true);
 		}
+	};
 
-		return $element = $style;
-
-	} else {
-		$link.onload = onDone;
-
-		$link.onreadystatechange = function() {
-			const state = $link.readyState;
-			if (state === 'loaded' || state === 'complete') {
-				onDone(true);
-			}
-		};
-
-		if ($link.addEventListener) {
-			$link.addEventListener('load', onDone);
-		}
-
-		return $link;
+	if ($link.addEventListener) {
+		$link.addEventListener('load', onDone);
 	}
 }
 
 
 function loadCssStylesheet() {
-	for (let $element of $loading) {
-		if ($element.tagName==='style') {
+	for (let item of loading) {
+		const { $link } = item;
+
+		if ($link.tagName==='style') {
 			try {
-				$element.sheet.cssRules; // see: https://www.phpied.com/when-is-a-stylesheet-really-loaded/
-				$loading.indexOf($element)!==-1 && $loading.splice($loading.indexOf($element), 1);
-				$loaded.indexOf($element)===-1 && $loaded.push($element);
-			    $element.onload && $element.onload(true);
+				$link.sheet.cssRules; // see: https://www.phpied.com/when-is-a-stylesheet-really-loaded/
+				loading.splice(loading.indexOf(item), 1);
+				loaded.push(item);
+			    $link.onload && $link.onload(true);
 
 			} catch (e) {}
 
 		} else {
 			for (let sheet of document.styleSheets) {
-				if (sheet.ownerNode===$element) {
-					$loading.indexOf($element)!==-1 && $loading.splice($loading.indexOf($element), 1);
-					$loaded.indexOf($element)===-1 && $loaded.push($element);
-					$element.onload && $element.onload(true);
+				if (sheet.ownerNode===$link) {
+					loading.splice(loading.indexOf(item), 1);
+					loaded.push(item);
+					$link.onload && $link.onload(true);
 				}
 			}
 		}
 	}
 
-	if ($loading.length) {
+	if (loading.length) {
 		pending = setTimeout(loadCssStylesheet, 10);
 	}
 }
