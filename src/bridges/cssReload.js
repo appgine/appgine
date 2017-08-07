@@ -21,6 +21,7 @@ function transformWithSearch(href, search) {
 
 let loaded = null;
 let loading = [];
+let styles = [];
 let swaplist = [];
 let pending = null;
 
@@ -40,6 +41,16 @@ export default function bridgeCssReload(options={}, transform=defaultTransform) 
 
 		onBeforeSwap && onBeforeSwap(...arguments);
 		const { $fragment } = requestTo;
+
+		let _styles = [];
+		Array.from($fragment.querySelectorAll('head > style')).forEach(function($style) {
+			const _$style = $style.cloneNode(true);
+			_styles.push(_$style);
+			document.head.appendChild(_$style);
+		});
+
+		styles.forEach($style => $style.parentNode && $style.parentNode.removeChild($style));
+		styles = _styles;
 
 		let enabled = [];
 		let swapped = [];
