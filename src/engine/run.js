@@ -300,7 +300,10 @@ function leave(endpoint) {
 
 		if (_pending) {
 			_pending = 0;
-			history.cancelState();
+
+			if (newPage) {
+				history.cancelState();
+			}
 		}
 
 		return true;
