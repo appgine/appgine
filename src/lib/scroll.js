@@ -1,6 +1,12 @@
 
 import closure from '../closure'
 
+let hashFixedEdge = null;
+
+export function setHashFixedEdge(option) {
+	hashFixedEdge = option;
+}
+
 
 export function scrollHashToView(hash, animated, onEnd) {
 	const $node = hash ? document.getElementById(hash) : document.body;
@@ -16,11 +22,11 @@ export function scrollHashToView(hash, animated, onEnd) {
 
 export function scrollNodeToView($node, animated, onEnd) {
 	if ($node) {
-		const fixedOffset = findHeaderBottom();
+		const fixedEdge = findFixedEdge();
 		const [left, top] = findNodeOffset($node);
 
 		const scrollLeft = left;
-		const scrollTop = top-fixedOffset;
+		const scrollTop = top-fixedEdge;
 
 		setTimeout(() => {
 			if (animated) {
@@ -53,29 +59,59 @@ export function scrollFormToView($form, top=false) {
 			return scrollNodeToView($form)
 
 		} else {
-			const fixedOffset = findHeaderBottom();
+			const fixedEdge = findFixedEdge();
 			const [left, top, right, bottom] = findNodeOffset($form);
 			const screen = closure.rect.fromScreen()
 
 			return window.scrollTo(
 				screen.left+screen.width < left ? left : Math.min(screen.left, left),
-				screen.top+screen.height < top ? Math.min(top-fixedOffset, bottom-screen.height) : Math.min(screen.top, top-fixedOffset)
+				screen.top+screen.height < top ? Math.min(top-fixedEdge, bottom-screen.height) : Math.min(screen.top, top-fixedEdge)
 			);
 		}
 	}
 }
 
 
-function findHeaderBottom() {
+function findFixedEdge() {
 	const scrollTop = closure.scrollTop();
 
- 	let offsetBottom = 0;
- 	[].forEach.call(document.querySelectorAll('header, .header-fixed'), function($header) {
- 		const bounds = closure.style.getBounds($header);
- 		offsetBottom = Math.max(offsetBottom, bounds.top + bounds.height - scrollTop);
- 	});
+ 	let fixedEdge = 0;
 
- 	return offsetBottom;
+ 	let _hashFixedEdge = hashFixedEdge;
+ 	if (typeof _hashFixedEdge==='function') {
+ 		_hashFixedEdge = _hashFixedEdge();
+ 	}
+
+ 	if (typeof _hashFixedEdge==='string') {
+ 		_hashFixedEdge = [_hashFixedEdge];
+
+ 	} else if (_hashFixedEdge instanceof Element) {
+ 		_hashFixedEdge = [_hashFixedEdge];
+ 	}
+
+ 	if (Array.isArray(_hashFixedEdge)) {
+ 		_hashFixedEdge.forEach(function(val) {
+ 			if (typeof val==='function') {
+ 				val = val();
+ 			}
+
+ 			if (typeof val==='string') {
+ 				val = Array.from(document.querySelectorAll(val));
+
+ 			} else if (val instanceof Element) {
+ 				val = [val];
+ 			}
+
+ 			if (Array.isArray(val)) {
+ 				val.
+ 					filter($node => $node instanceof Element).
+ 					map(closure.style.getBounds).
+ 					forEach(({ top, height }) => fixedEdge = Math.max(fixedEdge, top + height - scrollTop));
+ 			}
+ 		});
+ 	}
+
+ 	return fixedEdge;
 }
 
 function findNodeOffset($node) {

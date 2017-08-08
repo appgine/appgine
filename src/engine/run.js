@@ -6,7 +6,7 @@ import createOptions from './createOptions'
 import { loadMain, update, unload, unloadMain } from './plugins'
 import loadHtml from '../lib/loadHtml'
 import createFragment from '../lib/createFragment'
-import { scrollHashToView, scrollFormToView } from '../lib/scroll'
+import { scrollHashToView, scrollFormToView, setHashFixedEdge } from '../lib/scroll'
 import * as apiRequest from '../api/request'
 import * as apiShortcut from '../api/shortcut'
 import * as tick from '../tick'
@@ -43,6 +43,7 @@ tick.onEachTick(function(screen, updated, done) {
 
 		} else if (request.scrolled!==true) {
 			if (typeof request.scrolled === 'string') {
+				setHashFixedEdge(_options.hashFixedEdge);
 				scrollHashToView(request.scrolled, true);
 				request.scrolled = true;
 
@@ -189,6 +190,7 @@ export function onClickHash(e, $link, hash, toTarget) {
 
 		} else {
 			e.preventDefault();
+			setHashFixedEdge(_options.hashFixedEdge);
 			scrollHashToView(hash, true);
 		}
 	}
@@ -393,6 +395,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 			const $found = closure.dom.findForm(formName, formId);
 
 			if ($found && formName[0]==='#') {
+				setHashFixedEdge(_options.hashFixedEdge);
 				scrollFormToView($found, true);
 			}
 		});
@@ -403,6 +406,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 			const $found = closure.dom.findForm(formName, formId);
 
 			if ($found) {
+				setHashFixedEdge(_options.hashFixedEdge);
 				scrollFormToView($found, formName[0]==='#');
 
 			} else {
