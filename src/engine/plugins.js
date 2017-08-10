@@ -14,21 +14,10 @@ import {
 	querySelectorAll, resolveDataAttribute, contains,
 } from 'plugin-macro-loader/lib/loader'
 
-import {
-	getTargetsContainer,
-	reloadTargets, completeTargets,
-} from '../api/targets/container'
+export { swapDocument } from '../api/targets/container'
+import { getTargetsContainer } from '../api/targets/container'
 
 import closure from '../closure'
-
-
-export function swapDocument(fn)
-{
-	getTargetsContainer('document').remove(document);
-	fn && fn();
-	getTargetsContainer('document').add(document);
-	completeTargets();
-}
 
 
 export function loadMain()

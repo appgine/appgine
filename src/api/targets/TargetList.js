@@ -20,7 +20,9 @@ export default class TargetList
 		this._first = [];
 		this._every = [];
 		this._complete = [];
+		this._document = [];
 		this._completed = false;
+		this._documented = false;
 	}
 
 
@@ -103,10 +105,22 @@ export default class TargetList
 				complete.result = complete();
 			}
 		}
+
+		if (this._documented===false) {
+			this._documented = true;
+
+			for (let complete of this._document) {
+				complete.result = complete();
+			}
+		}
 	}
 
 	uncompleteTargets() {
+		this.uncompleteDocument();
+
 		if (this._completed) {
+			this._completed = false;
+
 			for (let complete of this._complete) {
 				if (typeof complete.result==='function') {
 					complete.result();
@@ -114,8 +128,20 @@ export default class TargetList
 				}
 			}
 		}
+	}
 
-		this._completed = false;
+
+	uncompleteDocument() {
+		if (this._documented) {
+			this._documented = false;
+
+			for (let complete of this._document) {
+				if (typeof complete.result==='function') {
+					complete.result();
+					complete.result = undefined;
+				}
+			}
+		}
 	}
 
 	reload() {
@@ -173,6 +199,11 @@ export default class TargetList
 		createFn.target = target;
 		createFn.ids = {};
 		this._every.push(createFn);
+		return this;
+	}
+
+	document(createFn) {
+		this._document.push(createFn);
 		return this;
 	}
 
