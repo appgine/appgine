@@ -1,6 +1,6 @@
 {
   "name": "appgine",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "license": "MIT",
   "maintainers": [
     "Ales Kafka <ales.kafka@gmail.com>"
@@ -16,7 +16,12 @@
   },
   "files": [
     "lib/",
-    "run.js"
+    "run.js",
+    "shim.js",
+    "closure.js",
+    "plugins.js",
+    "helpers.js",
+    "plugin-helpers.js"
   ],
   "dependencies": {
     "kefir": "^3.1.0",
