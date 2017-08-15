@@ -1,4 +1,7 @@
 
+import { destroy } from 'plugin-macro-loader/lib/lib/destroy'
+import { isArgumentObj } from 'plugin-macro-loader/lib/helpers'
+
 
 export default class TargetList
 {
@@ -35,23 +38,25 @@ export default class TargetList
 
 	addTarget(id, targetObj) {
 		const { $element, target, data } = targetObj;
-		const state = {};
+		const state = this.pluginObj.state('target', target, $element);
 		this.uncompleteTargets();
 
 		if (this._targets[id]===undefined && this.containsElement($element)===false) {
-			this._targets[id] = { id, state, ...targetObj };
+			this._targets[id] = { id, state, instances: [], $element, $target: $element, ...targetObj };
 			targetObj = this._targets[id];
 
 			for (let first of this._first) {
 				if (first.id===undefined && (first.target==='' || first.target===target)) {
 					first.id = id;
-					first.result = first($element, targetObj);
+					first.result = (isArgumentObj(first, 'target') ? first(targetObj) : first($element, targetObj))||{};
+					targetObj.instances.push(first.result);
 				}
 			}
 
 			for (let every of this._every) {
 				if (every.target==='' || every.target===target) {
-					every.ids[id] = every($element, targetObj);
+					every.ids[id] = (isArgumentObj(every, 'target') ? every(targetObj) : every($element, targetObj))||{};
+					targetObj.instances.push(every.ids[id]);
 				}
 			}
 		}
@@ -61,25 +66,29 @@ export default class TargetList
 		if (this._targets[id]) {
 			this.uncompleteTargets();
 
+			const targetObj = this._targets[id];
 			delete this._targets[id];
 
 			for (let every of this._every) {
-				const destroy = every.ids[id];
+				const instance = every.ids[id];
 				delete every.ids[id];
-				destroy && destroy();
+				targetObj.instances.splice(targetObj.instances.indexOf(instance), 1);
+				destroy(instance);
 			}
 
 			for (let first of this._first) {
 				if (first.id===id) {
-					const destroy = first.result;
+					const instance = first.result;
 					delete first.id;
 					delete first.result;
-					destroy && destroy();
+					targetObj.instances.splice(targetObj.instances.indexOf(instance), 1);
+					destroy(instance);
 
 					for (let target of Object.values(this._targets)) {
 						if (first.target==='' || first.target===target.target) {
 							first.id = target.id;
 							first.result = first(target.$element, target);
+							target.instances.push(first.result);
 							break;
 						}
 					}
@@ -123,10 +132,8 @@ export default class TargetList
 			this._completed = false;
 
 			for (let complete of this._complete) {
-				if (typeof complete.result==='function') {
-					complete.result();
-					complete.result = undefined;
-				}
+				destroy(complete.result);
+				complete.result = undefined;
 			}
 		}
 	}
@@ -137,10 +144,8 @@ export default class TargetList
 			this._documented = false;
 
 			for (let complete of this._document) {
-				if (typeof complete.result==='function') {
-					complete.result();
-					complete.result = undefined;
-				}
+				destroy(complete.result);
+				complete.result = undefined;
 			}
 		}
 	}
