@@ -3,7 +3,8 @@
 export default class TargetList
 {
 
-	constructor(...queries) {
+	constructor(pluginObj, ...queries) {
+		this.pluginObj = pluginObj;
 		this._queries = [];
 		queries.forEach(query => {
 			const [target, ...selector] = String(query).split('@');
