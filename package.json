@@ -1,6 +1,6 @@
 {
   "name": "appgine",
-  "version": "0.15.1",
+  "version": "0.15.2",
   "license": "MIT",
   "maintainers": [
     "Ales Kafka <ales.kafka@gmail.com>"
@@ -18,7 +18,6 @@
     "lib/",
     "run.js",
     "shim.js",
-    "closure.js",
     "plugins.js",
     "helpers.js",
     "plugin-helpers.js"
