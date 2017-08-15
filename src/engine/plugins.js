@@ -10,7 +10,7 @@ import {
 	loadScripts, unloadScripts,
 	loadGlobal, unloadGlobal,
 	loadSystem, unloadSystem,
-	updatePlugins, updatePlugin,
+	updateGlobal,
 	querySelectorAll, resolveDataAttribute, contains,
 } from 'plugin-macro-loader/lib/loader'
 
@@ -74,7 +74,7 @@ export function reloadStatic($dom)
 		});
 
 		const plugins = findPlugins(({ options }) => options.static===attr);
-		updatePlugins(plugins, update);
+		updatePlugins(undefined, plugins, update);
 	});
 }
 
@@ -106,10 +106,15 @@ export function unloadAtomic($dom, request)
 export function update($dom, $element, data)
 {
 	const plugins = findPlugins(({ $element, options }) => contains($dom, $element) || options.static);
+	updatePlugins($element, plugins, data);
+}
+
+
+function updatePlugins($element, plugins, data) {
 	let plugin = null;
 
 	plugins.forEach(function(_plugin) {
-		if (contains(_plugin.$element, $element)) {
+		if ($element && contains(_plugin.$element, $element)) {
 			plugin = plugin || _plugin;
 
 			if (closure.dom.compareNodeOrder(_plugin.$element, plugin.$element)>=0) {
@@ -118,8 +123,64 @@ export function update($dom, $element, data)
 		}
 	});
 
-	updatePlugins(plugins, data);
-	updatePlugin(plugin, data);
+	Object.keys(data||{}).forEach(function(key) {
+		const [, name, method='update'] = key.match(/^(.*?)(?:::(.+))?$/)||[];
+
+		updateGlobal(name, data[key]);
+
+		if (plugin && !name) {
+			updatePlugin(plugin, method, data[key]);
+		}
+
+		plugins.
+			filter(val => val.pluginName===name || val.name===name).
+			forEach(plugin => updatePlugin(plugin, method, data[key]));
+	});
+}
+
+
+function updatePlugin(plugin, method, data) {
+	const [, targetId, targetMethod] = method.match(/^(.+?)\.(.+)$/)||[];
+
+	(plugin.api('update')||[]).forEach(apiUpdate => {
+		if (apiUpdate && apiUpdate[method]) {
+			apiUpdate[method](data);
+		}
+	});
+
+	if (plugin && plugin.instance && plugin.instance[method]) {
+		plugin.instance[method](data);
+	}
+
+	(plugin.api('targets')||[]).forEach(apiTargets => {
+		apiTargets.findAll('', function(target) {
+			(target.instances||[]).forEach(instance => {
+				if (instance && instance[method]) {
+					instance[method](data);
+				}
+
+				if (target.id===targetId && instance && instance[targetMethod]) {
+					instance[targetMethod](data);
+				}
+			});
+		});
+	});
+
+	(plugin.api('targets')||[]).forEach(apiTargets => {
+		apiTargets._complete.forEach(function(complete) {
+			if (complete.result && complete.result[method]) {
+				complete.result[method](data);
+			}
+		});
+	});
+
+	(plugin.api('targets')||[]).forEach(apiTargets => {
+		apiTargets._document.forEach(function(complete) {
+			if (complete.result && complete.result[method]) {
+				complete.result[method](data);
+			}
+		});
+	});
 }
 
 
