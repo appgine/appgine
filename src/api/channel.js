@@ -2,9 +2,9 @@
 const listeners = [];
 
 export default {
-	listen(state=[], type, action, fn) {
+	initialState: [],
+	listen(state, type, action, fn) {
 		state.push(createListener(type, action, fn));
-		return state;
 	},
 	dispatch(state, type, action, ...args) {
 		dispatch(type, action, ...args);

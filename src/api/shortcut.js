@@ -33,17 +33,15 @@ const listenShortcutHandler = shortcuthandler(function(e, identifier, isValid) {
 
 
 const api = {
-	onPluginShortcut(state=[], ...args) {
+	initialState: [],
+	onPluginShortcut(state, ...args) {
 		state.push(listeners.create(api.onPluginShortcut, this.$element, ...args));
-		return state;
 	},
-	onValidShortcut(state=[], ...args) {
+	onValidShortcut(state, ...args) {
 		state.push(listeners.create(api.onValidShortcut, this.$element, ...args));
-		return state;
 	},
-	onShortcut(state=[], ...args) {
+	onShortcut(state, ...args) {
 		state.push(listeners.create(api.onShortcut, this.$element, ...args));
-		return state;
 	},
 	destroy(state) {
 		state.forEach(listener => listener());

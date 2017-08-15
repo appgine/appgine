@@ -6,29 +6,24 @@ import createListeners from './createListeners'
 const listeners = createListeners();
 
 const api = {
-	onPluginRequest(state=[], ...args) {
+	initialState: [],
+	onPluginRequest(state, ...args) {
 		state.push(listeners.create(api.onPluginRequest, this.$element, ...args));
-		return state;
 	},
-	onPluginClick(state=[], ...args) {
+	onPluginClick(state, ...args) {
 		state.push(listeners.create(api.onPluginClick, this.$element, ...args));
-		return state;
 	},
-	onPluginSubmit(state=[], ...args) {
+	onPluginSubmit(state, ...args) {
 		state.push(listeners.create(api.onPluginSubmit, this.$element, ...args));
-		return state;
 	},
-	onRequest(state=[], ...args) {
+	onRequest(state, ...args) {
 		state.push(listeners.create(api.onRequest, this.$element, ...args));
-		return state;
 	},
-	onClick(state=[], ...args) {
+	onClick(state, ...args) {
 		state.push(listeners.create(api.onClick, this.$element, ...args));
-		return state;
 	},
-	onSubmit(state=[], ...args) {
+	onSubmit(state, ...args) {
 		state.push(listeners.create(api.onSubmit, this.$element, ...args));
-		return state;
 	},
 	destroy(state) {
 		state.forEach(listener => listener());
