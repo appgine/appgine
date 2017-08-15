@@ -164,19 +164,21 @@ export default class TargetList
 		return this.findAllElement(target)[0] || null;
 	}
 
-	findAll(target='') {
+	findAll(target='', fn) {
 		const found = [];
 		for (let _target of Object.values(this._targets)) {
 			if (target==='' || _target.target===target) {
 				found.push(_target);
+				fn && fn(_target);
 			}
 		}
 
 		return found;
 	}
 
-	findAllElement(target='') {
-		return this.findAll(target).map(target => target.$element);
+	findAllElement(target='', fn) {
+		const _fn = fn && (({ $element }) => fn($element));
+		return this.findAll(target, _fn).map(target => target.$element);
 	}
 
 	first(target, createFn) {
