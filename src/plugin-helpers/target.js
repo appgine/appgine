@@ -9,8 +9,7 @@ export function target(name, create) {
 				plugin.$target = $element;
 				plugin.target = target;
 
-				const instance = create.call(pluginThis, plugin);
-				return pluginThis.update(instance);
+				return pluginThis.createInstance(create, plugin);
 			});
 		});
 	}

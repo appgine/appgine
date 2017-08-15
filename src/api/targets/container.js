@@ -79,20 +79,20 @@ export function getTargetsContainer(id='')
 function uncompleteDocument()
 {
 	findPlugins(document).
-		map(({ api }) => api('targets')||[]).
-		forEach(apiTargetsList => apiTargetsList.
-			filter(targets => targets && targets.uncompleteDocument).
-			forEach(targets => targets.uncompleteDocument())
-		);
+		forEach(({ api }) => api('targets', function(apiTargetsList) {
+			apiTargetsList.
+				filter(targets => targets && targets.uncompleteDocument).
+				forEach(targets => targets.uncompleteDocument())
+		}))
 }
 
 
 function completeTargets()
 {
 	findPlugins(document).
-		map(({ api }) => api('targets')||[]).
-		forEach(apiTargetsList => apiTargetsList.
-			filter(targets => targets && targets.completeTargets).
-			forEach(targets => targets.completeTargets())
-		);
+		forEach(({ api }) => api('targets', function(apiTargetsList) {
+			apiTargetsList.
+				filter(targets => targets && targets.completeTargets).
+				forEach(targets => targets.completeTargets())
+		}))
 }

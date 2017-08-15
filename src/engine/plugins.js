@@ -142,17 +142,17 @@ function updatePlugins($element, plugins, data) {
 function updatePlugin(plugin, method, data) {
 	const [, targetId, targetMethod] = method.match(/^(.+?)\.(.+)$/)||[];
 
-	(plugin.api('update')||[]).forEach(apiUpdate => {
+	plugin.api('update', apiUpdateList => apiUpdateList.forEach(apiUpdate => {
 		if (apiUpdate && apiUpdate[method]) {
 			apiUpdate[method](data);
 		}
-	});
+	}));
 
-	if (plugin && plugin.instance && plugin.instance[method]) {
-		plugin.instance[method](data);
+	if (plugin && plugin.instances) {
+		plugin.instances.forEach(instance => instance && instance[method] && instance[method](data));
 	}
 
-	(plugin.api('targets')||[]).forEach(apiTargets => {
+	plugin.api('targets', apiTargetsList => apiTargetsList.forEach(apiTargets => {
 		apiTargets.findAll('', function(target) {
 			(target.instances||[]).forEach(instance => {
 				if (instance && instance[method]) {
@@ -164,23 +164,23 @@ function updatePlugin(plugin, method, data) {
 				}
 			});
 		});
-	});
+	}));
 
-	(plugin.api('targets')||[]).forEach(apiTargets => {
+	plugin.api('targets', apiTargetsList => apiTargetsList.forEach(apiTargets => {
 		apiTargets._complete.forEach(function(complete) {
 			if (complete.result && complete.result[method]) {
 				complete.result[method](data);
 			}
 		});
-	});
+	}));
 
-	(plugin.api('targets')||[]).forEach(apiTargets => {
+	plugin.api('targets', apiTargetsList => apiTargetsList.forEach(apiTargets => {
 		apiTargets._document.forEach(function(complete) {
 			if (complete.result && complete.result[method]) {
 				complete.result[method](data);
 			}
 		});
-	});
+	}));
 }
 
 

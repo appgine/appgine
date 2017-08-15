@@ -32,9 +32,7 @@ export default class NodeList
 
 			findPlugins($node).forEach(plugin => {
 				const { $element, api, name } = plugin;
-				const apiTargetsList = api('targets');
-
-				if (apiTargetsList) {
+				api('targets', apiTargetsList => {
 					plugins.push(plugin);
 
 					this.targets.forEach(targetList => targetList.forEach(([id, target]) => {
@@ -55,13 +53,12 @@ export default class NodeList
 							});
 						})
 					});
-				}
+				});
+
 			});
 
 			this.plugins.forEach(pluginList => pluginList.forEach(({ api }) => {
-				const apiTargetsList = api('targets');
-
-				if (apiTargetsList) {
+				api('targets', apiTargetsList => {
 					apiTargetsList.forEach(apiTargets => {
 						findPluginTargets(apiTargets, $node).forEach(target => {
 							const id = ++targetId;
@@ -69,7 +66,8 @@ export default class NodeList
 							apiTargets.addTarget(id, target);
 						});
 					});
-				}
+				});
+
 			}));
 
 			this.plugins.push(plugins);
@@ -80,10 +78,10 @@ export default class NodeList
 
 				this.plugins.forEach(pluginList => pluginList.forEach(({ $element, api, name }) => {
 					if (target.name===name) {
-						(api('targets')||[]).forEach(apiTargets => apiTargets.addTarget(id, target));
+						api('targets', apiTargetsList => apiTargetsList.forEach(apiTargets => apiTargets.addTarget(id, target)));
 
 					} else if (target.pluginName==='this' && contains($element, target.$element)) {
-						(api('targets')||[]).forEach(apiTargets => apiTargets.addTarget(id, target));
+						api('targets', apiTargetsList => apiTargetsList.forEach(apiTargets => apiTargets.addTarget(id, target)));
 					}
 				}));
 			});
@@ -98,7 +96,7 @@ export default class NodeList
 		if (index!==-1) {
 			this.targets[index].forEach(([id, target]) => {
 				this.plugins.forEach(pluginList => pluginList.forEach(({ api }) => {
-					(api('targets')||[]).forEach(apiTargets => apiTargets.removeTarget(id));
+					api('targets', apiTargetsList => apiTargetsList.forEach(apiTargets => apiTargets.removeTarget(id)));
 				}));
 			});
 
