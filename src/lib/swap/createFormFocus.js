@@ -17,9 +17,21 @@ export default function createFormFocus() {
 			return function() {
 				const $found = dom.findForm(formName, formId);
 
-				if ($found && $found[inputName]) {
-					const $input = $found[inputName];
+				let $input = null;
+				if ($found) {
+					if (Array.isArray($found[inputName])) {
+						$found[inputName].forEach(function(_$input) {
+							if (_$input && _$input.value===inputValue) {
+								$input = _$input;
+							}
+						});
 
+					} else if ($found[inputName] instanceof Element) {
+						$input = $found[inputName];
+					}
+				}
+
+				if ($input) {
 					$input.focus && $input.focus();
 					selection.setCursorAtEnd($input);
 
