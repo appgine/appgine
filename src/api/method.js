@@ -12,7 +12,7 @@ export default {
 	},
 	findElementMethods(state, method, $element) {
 		const found = listeners.find(
-			[method, _$element => $element && _$element && _$element.contains($element)]
+			[method, _$element => $element && _$element && _$element.contains && _$element.contains($element)]
 		);
 
 		return found.map(({ listener: { handler }}) => handler);
