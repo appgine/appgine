@@ -66,11 +66,11 @@ export default function(options={}) {
 	if (window.appgine) {
 		window.appgine = function(scrollTo) {
 			window.appgine = true;
-			run(options, scrollTo);
+			run(options, String(window.location.hash).substr(1) || scrollTo);
 		}
 
 	} else {
 		window.appgine = true;
-		ready(() => run(options, scrollTop()));
+		ready(() => run(options, String(window.location.hash).substr(1) || scrollTop()));
 	}
 }
