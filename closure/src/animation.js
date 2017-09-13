@@ -24,7 +24,7 @@ exports.scrollTo = function(scrollLeft, scrollTop, onEnd) {
 		var time = Math.min(300, Math.max(100, Math.ceil(diff/3)));
 
 		var animation = new goog.fx.dom.Scroll(
-			document.body,
+			document.documentElement || document.body.parentNode || document.body,
 			[scrolled.x, scrolled.y],
 			[scrollLeft, scrollTop],
 			time
