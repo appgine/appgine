@@ -22,18 +22,12 @@ export function scrollHashToView(hash, animated, onEnd) {
 
 export function scrollNodeToView($node, animated, onEnd) {
 	if ($node) {
-		const fixedEdge = findFixedEdge();
-		const [left, top] = findNodeOffset($node);
-
-		const scrollLeft = left;
-		const scrollTop = top-fixedEdge;
-
 		setTimeout(() => {
 			if (animated) {
-				closure.animation.scrollTo(scrollLeft, scrollTop, onEnd);
+				closure.animation.scrollToLazy(findScrollTo.bind(null, $node), onEnd);
 
 			} else {
-				window.scrollTo(scrollLeft, scrollTop);
+				window.scrollTo(...findScrollTo($node));
 				onEnd && onEnd();
 			}
 		}, 0);
@@ -69,6 +63,17 @@ export function scrollFormToView($form, top=false) {
 			);
 		}
 	}
+}
+
+
+function findScrollTo($node) {
+	const fixedEdge = findFixedEdge();
+	const [left, top] = findNodeOffset($node);
+
+	const scrollLeft = left;
+	const scrollTop = top-fixedEdge;
+
+	return [scrollLeft, scrollTop];
 }
 
 
