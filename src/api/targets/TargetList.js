@@ -1,6 +1,5 @@
 
 import { destroy } from 'plugin-macro-loader/lib/lib/destroy'
-import { isArgumentObj } from 'plugin-macro-loader/lib/helpers'
 
 
 export default class TargetList
@@ -48,14 +47,14 @@ export default class TargetList
 			for (let first of this._first) {
 				if (first.id===undefined && (first.target==='' || first.target===target)) {
 					first.id = id;
-					first.result = (isArgumentObj(first, 'target') ? first(targetObj) : first($element, targetObj))||{};
+					first.result = first($element, targetObj)||{};
 					targetObj.instances.push(first.result);
 				}
 			}
 
 			for (let every of this._every) {
 				if (every.target==='' || every.target===target) {
-					every.ids[id] = (isArgumentObj(every, 'target') ? every(targetObj) : every($element, targetObj))||{};
+					every.ids[id] = every($element, targetObj)||{};
 					targetObj.instances.push(every.ids[id]);
 				}
 			}
