@@ -38,6 +38,57 @@ exports.scrollTo = function(scrollLeft, scrollTop, onEnd) {
 	}
 }
 
+exports.scrollToLazy = function(fn, onEnd) {
+	var _animationEnded = false;
+	var _animationRequest = null;
+	var _animationPositions = [-1, -1];
+	var _animationTime = -1;
+	var _animation;
+
+	var _animationEnd = function() {
+		window.cancelAnimationFrame(_animationRequest);
+
+		if (_animationEnded===false) {
+			_animationEnded = true;
+			onEnd && onEnd();
+			onEnd = undefined;
+		}
+	}
+
+
+	var _animationFrame = function() {
+		_animationRequest = window.requestAnimationFrame(_animationFrame);
+
+		var positions = fn();
+		var scrolled = goog.dom.getDocumentScroll();
+
+		if (scrolled.x===positions[0] && scrolled.y===positions[1]) {
+			_animation && _animation.stop();
+			_animationEnd && _animationEnd();
+
+		} else if (_animationTime===-1 || _animationPositions[0]!==positions[0] || _animationPositions[1]!==positions[1]) {
+			_animationPositions = positions;
+
+			if (_animationTime===-1) {
+				_animationTime = Date.now()+Math.min(300, Math.max(100, Math.ceil(Math.abs(scrolled.y - positions[1])/3)));
+			}
+
+			_animation && _animation.stop();
+			_animation = new goog.fx.dom.Scroll(
+				document.documentElement || document.body.parentNode || document.body,
+				[scrolled.x, scrolled.y],
+				positions,
+				Math.max(1, _animationTime-Date.now())
+			);
+
+			goog.events.listen(_animation, goog.fx.Animation.EventType.END, _animationEnd);
+			_animation.play();
+		}
+	}
+
+	_animationFrame();
+}
+
 var _whichAnimationEvent;
 var _whichTransitionEvent;
 
