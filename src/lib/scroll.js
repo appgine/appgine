@@ -128,7 +128,9 @@ function findNodeOffset($node) {
 }
 
 function findTrOffset($node) {
-	const siblings = [].slice.call($node.parentNode.children);
+	const siblings = Array.from($node.parentNode.children).filter(function($child) {
+		return String($child.tagName.toLowerCase())==='tr';
+	});
 
 	if (siblings.indexOf($node)===0) {
 		const table = _findNodeOffset(closure.dom.getAncestor($node, 'table'));
