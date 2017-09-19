@@ -5,7 +5,7 @@ import { dispatch } from '../api/channel'
 
 
 export default function createOptions(options={}) {
-	return {
+	return patchTryCatch({
 		...options,
 		timeout: options.timeout ? Math.max(0, parseInt(options.timeout, 10)) : undefined,
 		dragAndDropClass: options.dragAndDropClass || '',
@@ -47,5 +47,22 @@ export default function createOptions(options={}) {
 		onFormData(formData) {
 			return options.onFormData ? options.onFormData(formData) : formData;
 		},
+	})
+}
+
+
+function patchTryCatch(options) {
+	for (let key in options) {
+		const val = options[key];
+		if (typeof val==='function') {
+			options[key] = function() {
+				try {
+					return val.apply(options, arguments);
+
+				} catch(e) {}
+			}
+		}
 	}
+
+	return options;
 }
