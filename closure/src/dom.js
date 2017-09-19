@@ -13,6 +13,7 @@ exports.setTextContent = goog.dom.setTextContent;
 exports.setProperties = goog.dom.setProperties;
 exports.createDom = goog.dom.createDom;
 exports.getChildren = goog.dom.getChildren;
+exports.findNodes = goog.dom.findNodes;
 exports.removeChildren = goog.dom.removeChildren;
 exports.contains = function(parent, descendant) {
 	return parent && descendant ? goog.dom.contains(parent, descendant) : false;

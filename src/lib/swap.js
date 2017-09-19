@@ -1,6 +1,7 @@
 
 import { swapDocument, load, loadStatic, unload, unloadStatic } from '../engine/plugins'
 import createFormFocus from './swap/createFormFocus'
+import createKeepScroll from './swap/createKeepScroll'
 
 import { willUpdate } from '../update'
 import closure from '../closure'
@@ -38,8 +39,9 @@ export default function swap(from, into) {
 				const attr = $static.getAttribute('data-static');
 				const $prevStatic = document.body.querySelector('[data-static="'+attr+'"]');
 				const $dataStatic = document.createElement('dataStatic');
+				const keepScroll = createKeepScroll($prevStatic);
 
-				$staticList.push([$static, $dataStatic, $prevStatic]);
+				$staticList.push({ $static, $dataStatic, $prevStatic, keepScroll });
 				$static.parentNode.replaceChild($dataStatic, $static);
 			});
 
@@ -49,12 +51,12 @@ export default function swap(from, into) {
 				$dataAtomic.parentNode.replaceChild($atomicList[i], $dataAtomic);
 			});
 
-			$staticList.filter(([,, $prevStatic]) => !$prevStatic).forEach(function([$static, $dataStatic, $prevStatic]) {
+			$staticList.filter(({ $prevStatic }) => !$prevStatic).forEach(function({ $static, $dataStatic, $prevStatic }) {
 				loadStatic($static);
 				$dataStatic.parentNode.replaceChild($static, $dataStatic);
 			});
 
-			$staticList.filter(([,, $prevStatic]) => $prevStatic).forEach(function([$static, $dataStatic, $prevStatic]) {
+			$staticList.filter(({ $prevStatic}) => $prevStatic).forEach(function({ $static, $dataStatic, $prevStatic }) {
 				$dataStatic.parentNode.replaceChild($prevStatic, $dataStatic);
 			});
 
@@ -63,6 +65,8 @@ export default function swap(from, into) {
 			Array.from($nextFragment.querySelector('body').childNodes).forEach($child => document.body.appendChild($child));
 
 			closure.classes.swap('body', from && from.$fragment || null, $into);
+
+			$staticList.filter(({ $prevStatic }) => $prevStatic).forEach(({ keepScroll }) => keepScroll());
 
 			if (from) {
 				const $from = from.$fragment;
