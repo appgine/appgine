@@ -267,14 +267,14 @@ export function onSubmitForm(e, $form, $submitter, toTarget) {
 
 
 export function onReload() {
-	const endpoint = closure.uri.create(history.getLink(), {}, '');
+	const endpoint = closure.uri.create(history.getLink(), {});
 	const httpRequest = apiRequest.createHttpRequest(document.body, endpoint);
 	loadPage(httpRequest, document.body, endpoint, false, _stack.loadRequest() && _stack.loadRequest().scrollTop);
 }
 
 
 export function location($element, endpoint, isAjax=false) {
-	endpoint = closure.uri.create(endpoint, {}, '');
+	endpoint = closure.uri.create(endpoint, {});
 
 	if (closure.uri.sameOrigin(endpoint)) {
 		const httpRequest = apiRequest.createHttpRequest($element, endpoint);
