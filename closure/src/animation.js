@@ -24,7 +24,7 @@ exports.scrollTo = function(scrollLeft, scrollTop, onEnd) {
 		var time = Math.min(300, Math.max(100, Math.ceil(diff/3)));
 
 		var animation = new goog.fx.dom.Scroll(
-			document.documentElement || document.body.parentNode || document.body,
+			goog.dom.getDocumentScrollElement(),
 			[scrolled.x, scrolled.y],
 			[scrollLeft, scrollTop],
 			time
@@ -75,7 +75,7 @@ exports.scrollToLazy = function(fn, onEnd) {
 
 			_animation && _animation.stop();
 			_animation = new goog.fx.dom.Scroll(
-				document.documentElement || document.body.parentNode || document.body,
+				goog.dom.getDocumentScrollElement(),
 				[scrolled.x, scrolled.y],
 				positions,
 				Math.max(1, _animationTime-Date.now())
