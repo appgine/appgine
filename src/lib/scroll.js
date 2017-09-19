@@ -8,11 +8,11 @@ export function setHashFixedEdge(option) {
 }
 
 
-export function scrollHashToView(hash, animated, onEnd) {
+export function scrollHashToView(hash, animated, onStart, onEnd) {
 	const $node = hash ? document.getElementById(hash) : document.body;
 
 	if ($node) {
-		scrollNodeToView($node, animated, onEnd);
+		scrollNodeToView($node, animated, onStart, onEnd);
 		return true;
 
 	} else {
@@ -20,15 +20,19 @@ export function scrollHashToView(hash, animated, onEnd) {
 	}
 }
 
-export function scrollNodeToView($node, animated, onEnd) {
+export function scrollNodeToView($node, animated, onStart, onEnd) {
 	if ($node) {
+		onStart && onStart($node);
+
 		setTimeout(() => {
 			if (animated) {
-				closure.animation.scrollToLazy(findScrollTo.bind(null, $node), onEnd);
+				closure.animation.scrollToLazy(findScrollTo.bind(null, $node), function() {
+					onEnd && onEnd($node);
+				});
 
 			} else {
 				window.scrollTo(...findScrollTo($node));
-				onEnd && onEnd();
+				onEnd && onEnd($node);
 			}
 		}, 0);
 	}

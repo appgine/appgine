@@ -28,7 +28,7 @@ export const requestStack = _stack;
 tick.onEachTick(function(screen, updated, done) {
 
 	if (_poping && _poping!==true) {
-		const endpoint = closure.uri.create(_poping, {}, '');
+		const endpoint = closure.uri.create(_poping, {});
 		const httpRequest = apiRequest.createHttpRequest(document.body, endpoint);
 		loadPage(httpRequest, document.body, endpoint, true, history.state('scrollTop', 0));
 		_poping = true;
@@ -43,8 +43,7 @@ tick.onEachTick(function(screen, updated, done) {
 
 		} else if (request.scrolled!==true) {
 			if (typeof request.scrolled === 'string') {
-				setHashFixedEdge(_options.hashFixedEdge);
-				scrollHashToView(request.scrolled, true);
+				internalScrollHashToView(request.scrolled);
 				request.scrolled = true;
 
 			} else if (typeof request.scrolled === 'function') {
@@ -132,6 +131,7 @@ export default function run(options, scrollTo=0) {
 		const request = _stack.loadRequest();
 
 		if (request) {
+			request.endpoint = endpoint;
 			const { canonize: _canonize, redirect: _redirect, swap: _swap } = request;
 
 			if (_canonize) {
@@ -153,9 +153,18 @@ export default function run(options, scrollTo=0) {
 				_options.dispatch('app.request', 'pageview', endpoint);
 
 			} else if (request!==_request) {
-				request.scrolled = -1;
+				if (closure.uri.getPart(endpoint, 'hash')[0]) {
+					request.scrolled = closure.uri.getPart(endpoint, 'hash')[0].substr(1);
+
+				} else {
+					request.scrolled = -1;
+				}
+
 				internalSwapRequest(request);
 				_options.dispatch('app.request', 'pageview', endpoint);
+
+			} else if (closure.uri.getPart(endpoint, 'hash')[0]) {
+				internalScrollHashToView(closure.uri.getPart(endpoint, 'hash')[0].substr(1));
 
 			} else {
 				request.scrolled = -1;
@@ -190,8 +199,7 @@ export function onClickHash(e, $link, hash, toTarget) {
 
 		} else {
 			e.preventDefault();
-			setHashFixedEdge(_options.hashFixedEdge);
-			scrollHashToView(hash, true);
+			internalScrollHashToView(hash);
 		}
 	}
 }
@@ -203,14 +211,29 @@ export function onClick(e, $link, toTarget) {
 	if (toTarget==='' || toTarget==='_ajax' || toTarget==='_current') {
 		if (closure.uri.sameOrigin(endpoint)) {
 			if (_pending===0 || toTarget==='_ajax' || endpoint!==history.getLink()) {
-				const clickRequest = apiRequest.createClickRequest(e, $link, endpoint);
+				const hash = String($link.hash||'').substr(1);
+				const endpointWithoutHash = closure.uri.create(endpoint, {}, '');
+				const historyWithoutHash = closure.uri.create(history.getLink(), {}, '');
 
-				if (!e.defaultPrevented) {
+				if (endpointWithoutHash===historyWithoutHash && hash && document.getElementById(hash)) {
+					if (toTarget==='' && endpoint!==history.getLink()) {
+						pushEndpoint(endpoint);
+						_pushing = false;
+					}
+
 					e.preventDefault();
-					loadEndpoint(clickRequest, $link, endpoint, toTarget==='_ajax', toTarget==='_current'||null);
+					internalScrollHashToView(hash);
 
 				} else {
-					clickRequest.prevented();
+					const clickRequest = apiRequest.createClickRequest(e, $link, endpoint);
+
+					if (!e.defaultPrevented) {
+						e.preventDefault();
+						loadEndpoint(clickRequest, $link, endpoint, toTarget==='_ajax', toTarget==='_current'||null);
+
+					} else {
+						clickRequest.prevented();
+					}
 				}
 
 			} else {
@@ -340,6 +363,8 @@ function redirect($element, endpoint, newPage=false, scrollTo=0) {
 
 
 function pushEndpoint(endpoint, state={}, replacing=null) {
+	_onRemoveScroll && _onRemoveScroll();
+
 	if (_pushing || replacing || (closure.uri.isSame(endpoint) && replacing===null)) {
 		_pushing = true;
 		history.replaceState({...state, scrollTop: history.state('scrollTop', 0)}, endpoint);
@@ -395,8 +420,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 			const $found = closure.dom.findForm(formName, formId);
 
 			if ($found && formName[0]==='#') {
-				setHashFixedEdge(_options.hashFixedEdge);
-				scrollFormToView($found, true);
+				internalScrollFormToView($found, true);
 			}
 		});
 
@@ -406,8 +430,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 			const $found = closure.dom.findForm(formName, formId);
 
 			if ($found) {
-				setHashFixedEdge(_options.hashFixedEdge);
-				scrollFormToView($found, formName[0]==='#');
+				internalScrollFormToView($found, formName[0]==='#');
 
 			} else {
 				window.scrollTo(0, 0);
@@ -619,13 +642,37 @@ function internalSwapRequest(requestInto) {
 }
 
 
+let _onRemoveScroll = null;
+function internalScrollHashToView(hash) {
+	_onRemoveScroll && _onRemoveScroll();
+
+	setHashFixedEdge(_options.hashFixedEdge);
+	scrollHashToView(hash, true, _options.onBeforeScroll, function($element) {
+		_options.onScroll($element);
+		_onRemoveScroll = function() {
+			_onRemoveScroll = null;
+			_options.onRemoveScroll($element);
+		};
+	});
+}
+
+
+function internalScrollFormToView($form, top) {
+	_onRemoveScroll && _onRemoveScroll();
+
+	setHashFixedEdge(_options.hashFixedEdge);
+	scrollFormToView($form, top);
+}
+
+
 function internalDispose() {
+	_onRemoveScroll && _onRemoveScroll();
 	_request = null;
-	_stack.dispose();
-	unload(document);
-	unloadMain();
-	history.dispose();
-	tick.dispose();
-	closure.dispose();
+	try { _stack.dispose(); } catch(e) {}
+	try { unload(document); } catch(e) {}
+	try { unloadMain(); } catch(e) {}
+	try { history.dispose(); } catch(e) {}
+	try { tick.dispose(); } catch(e) {}
+	try { closure.dispose(); } catch(e) {}
 	delete window.googNamespace;
 }

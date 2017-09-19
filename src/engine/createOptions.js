@@ -10,6 +10,15 @@ export default function createOptions(options={}) {
 		timeout: options.timeout ? Math.max(0, parseInt(options.timeout, 10)) : undefined,
 		dragAndDropClass: options.dragAndDropClass || '',
 		abortOnEscape: options.abortOnEscape===undefined || options.abortOnEscape,
+		onBeforeScroll($element) {
+			options.onBeforeScroll && options.onBeforeScroll($element);
+		},
+		onScroll($element) {
+			options.onScroll && options.onScroll($element);
+		},
+		onRemoveScroll($element) {
+			options.onRemoveScroll && options.onRemoveScroll($element);
+		},
 		initHTML($html) {
 			options.initHTML && options.initHTML($html);
 		},
