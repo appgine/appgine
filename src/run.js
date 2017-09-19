@@ -36,6 +36,10 @@ export default function(options={}) {
 		if (options.bindApi.shortcut!==false) {
 			bindApi('shortcut', require('./api/shortcut').default);
 		}
+
+		if (options.bindApi.reload!==false) {
+			bindApi('reload', require('./api/reload').default);
+		}
 	});
 
 	require('./plugins').loader(function({ bindApi, bindSystem }) {

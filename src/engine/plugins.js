@@ -58,6 +58,17 @@ export function loadAtomic($dom, request)
 }
 
 
+export function reloadPlugins($dom, ...exclude)
+{
+	if ($dom && $dom.contains) {
+		const plugins = findPlugins(({ $element }) => $dom.contains($element))
+			.filter(pluginObj => exclude.indexOf(pluginObj)===-1);
+
+		plugins.forEach(plugin => plugin.reload && plugin.reload());
+	}
+}
+
+
 /**
  * @param {Element}
  */
