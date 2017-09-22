@@ -1,4 +1,5 @@
 
+import * as errorhub from '../errorhub'
 import RequestStack from './RequestStack'
 
 import createOptions from './createOptions'
@@ -458,6 +459,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
  */
 function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
 	return _bindRequest(apiRequest, _pushing ? 0 : ++_requestnum, $element, endpoint, false, scrollTo, function(err) {
+		errorhub.dispatch(errorhub.ERROR.REQUEST, 'Failed to handle request.\n' + String(err||''), undefined, endpoint);
 		_options.onError('Failed to handle request.\n' + String(err||''));
 	});
 }
@@ -472,6 +474,7 @@ function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
  */
  function bindRequest(apiRequest, $element, endpoint, newPage, scrollTo) {
 	return _bindRequest(apiRequest, ++_requestnum, $element, endpoint, newPage, scrollTo, function(err) {
+		errorhub.dispatch(errorhub.ERROR.REQUEST, 'Failed to load requested page.\n' + String(err||''), undefined, endpoint);
 		_options.onError('Failed to load requested page.\n' + String(err||''));
 	});
 }
