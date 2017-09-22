@@ -40,6 +40,10 @@ export default function(options={}) {
 		if (options.bindApi.reload!==false) {
 			bindApi('reload', require('./api/reload').default);
 		}
+
+		if (options.bindApi.event!==false) {
+			bindApi('event', require('./api/event').default);
+		}
 	});
 
 	require('./plugins').loader(function({ bindApi, bindSystem }) {
