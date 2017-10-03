@@ -25,10 +25,12 @@ export default class NodeList
 
 	add($node) {
 		if (this.$nodeList.indexOf($node)===-1) {
-			this.$nodeList.push($node);
-
 			const plugins = [];
 			const targets = [];
+
+			this.$nodeList.push($node);
+			this.plugins.push(plugins);
+			this.targets.push(targets);
 
 			findPlugins($node).forEach(plugin => {
 				const { $element, api, name } = plugin;
@@ -70,8 +72,6 @@ export default class NodeList
 
 			}));
 
-			this.plugins.push(plugins);
-
 			findTargets($node).forEach(target => {
 				const id = ++targetId;
 				targets.push([id, target]);
@@ -85,8 +85,6 @@ export default class NodeList
 					}
 				}));
 			});
-
-			this.targets.push(targets);
 		}
 	}
 

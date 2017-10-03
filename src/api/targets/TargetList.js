@@ -5,8 +5,8 @@ import { destroy } from 'plugin-macro-loader/lib/lib/destroy'
 export default class TargetList
 {
 
-	constructor(pluginObj, ...queries) {
-		this.pluginObj = pluginObj;
+	constructor(pluginApi, ...queries) {
+		this._pluginApi = pluginApi;
 		this._queries = [];
 		queries.forEach(query => {
 			const [target, ...selector] = String(query).split('@');
@@ -37,27 +37,31 @@ export default class TargetList
 
 	addTarget(id, targetObj) {
 		const { $element, target, data } = targetObj;
-		const state = this.pluginObj.state('target', target, $element);
+		const state = this._pluginApi.state('target', target, $element);
 		this.uncompleteTargets();
 
 		if (this._targets[id]===undefined && this.containsElement($element)===false) {
 			this._targets[id] = { id, state, instances: [], $element, $target: $element, ...targetObj };
 			targetObj = this._targets[id];
 
-			for (let first of this._first) {
-				if (first.id===undefined && (first.target==='' || first.target===target)) {
-					first.id = id;
-					first.result = first($element, targetObj)||{};
-					targetObj.instances.push(first.result);
+			this._pluginApi.pluginObj.internalCall('targets.first', false, () => {
+				for (let first of this._first) {
+					if (first.id===undefined && (first.target==='' || first.target===target)) {
+						first.id = id;
+						first.result = first($element, targetObj)||{};
+						targetObj.instances.push(first.result);
+					}
 				}
-			}
+			});
 
-			for (let every of this._every) {
-				if (every.target==='' || every.target===target) {
-					every.ids[id] = every($element, targetObj)||{};
-					targetObj.instances.push(every.ids[id]);
+			this._pluginApi.pluginObj.internalCall('targets.every', false, () => {
+				for (let every of this._every) {
+					if (every.target==='' || every.target===target) {
+							every.ids[id] = every($element, targetObj)||{};
+							targetObj.instances.push(every.ids[id]);
+					}
 				}
-			}
+			});
 		}
 	}
 
@@ -72,7 +76,7 @@ export default class TargetList
 				const instance = every.ids[id];
 				delete every.ids[id];
 				targetObj.instances.splice(targetObj.instances.indexOf(instance), 1);
-				destroy(instance);
+				this._pluginApi.pluginObj.internalCall('targets.every:destroy', true, () => destroy(instance));
 			}
 
 			for (let first of this._first) {
@@ -81,16 +85,17 @@ export default class TargetList
 					delete first.id;
 					delete first.result;
 					targetObj.instances.splice(targetObj.instances.indexOf(instance), 1);
-					destroy(instance);
+					this._pluginApi.pluginObj.internalCall('targets.first:destroy', true, () => destroy(instance));
 
-					for (let target of Object.values(this._targets)) {
-						if (first.target==='' || first.target===target.target) {
-							first.id = target.id;
-							first.result = first(target.$element, target);
-							target.instances.push(first.result);
-							break;
+					this._pluginApi.pluginObj.internalCall('targets.first', false, () => {
+						for (let target of Object.values(this._targets)) {
+							if (first.target==='' || first.target===target.target) {
+								first.id = target.id;
+								first.result = first($element, targetObj)||{};
+								return targetObj.instances.push(first.result);
+							}
 						}
-					}
+					});
 				}
 			}
 		}
@@ -110,17 +115,21 @@ export default class TargetList
 		if (this._completed===false) {
 			this._completed = true;
 
-			for (let complete of this._complete) {
-				complete.result = complete();
-			}
+			this._pluginApi.pluginObj.internalCall('targets.complete', false, () => {
+				for (let complete of this._complete) {
+					complete.result = complete();
+				}
+			});
 		}
 
 		if (this._documented===false) {
 			this._documented = true;
 
-			for (let complete of this._document) {
-				complete.result = complete();
-			}
+			this._pluginApi.pluginObj.internalCall('targets.complete.document', false, () => {
+				for (let complete of this._document) {
+					complete.result = complete();
+				}
+			});
 		}
 	}
 
@@ -131,7 +140,7 @@ export default class TargetList
 			this._completed = false;
 
 			for (let complete of this._complete) {
-				destroy(complete.result);
+				this._pluginApi.pluginObj.internalCall('targets.complete:destroy', true, () => destroy(complete.result));
 				complete.result = undefined;
 			}
 		}
@@ -143,7 +152,7 @@ export default class TargetList
 			this._documented = false;
 
 			for (let complete of this._document) {
-				destroy(complete.result);
+				this._pluginApi.pluginObj.internalCall('targets.complete.document:destroy', true, () => destroy(complete.result));
 				complete.result = undefined;
 			}
 		}
