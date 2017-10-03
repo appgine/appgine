@@ -1,5 +1,5 @@
 
-export default function loadHtml($element) {
+export default function loadTitle($element) {
 	if ($element.querySelector) {
 		const $title = $element.querySelector('title');
 		return $title && $title.textContent || '';
