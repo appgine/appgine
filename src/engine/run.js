@@ -669,6 +669,7 @@ function internalScrollFormToView($form, top) {
 
 
 function internalDispose() {
+	_options.onDispose();
 	_onRemoveScroll && _onRemoveScroll();
 	_request = null;
 	try { _stack.dispose(); } catch(e) {}
