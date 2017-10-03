@@ -72,9 +72,9 @@ export default function(options={}) {
 	addListener('app.event', 'reload', onReload);
 
 	if (window.appgine) {
-		window.appgine = function(scrollTo) {
+		window.appgine = function(scrollTo, bodyClassName) {
 			window.appgine = true;
-			run(options, String(window.location.hash).substr(1) || scrollTo);
+			run(options, String(window.location.hash).substr(1) || scrollTo, bodyClassName);
 		}
 
 	} else {

@@ -98,11 +98,21 @@ export function isRequestCurrent() {
 	return _request===_stack.loadRequest();
 }
 
-export default function run(options, scrollTo=0) {
+export default function run(options, scrollTo=0, bodyClassName) {
+	const _bodyClassName = document.body.className;
+
+	if (bodyClassName!==undefined) {
+		document.body.className = bodyClassName;
+	}
+
 	_options = createOptions(options);
 	_options.initHTML(document.documentElement);
 
 	const html = loadHtml(document.documentElement);
+
+	if (document.body.className!==_bodyClassName) {
+		document.body.className = _bodyClassName
+	}
 
 	if (_options.timeout) {
 		closure.ajax.setTimeout(_options.timeout);
@@ -624,7 +634,7 @@ function internalSwap(url, html, scrollTo)
 					Array.from($fragment.querySelector('body').childNodes).forEach($child => document.body.appendChild($child));
 					document.title = loadTitle($fragment);
 
-					window.appgine(scrollTo);
+					window.appgine(scrollTo, $fragment.querySelector('body').className);
 				}
 			}
 
