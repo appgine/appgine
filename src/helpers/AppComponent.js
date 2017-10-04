@@ -1,12 +1,13 @@
 
 import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { dispatch } from '../api/channel'
 
 const context = {};
 const contextTypes = {};
 
 context.dispatch = dispatch;
-contextTypes.dispatch = React.PropTypes.func;
+contextTypes.dispatch = PropTypes.func;
 
 
 export function setDispatch(dispatch) {
@@ -16,7 +17,7 @@ export function setDispatch(dispatch) {
 
 export function addStore(name, store) {
 	context[name] = store;
-	contextTypes[name] = React.PropTypes.object;
+	contextTypes[name] = PropTypes.object;
 }
 
 export class AppComponent extends Component {
@@ -71,10 +72,10 @@ function DynamicAppComponent(context) {
 
 	Object.keys(context).forEach(function(key) {
 		if (typeof context[key]==='function') {
-			contextTypes[key] = React.PropTypes.func;
+			contextTypes[key] = PropTypes.func;
 
 		} else {
-			contextTypes[key] = React.PropTypes.object;
+			contextTypes[key] = PropTypes.object;
 		}
 	});
 

@@ -1,5 +1,6 @@
 
 import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { findDOMNode } from 'react-dom'
 import { fillKeys, fromPair } from '../lib/object'
 
@@ -12,7 +13,7 @@ export function createStoreComponent(stores={}) {
 
 	return class StoreComponent extends Component
 	{
-		static contextTypes = fillKeys(stores, React.PropTypes.object.isRequired);
+		static contextTypes = fillKeys(stores, PropTypes.object.isRequired);
 
 		constructor(props, context) {
 			super();
