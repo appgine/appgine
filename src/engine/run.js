@@ -628,7 +628,7 @@ function internalSwap(url, html, scrollTo)
 
 					const $lastHead = document.createElement('head');
 					const $lastBody = document.createElement('body');
-					Array.from(document.head.childNodes).forEach($child => $lastHead.appendChild($child));
+					Array.from(document.head.childNodes).filter($child => !($child.hasAttribute && $child.hasAttribute('data-appgine'))).forEach($child => $lastHead.appendChild($child));
 					Array.from(document.body.childNodes).forEach($child => $lastBody.appendChild($child));
 					Array.from($fragment.querySelector('head').childNodes).forEach($child => document.head.appendChild($child));
 					Array.from($fragment.querySelector('body').childNodes).forEach($child => document.body.appendChild($child));
