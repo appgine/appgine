@@ -99,6 +99,8 @@ export function isRequestCurrent() {
 }
 
 export default function run(options, scrollTo=0, bodyClassName) {
+	history.init();
+
 	const _bodyClassName = document.body.className;
 
 	if (bodyClassName!==undefined) {

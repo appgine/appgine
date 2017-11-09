@@ -44,6 +44,11 @@ if (matched) {
 
 _requestTree[_state._position] = _state._id;
 
+export function init() {
+	_link = closure.uri.change(window.location.href);
+	_origin = _state.origin = _link;
+}
+
 function getStateId() {
 	return (_state && _state._id) || createStateId();
 }
