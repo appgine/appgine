@@ -1,7 +1,7 @@
 {
   "name": "appgine",
-  "version": "0.19.5",
-  "license": "MIT",
+  "version": "0.19.6",
+  "license": "SEE LICENSE IN licence.md",
   "maintainers": [
     "Ales Kafka <ales.kafka@gmail.com>"
   ],

@@ -1,7 +1,12 @@
+
+Copyright (c) 2017 Ales Kafka, all rights reserved.
+Personal use only is allowed under The MIT License.
+
+
 The MIT License
 ===============
 
-Copyright (c) 2016 Ales Kafka
+Copyright (c) 2017 Ales Kafka
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
