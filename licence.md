@@ -1,6 +1,6 @@
 
 Copyright (c) 2017 Ales Kafka, all rights reserved.
-Personal use only is allowed under The MIT License.
+Personal use only is permitted under The MIT License.
 
 
 The MIT License
