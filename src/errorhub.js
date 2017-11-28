@@ -1,5 +1,7 @@
 
 import { listen as listenPlugins } from 'plugin-macro-loader/errorhub'
+import loadScript from './lib/loadScript'
+import cloneToSerializable from './lib/cloneToSerializable'
 
 const onerror = window.onerror;
 window.onerror = function(messageOrEvent, source, lineno, colno, error) {
@@ -39,4 +41,36 @@ export function listen(fn) {
 
 export function dispatch(errno, error, e, ...payload) {
 	listeners.forEach(fn => fn(errno, error, e, ...payload));
+}
+
+
+export function createRavenHandler(endpoint, config) {
+	return function(errno, error, e, ...payload) {
+		loadScript(endpoint, function(first) {
+			if (window.Raven) {
+				if (first) {
+					window.Raven.config(config);
+				}
+
+				if (isError(e)) {
+					window.Raven.captureException(e, cloneToSerializable({ errno, error, payload }));
+
+				} else {
+					window.Raven.captureMessage(error, cloneToSerializable({ errno, error, payload }));
+				}
+			}
+		});
+	}
+}
+
+
+// Yanked from https://git.io/vS8DV re-used under CC0
+// with some tiny modifications
+function isError(value) {
+  switch ({}.toString.call(value)) {
+    case '[object Error]': return true;
+    case '[object Exception]': return true;
+    case '[object DOMException]': return true;
+    default: return value instanceof Error;
+  }
 }
