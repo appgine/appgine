@@ -20,8 +20,11 @@ export default class TargetList
 		});
 
 		this._targets = {};
+		this._targetsComplete = [];
 		this._first = [];
 		this._every = [];
+		this._parent = [];
+		this._parents = [];
 		this._complete = [];
 		this._document = [];
 		this._completed = false;
@@ -57,8 +60,8 @@ export default class TargetList
 			this._pluginApi.pluginObj.internalCall('targets.every', false, () => {
 				for (let every of this._every) {
 					if (every.target==='' || every.target===target) {
-							every.ids[id] = every($element, targetObj)||{};
-							targetObj.instances.push(every.ids[id]);
+						every.ids[id] = every($element, targetObj)||{};
+						targetObj.instances.push(every.ids[id]);
 					}
 				}
 			});
@@ -112,6 +115,35 @@ export default class TargetList
 	}
 
 	completeTargets() {
+		const $element = this._pluginApi.pluginObj.$element;
+		const state = this._pluginApi.state('complete');
+
+		this._pluginApi.pluginObj.internalCall('complete.parent', false, () => {
+			$element && this._parent.forEach(createFn => {
+				let $parent = $element;
+				while ($parent = $parent.parentNode) {
+					if ($parent.matches && $parent.matches(createFn.selector)) {
+						createFn.result = createFn($parent)||{};
+						this._targetsComplete.push(createFn.result);
+						break;
+					}
+				}
+			});
+		});
+
+		this._pluginApi.pluginObj.internalCall('complete.parents', false, () => {
+			$element && this._parents.forEach(createFn => {
+				let $parent = $element;
+				while ($parent = $parent.parentNode) {
+					if ($parent.matches && $parent.matches(createFn.selector)) {
+						const result = createFn($parent)||{};
+						createFn.results.push(result);
+						this._targetsComplete.push(result);
+					}
+				}
+			});
+		});
+
 		if (this._completed===false) {
 			this._completed = true;
 
@@ -143,6 +175,22 @@ export default class TargetList
 				this._pluginApi.pluginObj.internalCall('targets.complete:destroy', true, () => destroy(complete.result));
 				complete.result = undefined;
 			}
+		}
+
+		for (let parents of this._parents) {
+			parents.results.forEach(instance => {
+				this._targetsComplete.splice(this._targetsComplete.indexOf(instance), 1);
+				this._pluginApi.pluginObj.internalCall('complete.parents:destroy', true, () => destroy(instance));
+			});
+
+			parents.results = [];
+		}
+
+		for (let parent of this._parent) {
+			const instance = parent.result;
+			delete parent.result;
+			this._targetsComplete.splice(this._targetsComplete.indexOf(instance), 1);
+			this._pluginApi.pluginObj.internalCall('complete.parent:destroy', true, () => destroy(instance));
 		}
 	}
 
@@ -215,6 +263,19 @@ export default class TargetList
 		createFn.target = target;
 		createFn.ids = {};
 		this._every.push(createFn);
+		return this;
+	}
+
+	parent(selector, createFn) {
+		createFn.selector = selector;
+		this._parent.push(createFn);
+		return this;
+	}
+
+	parents(selector, createFn) {
+		createFn.selector = selector;
+		createFn.results = [];
+		this._parents.push(createFn);
 		return this;
 	}
 
