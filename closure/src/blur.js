@@ -15,7 +15,8 @@ exports.fromEvent = function(e) {
 
 exports.fromElement = function($el) {
 	var $el = goog.dom.getAncestorByTagNameAndClass($el, 'a')
-		|| goog.dom.getAncestorByTagNameAndClass($el, 'button');
+		|| goog.dom.getAncestorByTagNameAndClass($el, 'button')
+		|| goog.dom.getAncestorByTagNameAndClass($el, 'label');
 
 	if ($el && _enter===false) {
 		$el.blur();
