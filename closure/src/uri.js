@@ -50,7 +50,7 @@ exports.create = function(location, params, hash) {
 }
 
 exports.createFormAction = function($form) {
-	return createUri($form.getAttribute('action'), !form.isMethod($form, 'GET')).toString();
+	return createUri($form.getAttribute('action'), !form.isMethod($form, 'GET'), $form.getAttribute('action') ? undefined : '').toString();
 }
 
 exports.createForm = function($form, $submitter) {
