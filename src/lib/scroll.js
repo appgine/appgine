@@ -8,34 +8,25 @@ export function setHashFixedEdge(option) {
 }
 
 
-export function scrollHashToView(hash, animated, onStart, onEnd) {
+export function scrollHashToView(hash, animated, onEnd) {
 	const $node = hash ? document.getElementById(hash) : document.body;
 
-	if ($node) {
-		scrollNodeToView($node, animated, onStart, onEnd);
-		return true;
-
-	} else {
-		return false;
-	}
+	$node && scrollNodeToView($node, animated, () => onEnd($node));
+	return !!$node;
 }
 
-export function scrollNodeToView($node, animated, onStart, onEnd) {
-	if ($node) {
-		onStart && onStart($node);
+export function scrollNodeToView($node, animated, onEnd) {
+	setTimeout(() => {
+		if (animated) {
+			closure.animation.scrollToLazy(findScrollTo.bind(null, $node), function() {
+				onEnd && onEnd();
+			});
 
-		setTimeout(() => {
-			if (animated) {
-				closure.animation.scrollToLazy(findScrollTo.bind(null, $node), function() {
-					onEnd && onEnd($node);
-				});
-
-			} else {
-				window.scrollTo(...findScrollTo($node));
-				onEnd && onEnd($node);
-			}
-		}, 0);
-	}
+		} else {
+			window.scrollTo(...findScrollTo($node));
+			onEnd && onEnd();
+		}
+	}, 0);
 }
 
 export function scrollFormToView($form, top=false) {

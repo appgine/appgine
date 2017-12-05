@@ -8,7 +8,7 @@ import { loadMain, update, unload, unloadMain } from './plugins'
 import loadHtml from '../lib/loadHtml'
 import loadTitle from '../lib/loadTitle'
 import createFragment from '../lib/createFragment'
-import { scrollHashToView, scrollFormToView, setHashFixedEdge } from '../lib/scroll'
+import { scrollNodeToView, scrollFormToView, setHashFixedEdge } from '../lib/scroll'
 import * as apiRequest from '../api/request'
 import * as apiShortcut from '../api/shortcut'
 import * as tick from '../tick'
@@ -377,7 +377,8 @@ function redirect($element, endpoint, newPage=false, scrollTo=0) {
 
 
 function pushEndpoint(endpoint, state={}, replacing=null) {
-	_onRemoveScroll && _onRemoveScroll();
+	_internalScrollHash = '';
+	_internalRemoveScroll && _internalRemoveScroll();
 
 	if (_pushing || replacing || (closure.uri.isSame(endpoint) && replacing===null)) {
 		_pushing = true;
@@ -654,37 +655,51 @@ function internalSwap(url, html, scrollTo)
 }
 
 
+let _internalScrollHash = '';
+let _internalRemoveScroll = null;
+
 function internalSwapRequest(requestInto) {
+	_internalRemoveScroll && _internalRemoveScroll();
 	_options.swap(_request, _request=requestInto);
+	internalScrollHash(_internalScrollHash, false);
 }
 
 
-let _onRemoveScroll = null;
 function internalScrollHashToView(hash) {
-	_onRemoveScroll && _onRemoveScroll();
-
-	setHashFixedEdge(_options.hashFixedEdge);
-	scrollHashToView(hash, true, _options.onBeforeScroll, function($element) {
-		_options.onScroll($element);
-		_onRemoveScroll = function() {
-			_onRemoveScroll = null;
-			_options.onRemoveScroll($element);
-		};
-	});
+	internalScrollHash(hash, true);
 }
 
 
 function internalScrollFormToView($form, top) {
-	_onRemoveScroll && _onRemoveScroll();
-
 	setHashFixedEdge(_options.hashFixedEdge);
 	scrollFormToView($form, top);
 }
 
 
+function internalScrollHash(hash, toView=true) {
+	_internalScrollHash = hash;
+	_internalRemoveScroll && _internalRemoveScroll();
+
+	const $node = hash && document.getElementById(hash);
+
+	if ($node) {
+		_options.onBeforeScroll($node);
+		_internalRemoveScroll = function() {
+			_internalRemoveScroll = null;
+			_options.onRemoveScroll($node);
+		}
+
+		if (toView) {
+			setHashFixedEdge(_options.hashFixedEdge);
+			scrollNodeToView($node, true, () => _internalRemoveScroll && _options.onScroll($node));
+		}
+	}
+}
+
+
 function internalDispose() {
 	_options.onDispose();
-	_onRemoveScroll && _onRemoveScroll();
+	_internalRemoveScroll && _internalRemoveScroll();
 	_request = null;
 	try { _stack.dispose(); } catch(e) {}
 	try { unload(document); } catch(e) {}
