@@ -45,22 +45,34 @@ function renderRow(row, token, $node)
 		goog.dom.append($node, [$category]);
 	}
 
-	var $container = goog.dom.createDom('a', 'ac-row-container');
+	var $container;
+	$container = goog.dom.createDom('a', 'ac-row-container');
 	$container.onclick = function(e) {
 		e.preventDefault();
 	}
 
-	var $image = goog.dom.createDom('span', 'ac-row-image');
-	var $title = goog.dom.createDom('span', 'ac-row-title', [row['data']['title']]);
+	if (row['data']['icon'] || row['data']['image']) {
+		var $image = goog.dom.createDom('span', 'ac-row-image');
+		goog.dom.append($container, [$image]);
 
-	if (row['data']['icon']) {
-		goog.dom.classes.add($image, 'fa', row['data']['icon']);
+		if (row['data']['image']) {
+			goog.style.setStyle($image, 'background-image', 'url('+row['data']['image']+')');
 
-	} else if (row['data']['image']) {
-		goog.style.setStyle($image, 'background-image', 'url('+row['data']['image']+')');
+		} else {
+			goog.dom.classes.add($image, 'fa', row['data']['icon']);
+		}
+
+	} else {
+		goog.dom.classes.add($container, 'ac-row-noimage');
 	}
 
-	goog.dom.append($container, [$image, $title]);
+	['title', 'subtitle'].map(function(key) {
+		if (row['data'][key]) {
+			var $element = goog.dom.createDom('span', 'ac-row-' + key, [row['data'][key]]);
+			goog.dom.append($container, [$element]);
+		}
+	});
+
 	goog.dom.append($node, [$container]);
 };
 
