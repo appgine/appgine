@@ -7,51 +7,19 @@ goog.require('goog.net.XhrIo');
 goog.require('goog.net.EventType');
 goog.require('goog.net.Jsonp');
 
-var _request;
-var _timeout = 10e3;
-var _headers = {};
 
 exports.ABORT = 'abort';
 exports.ERROR = 'error';
 exports.TIMEOUT = 'timeout';
 exports.SUCCESS = 'success';
 
-exports.setTimeout = function(timeout) {
-	_timeout = parseInt(timeout, 10);
-}
-
-exports.setHeader = function(name, value) {
-	if (value===undefined) {
-		delete _headers[name];
-
-	} else {
-		_headers[name] = value;
-	}
-}
 
 exports.jsonp = function(endpoint, args, fn) {
 	(new goog.net.Jsonp(endpoint)).send(args, fn);
-};
-
-
-exports.get = function(endpoint, fn) {
-	ajaxRequest(endpoint, 'GET', '', fn);
 }
 
 
-exports.post = function(endpoint, data, fn) {
-	ajaxRequest(endpoint, 'POST', data, fn);
-}
-
-
-exports.load = function(endpoint, fn) {
-	pageRequest(endpoint, 'GET', '', fn);
-}
-
-
-exports.submit = function(endpoint, method, data, fn) {
-	pageRequest(endpoint, method, data, fn);
-}
+var _request;
 
 
 exports.abort = function() {
@@ -59,25 +27,51 @@ exports.abort = function() {
 }
 
 
-function ajaxRequest(endpoint, method, data, fn) {
-	var request = new goog.net.XhrIo();
+exports.createAjax = function(headers, timeout) {
 
-	bindRequest(request, fn);
-	request.send(endpoint, method, data, Object.assign({}, _headers, {
-		'X-Requested-With': 'XMLHttpRequest',
-		'Is-Ajax': 1
-	}));
+	function ajaxRequest(endpoint, method, data, fn) {
+		var request = new goog.net.XhrIo();
+
+		bindRequest(request, fn);
+		request.setTimeoutInterval(timeout===undefined ? 10e3 : parseInt(timeout, 10));
+		request.send(endpoint, method, data, Object.assign({}, headers, {
+			'X-Requested-With': 'XMLHttpRequest',
+			'Is-Ajax': 1
+		}));
+	}
+
+
+	function pageRequest(endpoint, method, data, fn) {
+		_request && _request.abort();
+		bindRequest(_request = new goog.net.XhrIo(), fn);
+		_request.setTimeoutInterval(timeout===undefined ? 10e3 : parseInt(timeout, 10));
+		_request.send(endpoint, method, data, Object.assign({}, headers, {
+			'X-Requested-With': 'XMLHttpRequest'
+		}));
+	}
+
+	return {
+		"get": function(endpoint, fn) {
+			ajaxRequest(endpoint, 'GET', '', fn);
+		},
+		"post": function(endpoint, data, fn) {
+			ajaxRequest(endpoint, 'POST', data, fn);
+		},
+		"load": function(endpoint, fn) {
+			pageRequest(endpoint, 'GET', '', fn);
+		},
+		"submit": function(endpoint, method, data, fn) {
+			pageRequest(endpoint, method, data, fn);
+		}
+	}
 }
 
 
-function pageRequest(endpoint, method, data, fn) {
-	exports.abort();
-
-	bindRequest(_request = new goog.net.XhrIo(), fn);
-	_request.send(endpoint, method, data, Object.assign({}, _headers, {
-		'X-Requested-With': 'XMLHttpRequest'
-	}));
-}
+var ajax = exports.createAjax();
+exports.get = ajax.get;
+exports.post = ajax.post;
+exports.load = ajax.load;
+exports.submit = ajax.submit;
 
 
 /**
@@ -86,8 +80,6 @@ function pageRequest(endpoint, method, data, fn) {
  */
 function bindRequest(request, fn)
 {
-	_timeout>0 && request.setTimeoutInterval(_timeout);
-
 	var handled = false;
 	var handleResponse = function(e, status, error) {
 		if (handled===false) {

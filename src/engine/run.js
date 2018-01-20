@@ -116,10 +116,6 @@ export default function run(options, scrollTo=0, bodyClassName) {
 		document.body.className = _bodyClassName
 	}
 
-	if (_options.timeout) {
-		closure.ajax.setTimeout(_options.timeout);
-	}
-
 	if (_options.abortOnEscape) {
 		apiShortcut.listen('esc', function(e) {
 			if (_pending) {
@@ -305,7 +301,7 @@ export function ajaxGet($element, params) {
 	const endpoint = foundRequest ? closure.uri.create(foundRequest.endpoint, params) : closure.uri.create(params);
 
 	const httpRequest = apiRequest.createHttpRequest($element, endpoint);
-	closure.ajax.get(endpoint, bindAjaxRequest(httpRequest, $element, endpoint, 0));
+	createAjax($element).get(endpoint, bindAjaxRequest(httpRequest, $element, endpoint, 0));
 }
 
 
@@ -313,7 +309,7 @@ export function ajaxPost($element, endpoint, data) {
 	endpoint = closure.uri.create(endpoint);
 
 	const httpRequest = apiRequest.createHttpRequest($element, endpoint, data);
-	closure.ajax.post(endpoint, data, bindAjaxRequest(httpRequest, $element, endpoint, 0));
+	createAjax($element).post(endpoint, data, bindAjaxRequest(httpRequest, $element, endpoint, 0));
 }
 
 
@@ -394,13 +390,25 @@ function pushEndpoint(endpoint, state={}, replacing=null) {
 }
 
 
+function createAjax($element) {
+	const headers = {};
+	const foundRequest = _stack.findRequest($element);
+
+	if (foundRequest) {
+		headers['X-Appgine-Referer'] = foundRequest.endpoint;
+	}
+
+	return closure.ajax.createAjax(headers, _options.timeout);
+}
+
+
 function loadAjax(apiRequest, $element, endpoint, scrollTo) {
-	closure.ajax.load(endpoint, bindAjaxRequest(apiRequest, $element, endpoint, scrollTo));
+	createAjax($element).load(endpoint, bindAjaxRequest(apiRequest, $element, endpoint, scrollTo));
 }
 
 
 function loadPage(apiRequest, $element, endpoint, newPage, scrollTo) {
-	closure.ajax.load(endpoint, bindRequest(apiRequest, $element, endpoint, newPage, scrollTo));
+	createAjax($element).load(endpoint, bindRequest(apiRequest, $element, endpoint, newPage, scrollTo));
 }
 
 
@@ -453,9 +461,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 		});
 	}
 
-	const currentRequest = _stack.loadRequest();
-
-	closure.ajax.submit(formEndpoint, formMethod, submitData, function(...response) {
+	createAjax($element).submit(formEndpoint, formMethod, submitData, function(...response) {
 		if (formMethod!=='GET' || _pushing) {
 			_stack.clearHistory();
 		}
