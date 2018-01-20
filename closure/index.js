@@ -60,6 +60,7 @@ exports.scrollLeft = goog.require('scroll').scrollLeft;
 exports.scrollTop = goog.require('scroll').scrollTop;
 exports.scrollHeight = goog.require('scroll').scrollHeight;
 exports.scrollWidth = goog.require('scroll').scrollWidth;
+exports.getDocumentScrollElement = goog.require('scroll').getDocumentScrollElement;
 exports.animation = goog.require('animation');
 exports.ajax = goog.require('ajax');
 exports.form = goog.require('form');

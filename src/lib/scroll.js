@@ -1,5 +1,6 @@
 
 import closure from '../closure'
+import scrollIntoViewIfNeeded from './scrollIntoViewIfNeeded'
 
 let hashFixedEdge = null;
 
@@ -7,25 +8,23 @@ export function setHashFixedEdge(option) {
 	hashFixedEdge = option;
 }
 
-
-export function scrollHashToView(hash, animated, onEnd) {
-	const $node = hash ? document.getElementById(hash) : document.body;
-
-	$node && scrollNodeToView($node, animated, () => onEnd($node));
-	return !!$node;
-}
-
-export function scrollNodeToView($node, animated, onEnd) {
+export function scrollNodeToView($origin, $node, animated, onEnd) {
 	setTimeout(() => {
-		if (animated) {
-			closure.animation.scrollToLazy(findScrollTo.bind(null, $node), function() {
-				onEnd && onEnd();
-			});
+		scrollIntoViewIfNeeded($node, animated, function(scrolled) {
+			const bindFindScrollTo = (scrolled && $origin)
+				? findScrollToWithOrigin.bind(null, $node, $origin)
+				: findScrollTo.bind(null, $node);
 
-		} else {
-			window.scrollTo(...findScrollTo($node));
-			onEnd && onEnd();
-		}
+			if (animated) {
+				return closure.animation.scrollToLazy(bindFindScrollTo, function() {
+					onEnd && onEnd();
+				});
+
+			} else {
+				window.scrollTo(...bindFindScrollTo());
+				onEnd && onEnd();
+			}
+		});
 	}, 0);
 }
 
@@ -45,7 +44,7 @@ export function scrollFormToView($form, top=false) {
 		} while (($parent = $parent.parentNode) && ($parent instanceof Element));
 
 		if (top) {
-			return scrollNodeToView($form)
+			return scrollNodeToView(null, $form)
 
 		} else {
 			const fixedEdge = findFixedEdge();
@@ -69,6 +68,25 @@ function findScrollTo($node) {
 	const scrollTop = top-fixedEdge;
 
 	return [scrollLeft, scrollTop];
+}
+
+
+function findScrollToWithOrigin($node, $origin) {
+	const [nodeScrollLeft, nodeScrollTop] = findScrollTo($node);
+	const [originScrollLeft, originScrollTop] = findScrollTo($origin);
+	const { left, top, width, height } = closure.rect.fromScreen();
+
+	const originScreen = {
+		left: Math.min(left, originScrollLeft),
+		top: originScrollTop,
+		width, height
+	};
+
+	if (isWithinScreen(nodeScrollLeft, nodeScrollTop, originScreen)) {
+		return [originScreen.left, originScreen.top];
+	}
+
+	return [nodeScrollLeft, nodeScrollTop];
 }
 
 
@@ -171,4 +189,22 @@ function areChildrenAvailable($node) {
 
 function isNodeAvailable($node) {
 	return closure.style.isVisible($node);
+}
+
+
+function isWithinScreen(left, top, screen) {
+	if (left>screen.left+screen.width) {
+		return false;
+
+	} else if (left<screen.left) {
+		return false;
+
+	} else if (top>screen.top+screen.height) {
+		return false;
+
+	} else if (top<screen.top) {
+		return false;
+	}
+
+	return true;
 }

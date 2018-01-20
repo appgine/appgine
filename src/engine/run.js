@@ -45,7 +45,7 @@ tick.onEachTick(function(screen, updated, done) {
 
 		} else if (request.scrolled!==true) {
 			if (typeof request.scrolled === 'string') {
-				internalScrollHashToView(request.scrolled);
+				internalScrollHashToView(null, request.scrolled);
 				request.scrolled = true;
 
 			} else if (typeof request.scrolled === 'function') {
@@ -178,7 +178,7 @@ export default function run(options, scrollTo=0, bodyClassName) {
 				_options.dispatch('app.request', 'pageview', endpoint);
 
 			} else if (closure.uri.getPart(endpoint, 'hash')[0]) {
-				internalScrollHashToView(closure.uri.getPart(endpoint, 'hash')[0].substr(1));
+				internalScrollHashToView(null, closure.uri.getPart(endpoint, 'hash')[0].substr(1));
 
 			} else {
 				request.scrolled = -1;
@@ -213,7 +213,7 @@ export function onClickHash(e, $link, hash, toTarget) {
 
 		} else {
 			e.preventDefault();
-			internalScrollHashToView(hash);
+			internalScrollHashToView($link, hash);
 		}
 	}
 }
@@ -236,7 +236,7 @@ export function onClick(e, $link, toTarget) {
 					}
 
 					e.preventDefault();
-					internalScrollHashToView(hash);
+					internalScrollHashToView($link, hash);
 
 				} else {
 					const clickRequest = apiRequest.createClickRequest(e, $link, endpoint);
@@ -661,12 +661,13 @@ let _internalRemoveScroll = null;
 function internalSwapRequest(requestInto) {
 	_internalRemoveScroll && _internalRemoveScroll();
 	_options.swap(_request, _request=requestInto);
-	internalScrollHash(_internalScrollHash, false);
+	internalScrollHash(null, _internalScrollHash, false);
 }
 
 
-function internalScrollHashToView(hash) {
-	internalScrollHash(hash, true);
+function internalScrollHashToView($origin, hash) {
+	$origin = $origin || document.querySelector('a[href="#'+hash+'"]');
+	internalScrollHash($origin, hash, true);
 }
 
 
@@ -676,7 +677,7 @@ function internalScrollFormToView($form, top) {
 }
 
 
-function internalScrollHash(hash, toView=true) {
+function internalScrollHash($origin, hash, toView=true) {
 	_internalScrollHash = hash;
 	_internalRemoveScroll && _internalRemoveScroll();
 
@@ -691,7 +692,7 @@ function internalScrollHash(hash, toView=true) {
 
 		if (toView) {
 			setHashFixedEdge(_options.hashFixedEdge);
-			scrollNodeToView($node, true, () => _internalRemoveScroll && _options.onScroll($node));
+			scrollNodeToView($origin, $node, true, () => _internalRemoveScroll && _options.onScroll($node));
 		}
 	}
 }

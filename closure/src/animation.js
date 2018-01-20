@@ -16,18 +16,26 @@ exports.scrollTop = function(scrollTop, onEnd) {
 }
 
 exports.scrollTo = function(scrollLeft, scrollTop, onEnd) {
+	var scrollFrom = goog.dom.getDocumentScroll();
 
-	var scrolled = goog.dom.getDocumentScroll();
+	return exports.scrollElementTo(
+		goog.dom.getDocumentScrollElement(),
+		scrollFrom.x, scrollFrom.y,
+		scrollLeft, scrollTop,
+		onEnd
+	);
+}
 
-	if (scrolled.x!==scrollLeft || scrolled.y!==scrollTop) {
-		var diff = Math.abs(scrolled.y - scrollTop);
-		var time = Math.min(300, Math.max(100, Math.ceil(diff/3)));
+exports.scrollElementTo = function($element, scrollLeftFrom, scrollTopFrom, scrollLeft, scrollTop, onEnd, time) {
+	if (scrollLeftFrom!==scrollLeft || scrollTopFrom!==scrollTop) {
+		var diffLeft = Math.abs(scrollLeftFrom - scrollLeft);
+		var diffTop = Math.abs(scrollTopFrom - scrollTop);
 
 		var animation = new goog.fx.dom.Scroll(
-			goog.dom.getDocumentScrollElement(),
-			[scrolled.x, scrolled.y],
+			$element,
+			[scrollLeftFrom, scrollTopFrom],
 			[scrollLeft, scrollTop],
-			time
+			time || Math.min(300, Math.max(100, Math.ceil(diffLeft/3)), Math.max(100, Math.ceil(diffTop/3)))
 		);
 
 		goog.events.listen(animation, goog.fx.Animation.EventType.END, onEnd||function() {});

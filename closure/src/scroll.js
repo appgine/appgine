@@ -27,6 +27,8 @@ exports.scrollWidth = function() {
 	return Math.max(doc.body.scrollWidth||0, docEl.scrollWidth||0) - goog.dom.getViewportSize().width;
 }
 
+exports.getDocumentScrollElement = goog.dom.getDocumentScrollElement;
+
 
 var binded = false;
 var inited = 0;
