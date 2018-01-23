@@ -11,6 +11,11 @@ goog.Uri.reDisallowedInFragment_ = /^$/;
 
 var $link = goog.dom.createDom('a');
 var $location = goog.dom.createDom('a', {'href': window.location.href});
+var _ignoreURIParams = [];
+
+exports.ignoreURIParams = function(ignoreURIParams) {
+	_ignoreURIParams = ignoreURIParams;
+}
 
 exports.change = function(location) {
 	$location.href = location;
@@ -95,6 +100,15 @@ function createUri(location, params, hash) {
 
 	} else if (typeof params === 'object') {
 		queryData.extend(goog.Uri.QueryData.createFromMap(params||{}));
+	}
+
+	if (typeof _ignoreURIParams==='string') {
+		queryData.remove(_ignoreURIParams);
+
+	} else if (goog.isArray(_ignoreURIParams)) {
+		_ignoreURIParams.forEach(function(key) {
+			queryData.remove(key);
+		});
 	}
 
 	uri.setQueryData(queryData);

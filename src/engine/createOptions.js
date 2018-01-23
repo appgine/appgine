@@ -11,6 +11,7 @@ export default function createOptions(options={}) {
 			options.onDispose && options.onDispose();
 		},
 		timeout: options.timeout ? Math.max(0, parseInt(options.timeout, 10)) : undefined,
+		ignoreURIParams: [],
 		dragAndDropClass: options.dragAndDropClass || '',
 		abortOnEscape: options.abortOnEscape===undefined || options.abortOnEscape,
 		onBeforeScroll($element) {

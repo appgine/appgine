@@ -126,6 +126,10 @@ export default function run(options, scrollTo=0, bodyClassName) {
 		});
 	}
 
+	if (_options.ignoreURIParams) {
+		closure.uri.ignoreURIParams(_options.ignoreURIParams);
+	}
+
 	willUpdate(loadMain);
 
 	internalSwap(closure.uri.create(), html, scrollTo);
