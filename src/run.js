@@ -60,6 +60,7 @@ export default function(options={}) {
 		}
 
 		bindSystem(require('./system/tabIndex').default);
+		bindSystem(require('./system/metaReload').default);
 
 		if (options.dragAndDropClass) {
 			bindSystem(require('./system/dragAndDrop').default, plugin => plugin(options.dragAndDropClass));

@@ -1,0 +1,4 @@
+
+metaReload
+ -> fix browser default refresh when not inside <noscript>
+ -> careful call of window.stop();
