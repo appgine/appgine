@@ -115,6 +115,9 @@ function createUri(location, params, hash) {
 
 	if (typeof hash==='string') {
 		uri.setFragment(hash);
+
+	} else if (hash===true) {
+		uri.setFragment($location.hash.substr(1));
 	}
 
 	return uri;
