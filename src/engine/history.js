@@ -174,6 +174,12 @@ export function cancelState() {
 	_supported ? window.history.back() : null;
 }
 
+export function canonical(link) {
+	if (_link!==closure.uri.create(link, true, true)) {
+		changeState(_state, link, 'replaceState', 'replace');
+	}
+}
+
 export function replaceState(state={}, link) {
 	closure.uri.isSame(link) && _link!==_origin && (state.origin = _origin);
 	changeState(createState(state, false), link, 'replaceState', 'replace');

@@ -529,7 +529,7 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 			}
 
 		} else if (response.html || response.json) {
-			onResponse(response.html, response.json);
+			onResponse(response.html, response.json, response.headers);
 
 		} else if (response.error || response.json===undefined) {
 			onError(response.error);
@@ -554,7 +554,7 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 	const [, ...anchor] = endpoint.split('#');
 	const foundRequest = _stack.findRequest($element);
 
-	return function(text, json) {
+	return function(text, json, headers) {
 		const isCurrent = foundRequest===_stack.loadRequest();
 
 		if (json && json.reload) {
@@ -591,6 +591,14 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 			}
 
 		} else {
+			if (isCurrent && headers) {
+				const canonical = headers.match(/link: <(.+)>; rel="canonical"/);
+
+				if (canonical) {
+					history.canonical(canonical[1]);
+				}
+			}
+
 			if (json!==undefined) {
 				apiRequest.onResponseUpdate();
 				willUpdate();
@@ -672,6 +680,12 @@ function internalSwapRequest(requestInto) {
 	_internalRemoveScroll && _internalRemoveScroll();
 	_options.swap(_request, _request=requestInto);
 	internalScrollHash(null, _internalScrollHash, false);
+
+	const $canonical = requestInto.$fragment.querySelector('link[rel="canonical"]');
+
+	if ($canonical) {
+		history.canonical($canonical.getAttribute('href'));
+	}
 }
 
 
