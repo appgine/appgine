@@ -43,10 +43,17 @@ export default function bridgeCssReload(options={}, transform=defaultTransform) 
 				window.appgineCssReload.loaded.push({ $link, cssid, swapid });
 			});
 
+			Array.from(document.head.querySelectorAll('style')).forEach(function($style) {
+				if ($style.hasAttribute('data-appgine')===false) {
+					$style.setAttribute('data-appgine', '');
+					window.appgineCssReload.styles.push($style);
+				}
+			});
+
 		} else {
-			Array.from(document.head.querySelectorAll('link[rel*=stylesheet]')).forEach(function($link) {
-				if ($link.hasAttribute('data-appgine')===false) {
-					$link.parentNode.removeChild($link);
+			Array.from(document.head.querySelectorAll('style')).forEach(function($style) {
+				if ($style.hasAttribute('data-appgine')===false) {
+					$style.parentNode.removeChild($style);
 				}
 			});
 		}
