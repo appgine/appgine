@@ -81,6 +81,7 @@ export function reloadStatic($dom)
 		querySelectorAll($static, '[data-plugin]').forEach(function($node) {
 			resolveDataAttribute($node, 'data-plugin', function({ pluginName, pluginId, name, data }) {
 				update[name + '::reload'] = data;
+				update[name + '::reloadWithNode'] = { data, $node };
 			});
 		});
 
