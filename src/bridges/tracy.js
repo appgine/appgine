@@ -26,6 +26,11 @@ export default function bridgeTracy(options={}) {
 			}
 
 			$body.appendChild($tracyStatic);
+
+			for (let $style of $html.querySelectorAll('style.tracy-debug')) {
+				console.log($style);
+				$style.setAttribute('data-appgine', '');
+			}
 		}
 	}
 
