@@ -24,7 +24,7 @@ export default function create() {
 				refreshLast[4] = true;
 
 				if (refreshLast[2]) {
-					location(document, refreshLast[2]);
+					location(document.body, refreshLast[2]);
 
 				} else {
 					onReload();
