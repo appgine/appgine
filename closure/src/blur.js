@@ -18,7 +18,7 @@ exports.fromElement = function($el) {
 		|| goog.dom.getAncestorByTagNameAndClass($el, 'button')
 		|| goog.dom.getAncestorByTagNameAndClass($el, 'label');
 
-	if ($el && _enter===false) {
+	if ($el && _enter===false && !$el.onfocus && !$el.onblur) {
 		$el.blur();
 	}
 }
