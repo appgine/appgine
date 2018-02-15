@@ -4,7 +4,7 @@ const loading = {};
 
 export default function loadScript(src, onLoad) {
 	if (loading[src]===true) {
-		return onLoad(false);
+		return onLoad && onLoad(false);
 
 	} else if (loading[src]===false) {
 		return null;
