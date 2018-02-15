@@ -53,10 +53,20 @@ export default function create() {
 			event.initEvent('submit', true, true);
 		}
 
-		this.dispatchEvent(event);
+		const $form = document.body.contains(this) ? this : this.cloneNode(true);
+
+		if ($form!==this) {
+			document.body.appendChild($form);
+		}
+
+		$form.dispatchEvent(event);
 
 		if (!event.defaultPrevented) {
-			submit.call(this);
+			submit.call($form);
+		}
+
+		if ($form!==this) {
+			$form.parentNode.removeChild($form);
 		}
 	}
 
