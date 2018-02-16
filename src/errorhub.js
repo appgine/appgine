@@ -41,6 +41,10 @@ export function listen(fn) {
 
 export function dispatch(errno, error, e, ...payload) {
 	listeners.forEach(fn => fn(errno, error, e, ...payload));
+
+	if (listeners.length===0) {
+		console_error(errno, error, e);
+	}
 }
 
 
