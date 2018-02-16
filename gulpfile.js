@@ -15,6 +15,7 @@ function runDev() {
 function runBuild() {
 	return function(callback) {
 		child_process.execSync('rm -rf ./lib && ./node_modules/.bin/babel src --out-dir ./lib');
+		child_process.execSync('rm -rf ./addons && ./node_modules/.bin/babel src-addons --out-dir ./addons');
 
 		process.env.NODE_ENV = 'production';
 
