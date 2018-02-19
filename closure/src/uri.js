@@ -54,6 +54,27 @@ exports.create = function(location, params, hash) {
 	return createUri(location, params, hash).toString();
 }
 
+exports.canonical = function(location, params, hash) {
+	var uri = createUri(location, params, hash);
+	var uriQuery = uri.getQueryData();
+	var query = new goog.Uri.QueryData();
+
+	createUri().getQueryData().forEach(function(value, key) {
+		if (uriQuery.containsKey(key)) {
+			query.add(key, uriQuery.get(key));
+		}
+	});
+
+	uriQuery.forEach(function(value, key) {
+		if (query.containsKey(key)===false) {
+			query.add(key, value);	
+		}
+	});
+
+	uri.setQueryData(query);
+	return uri.toString();
+}
+
 exports.createFormAction = function($form) {
 	return createUri($form.getAttribute('action'), !form.isMethod($form, 'GET'), $form.getAttribute('action') ? undefined : '').toString();
 }
