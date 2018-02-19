@@ -23,18 +23,23 @@ export default function create($form, data) {
 
 	const onChange = function(e) {
 		if (value!==e.target.value || checked!==e.target.checked) {
+			value = e.target.value;
+			checked = e.target.checked;
 			autoSubmitForm(e.target, true);
 		}
 	}
 
-	const onFocusIn = function(e) { value = e.target.value; checked = e.target.checked; }
+	const onFocusIn = function(e) {
+		value = e.target.value;
+		checked = e.target.checked;
+	}
+
 	const onFocusOut = function(e) {
 		if (value!==e.target.value || checked!==e.target.checked) {
+			value = e.target.value;
+			checked = e.target.checked;
 			autoSubmitForm(e.target, false);
 		}
-
-		value = undefined;
-		checked = undefined;
 	}
 
 	const onKeyUp = function(e) {
