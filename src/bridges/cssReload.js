@@ -110,7 +110,7 @@ export default function bridgeCssReload(options={}, transform=defaultTransform) 
 						});
 					});
 
-					document.head.appendChild(exists.$link);
+					insertStyleLink(exists.$link);
 				}
 
 				if (swap && swap!==exists && window.appgineCssReload.loading.indexOf(exists)!==-1) {
@@ -232,5 +232,27 @@ function loadCssStylesheet() {
 
 	if (window.appgineCssReload.loading.length) {
 		window.appgineCssReload.pending = setTimeout(loadCssStylesheet, 10);
+	}
+}
+
+
+function insertStyleLink($link) {
+	const $found = document.querySelectorAll('head > link');
+
+	if ($found.length) {
+		const $foundLast = $found[$found.length-1];
+
+		if ($foundLast.nextSibling) {
+			document.head.insertBefore($link, $foundLast.nextSibling);
+
+		} else {
+			document.head.appendChild($link);
+		}
+
+	} else if (document.head.firstElementChild) {
+		document.head.insertBefore($link, document.head.firstElementChild);
+
+	} else {
+		document.head.appendChild($link);
 	}
 }
