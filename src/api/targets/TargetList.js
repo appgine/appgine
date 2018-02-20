@@ -46,25 +46,6 @@ export default class TargetList
 		if (this._targets[id]===undefined && this.containsElement($element)===false) {
 			this._targets[id] = { id, state, instances: [], $element, $target: $element, ...targetObj };
 			targetObj = this._targets[id];
-
-			this._pluginApi.pluginObj.internalCall('targets.first', false, () => {
-				for (let first of this._first) {
-					if (first.id===undefined && (first.target==='' || first.target===target)) {
-						first.id = id;
-						first.result = first($element, targetObj)||{};
-						targetObj.instances.push(first.result);
-					}
-				}
-			});
-
-			this._pluginApi.pluginObj.internalCall('targets.every', false, () => {
-				for (let every of this._every) {
-					if (every.target==='' || every.target===target) {
-						every.ids[id] = every($element, targetObj)||{};
-						targetObj.instances.push(every.ids[id]);
-					}
-				}
-			});
 		}
 	}
 
@@ -89,16 +70,6 @@ export default class TargetList
 					delete first.result;
 					targetObj.instances.splice(targetObj.instances.indexOf(instance), 1);
 					this._pluginApi.pluginObj.internalCall('targets.first:destroy', true, () => destroy(instance));
-
-					this._pluginApi.pluginObj.internalCall('targets.first', false, () => {
-						for (let target of Object.values(this._targets)) {
-							if (first.target==='' || first.target===target.target) {
-								first.id = target.id;
-								first.result = first($element, targetObj)||{};
-								return targetObj.instances.push(first.result);
-							}
-						}
-					});
 				}
 			}
 		}
@@ -117,6 +88,35 @@ export default class TargetList
 	completeTargets() {
 		const $element = this._pluginApi.pluginObj.$element;
 		const state = this._pluginApi.state('complete');
+
+		this._pluginApi.pluginObj.internalCall('targets.first', false, () => {
+			for (let first of this._first) {
+				for (let targetId of Object.keys(this._targets)) {
+					const targetObj = this._targets[targetId];
+					const { $element, target } = this._targets[targetId];
+
+					if (first.id===undefined && (first.target==='' || first.target===target)) {
+						first.id = targetId;
+						first.result = first($element, targetObj)||{};
+						targetObj.instances.push(first.result);
+					}
+				}
+			}
+		});
+
+		this._pluginApi.pluginObj.internalCall('targets.every', false, () => {
+			for (let every of this._every) {
+				for (let targetId of Object.keys(this._targets)) {
+					const targetObj = this._targets[targetId];
+					const { $element, target } = this._targets[targetId];
+					
+					if (every.target==='' || every.target===target) {
+						every.ids[targetId] = every($element, targetObj)||{};
+						targetObj.instances.push(every.ids[targetId]);
+					}
+				}
+			}
+		});
 
 		this._pluginApi.pluginObj.internalCall('complete.parent', false, () => {
 			$element && this._parent.forEach(createFn => {
