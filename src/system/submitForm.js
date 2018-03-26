@@ -3,30 +3,32 @@ import closure from '../closure'
 
 
 export default function create() {
-	let $submitter, _releaseClick, _releaseKey;
+	let _submitterEvent, _releaseClick, _releaseKey;
 	const dispatch = this.dispatch.bind(this);
 
 	const onClick = function onClick(e) {
 		clearTimeout(_releaseClick);
-		_releaseClick = setTimeout(function() { $submitter = null }, 250);
-		$submitter = e;
+		_releaseClick = setTimeout(function() { _submitterEvent = null }, 250);
+		_submitterEvent = e;
 	}
 
 	const onKeyDown = function onKeyDown(e) {
 		if (e.keyCode === 13) {
 			clearTimeout(_releaseKey);
-			_releaseKey = setTimeout(function() { $submitter = null; }, 300);
-			$submitter = e;
+			_releaseKey = setTimeout(function() { _submitterEvent = null; }, 300);
+			_submitterEvent = e;
 		}
 	}
 
 	const onSubmit = function onSubmit(e) {
-		const toTarget = (function() {
-			if ($submitter && ($submitter.metaKey || $submitter.ctrlKey)) {
+		const _$form = e.target;
+		const _$submitter = (_submitterEvent && closure.dom.contains(e.target, _submitterEvent.target)) ? closure.dom.getSubmitter(_submitterEvent) : undefined;
+		const _toTarget = (function() {
+			if (_submitterEvent && (_submitterEvent.metaKey || _submitterEvent.ctrlKey)) {
 				return '_blank';
 
-			} else if ($submitter && $submitter.target && $submitter.target.getAttribute('formtarget')) {
-				return $submitter.target.getAttribute('formtarget');
+			} else if (_$submitter && _$submitter.getAttribute('formtarget')) {
+				return _$submitter.getAttribute('formtarget');
 
 			} else if (e.target && e.target.getAttribute('target')) {
 				return e.target.getAttribute('target');
@@ -36,9 +38,7 @@ export default function create() {
 		})();
 
 		if (!e.defaultPrevented) {
-			const _$form = e.target;
-			const _$submitter = ($submitter && closure.dom.contains(e.target, $submitter.target)) ? closure.dom.getSubmitter($submitter) : undefined;
-			dispatch('app.event', 'submit', e, _$form, _$submitter, toTarget);
+			dispatch('app.event', 'submit', e, _$form, _$submitter, _toTarget);
 		}
 	}
 
