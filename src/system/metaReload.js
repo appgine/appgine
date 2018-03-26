@@ -5,13 +5,19 @@ import closure from '../closure'
 
 
 export default function create() {
+	const dispatch = this.dispatch.bind(this);
+
 	let refreshLast;
+	let refreshCached;
 	return tick.onEachTick(function() {
 		const request = requestStack.loadRequest();
-		const refresh = request && resolveRefresh(request.$fragment)
 
-		if (refresh) {
-			const refreshNow = [request, refresh[0], refresh[1], Date.now(), false];
+		if (!refreshCached || refreshCached[0]!==request) {
+			refreshCached = request ? [request, resolveRefresh(request.$fragment)] : null;
+		}
+
+		if (refreshCached && refreshCached[1]) {
+			const refreshNow = [request, refreshCached[1][0], refreshCached[1][1], Date.now(), false];
 
 			if (refreshLast && refreshLast[0]===refreshNow[0] && refreshLast[1]===refreshNow[1] && refreshLast[2]===refreshNow[2]) {
 				refreshNow[3] = refreshLast[3];
@@ -23,12 +29,7 @@ export default function create() {
 			if (refreshLast[4]===false && refreshLast[3]+refreshLast[1]<Date.now()) {
 				refreshLast[4] = true;
 
-				if (refreshLast[2]) {
-					location(document.body, refreshLast[2]);
-
-				} else {
-					onReload();
-				}
+				dispatch('meta-reload', 'reload', refreshLast[2]);
 			}
 		}
 	});
@@ -36,9 +37,15 @@ export default function create() {
 
 
 function resolveRefresh($fragment) {
+	const redirect = $fragment.querySelector('noscript[data-redirect]');
+
+	if (redirect) {
+		return [0, redirect.getAttribute('data-redirect')];
+	}
+
 	const refresh = findRefreshContent($fragment);
 	const refreshMatch = refresh.match(/\s+content\s*=\s*[\"']([0-9]+)(?:;url=(.*))?[\"']/);
-	return refreshMatch ? [parseInt(refreshMatch[1], 10)*1000, refreshMatch[2]] : null;
+	return refreshMatch ? [parseInt(refreshMatch[1], 10)*1000, refreshMatch[2].replace(/&amp;/g, '&')] : null;
 }
 
 

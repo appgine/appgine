@@ -1,6 +1,6 @@
 
 import ready from './lib/ready'
-import run, { onClick, onClickHash, onSubmitForm, onReload } from './engine/run'
+import run, { onClick, onClickHash, onSubmitForm, onReload, onLeave } from './engine/run'
 import { addListener } from './api/channel'
 import { scrollTop } from './closure'
 
@@ -71,6 +71,8 @@ export default function(options={}) {
 	addListener('app.event', 'clickHash', onClickHash);
 	addListener('app.event', 'submit', onSubmitForm);
 	addListener('app.event', 'reload', onReload);
+
+	addListener('meta-reload', 'reload', url => url ? onLeave(url) : onReload())
 
 	if (window.appgine) {
 		window.appgine = function(scrollTo, bodyClassName) {
