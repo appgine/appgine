@@ -15,12 +15,14 @@ export default function loadScript(src, onLoad) {
 		const $script = document.createElement('script');
 		$script.async = 1;
 		$script.onload = function() {
-			const callbacks = loading[src];
-			const first = callbacks.shift();
+			if (Array.isArray(loading[src])) {
+				const callbacks = loading[src];
+				const first = callbacks.shift();
 
-			loading[src] = true;
-			first && first(true);
-			callbacks.forEach(fn => fn && fn(false));
+				loading[src] = true;
+				first && first(true);
+				callbacks.forEach(fn => fn && fn(false));
+			}
 		}
 		$script.onerror = function() {
 			loading[src] = false;
