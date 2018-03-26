@@ -46,6 +46,9 @@ export default function createOptions(options={}) {
 		onRedirect(endpoint) {
 			return options.onRedirect ? options.onRedirect(endpoint) : false;
 		},
+		onLeave(endpoint) {
+			options.onLeave ? options.onLeave(endpoint) : (window.location.href = endpoint);
+		},
 		onError(err) {
 			return options.onError && options.onError(err);
 		},
