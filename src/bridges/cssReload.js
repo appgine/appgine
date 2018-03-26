@@ -156,7 +156,7 @@ function createCssElement($link) {
 		const $style = document.createElement('style');
 		$style.textContent = '@import "' + $link.href + '"';
 
-		for (let attr of $link.attributes) {
+		for (let attr of Array.from($link.attributes)) {
 			$style.setAttribute(attr.name, attr.value);
 		}
 
@@ -220,7 +220,7 @@ function loadCssStylesheet() {
 			} catch (e) {}
 
 		} else {
-			for (let sheet of document.styleSheets) {
+			for (let sheet of Array.from(document.styleSheets||[])) {
 				if (sheet.ownerNode===$link) {
 					window.appgineCssReload.loading.splice(window.appgineCssReload.loading.indexOf(item), 1);
 					window.appgineCssReload.loaded.push(item);

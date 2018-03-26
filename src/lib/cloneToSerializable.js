@@ -14,7 +14,7 @@ export default function cloneToSerializable(obj) {
 	} else if (obj instanceof Element && obj.attributes) {
 		const tag = [String(obj.tagName||'')];
 
-		for (let attr of obj.attributes) {
+		for (let attr of Array.from(obj.attributes)) {
 			tag.push(attr.name + '="' + attr.value + '"');
 		}
 
