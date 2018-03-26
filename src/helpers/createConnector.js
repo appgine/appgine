@@ -1,4 +1,6 @@
 
+import * as timers from '../lib/timer'
+
 
 
 export function createConnector(onTick, tickdelay=null) {
@@ -10,7 +12,7 @@ export function createConnector(onTick, tickdelay=null) {
 			onTick(handlers);
 
 		} else if (onTick) {
-			pendingTick = pendingTick || setTimeout(function() {
+			pendingTick = pendingTick || timers.setTimeout(function() {
 				pendingTick = null;
 				onTick(handlers);
 			}, tickdelay);

@@ -3,6 +3,7 @@ import Kefir from 'kefir'
 import { onUpdated, isUpdating } from './update'
 import { isRequestCurrent } from './engine/run'
 import closure from './closure'
+import * as timer from './lib/timer'
 
 const TICK = {
 	DELAYED: 0,
@@ -14,14 +15,30 @@ let ticks = [];
 let ticking = false;
 let updated = false;
 
-const stream_scroll = Kefir.fromEvents(window, 'scroll');
-const stream_resize = Kefir.fromEvents(window, 'resize');
-const stream_interval = Kefir.interval(300);
+const streamEvents = Kefir.stream(function(emitter) {
+	let throttled = 0;
+	timer.setInterval(function() {
+		if (throttled && throttled+100<Date.now()) {
+			throttled = 0;
+			emitter.emit();
+		}
+	}, 10);
+
+	Kefir.fromEvents(window, 'scroll').onValue(function() {
+		throttled = Date.now();
+	});
+
+	Kefir.fromEvents(window, 'resize').onValue(function() {
+		ticks.forEach(tick => tick.updated = true);
+		throttled = Date.now();
+	});
+});
 
 const stream1 = Kefir.merge([
-	stream_scroll,
-	stream_resize.throttle(100).onValue(() => ticks.forEach(tick => tick.updated = true)),
-	stream_interval,
+	streamEvents,
+	Kefir.stream(function(emitter) {
+		timer.setInterval(() => emitter.emit(), 300);
+	}),
 	Kefir.stream(emitter => onUpdated(() => {
 		updated = true;
 		ticks.forEach(tick => tick.updated = true);
@@ -39,11 +56,19 @@ const stream2 = Kefir.stream(emitter => stream1.onValue(() => window.requestAnim
 	.onValue(screen => invokeTicks(TICK.IMMEDIATE, screen))
 	.onValue(screen => updated && !isUpdating() && invokeTicks(TICK.DELAYED, screen))
 	.onValue(screen => updated = false)
-	.onValue(screen => ticking = false)
-	.delay(300)
-	.throttle(100);
+	.onValue(screen => ticking = false);
 
-Kefir.stream(emitter => stream2.onValue(screen => window.requestAnimationFrame(() => emitter.emit(screen))))
+Kefir.stream(function(emitter) {
+	const delayed = [];
+	timer.setInterval(function() {
+		while (delayed[0] && Date.now()-delayed[0][1]>300) {
+			const screen = delayed.shift()[0];
+			window.requestAnimationFrame(() => emitter.emit(screen));
+		}
+	}, 10);
+
+	stream2.onValue(screen => delayed.push([screen, Date.now()]));
+})
 	.filter(() => !isUpdating())
 	.map(screen => closure.rect.intersection(screen, closure.rect.fromScreen()))
 	.filter(screen => screen && screen.height && screen.width)
