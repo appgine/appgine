@@ -46,7 +46,7 @@ export default function(options={}) {
 		}
 	});
 
-	require('./plugins').loader(function({ bindApi, bindSystem }) {
+	require('./plugins').loader(function({ bindApi, bindSelector, bindSystem }) {
 		bindApi('channel', require('./api/channel').default);
 		bindApi('shortcut', require('./api/shortcut').default);
 
@@ -65,6 +65,8 @@ export default function(options={}) {
 		if (options.dragAndDropClass) {
 			bindSystem(require('./system/dragAndDrop').default, plugin => plugin(options.dragAndDropClass));
 		}
+
+		bindSelector('noscript[data-render-visible]', require('../addons/plugins/data-render-visible'));
 	});
 
 	addListener('app.event', 'click', onClick);
