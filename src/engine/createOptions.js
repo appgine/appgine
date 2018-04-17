@@ -34,10 +34,10 @@ export default function createOptions(options={}) {
 
 			return request;
 		},
-		swap(requestFrom, requestTo) {
-			options.onBeforeSwap && options.onBeforeSwap(requestFrom, requestTo);
-			swap(requestFrom, requestTo);
-			options.onAfterSwap && options.onAfterSwap(requestFrom, requestTo);
+		swap(requestFrom, requestTo, isRequestNew) {
+			options.onBeforeSwap && options.onBeforeSwap(requestFrom, requestTo, isRequestNew);
+			swap(requestFrom, requestTo, isRequestNew);
+			options.onAfterSwap && options.onAfterSwap(requestFrom, requestTo, isRequestNew);
 		},
 		dispatch(...args) {
 			dispatch(...args);

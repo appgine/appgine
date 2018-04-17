@@ -2,7 +2,7 @@
 import { dom, selection } from '../../closure'
 
 
-export default function createFormFocus() {
+export default function createFormFocus(isRequestNew) {
 	if (document.activeElement) {
 		const $active = document.activeElement;
 
@@ -35,7 +35,7 @@ export default function createFormFocus() {
 					$input.focus && $input.focus();
 					selection.setCursorAtEnd($input);
 
-					if ($input.hasAttribute('value')) {
+					if ($input.hasAttribute('value') && isRequestNew) {
 						$input.value = inputValue;
 						selection.setStart($input, selectionStart);
 						selection.setEnd($input, selectionEnd);

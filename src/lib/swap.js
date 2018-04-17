@@ -12,14 +12,14 @@ import loadTitle from './loadTitle'
 const $textarea = document.createElement('textarea');
 
 
-export default function swap(from, into) {
+export default function swap(from, into, isRequestNew) {
 	const { $fragment: $into, scrolled, scrollTop } = into;
 
 	willUpdate(function() {
 		swapDocument(function() {
 			document.title = loadTitle($into);
 
-			const formFocus = createFormFocus();
+			const formFocus = createFormFocus(isRequestNew);
 
 			const $atomicList = [];
 			Array.from($into.querySelectorAll('[data-atomic]')).forEach(function($atomic) {
