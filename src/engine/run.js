@@ -387,7 +387,6 @@ function pushEndpoint(endpoint, state={}, replacing=null) {
 	_internalRemoveScroll && _internalRemoveScroll();
 
 	if (_pushing || replacing || (closure.uri.isSame(endpoint) && replacing===null)) {
-		_pushing = true;
 		history.replaceState({...state, scrollTop: history.state('scrollTop', 0)}, endpoint);
 		return false;
 
