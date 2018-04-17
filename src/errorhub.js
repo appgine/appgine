@@ -5,7 +5,7 @@ import cloneToSerializable from './lib/cloneToSerializable'
 
 const onerror = window.onerror;
 window.onerror = function(messageOrEvent, source, lineno, colno, error) {
-	dispatch(ERROR.GLOBAL, 'window.onerror', error, messageOrEvent, source, lineno, colno);
+	dispatch(ERROR.GLOBAL, 'window.onerror: ' + String(messageOrEvent||''), error, messageOrEvent, source, lineno, colno);
 	try { onerror && onerror.apply(window, arguments); } catch(e) {}
 }
 
