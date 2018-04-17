@@ -8,6 +8,7 @@ import { loadMain, update, unload, unloadMain } from './plugins'
 import loadHtml from '../lib/loadHtml'
 import loadTitle from '../lib/loadTitle'
 import createFragment from '../lib/createFragment'
+import createTargetScroll from '../lib/swap/createTargetScroll'
 import { scrollNodeToView, scrollFormToView, setHashFixedEdge, setScrollPosition } from '../lib/scroll'
 import * as apiRequest from '../api/request'
 import * as apiShortcut from '../api/shortcut'
@@ -222,7 +223,7 @@ export function onClickHash(e, $link, hash, toTarget) {
 export function onClick(e, $link, toTarget) {
 	const endpoint = String($link.href||'');
 
-	if (toTarget==='' || toTarget==='_ajax' || toTarget==='_current') {
+	if (toTarget==='' || toTarget==='_ajax' || toTarget==='_current' || toTarget.indexOf('_this')===0 || toTarget[0]==='#') {
 		if (closure.uri.sameOrigin(endpoint)) {
 			if (_pending===0 || toTarget==='_ajax' || endpoint!==history.getLink()) {
 				const hash = String($link.hash||'').substr(1);
@@ -243,7 +244,7 @@ export function onClick(e, $link, toTarget) {
 
 					if (!e.defaultPrevented) {
 						e.preventDefault();
-						loadEndpoint(clickRequest, $link, endpoint, toTarget==='_ajax', toTarget==='_current'||null);
+						loadEndpoint(clickRequest, $link, endpoint, toTarget==='_ajax', toTarget==='_current'||null, createTargetScroll(toTarget));
 
 					} else {
 						clickRequest.prevented();
@@ -264,7 +265,7 @@ export function onClick(e, $link, toTarget) {
 export function onSubmitForm(e, $form, $submitter, toTarget) {
 	const endpoint = closure.uri.createForm($form, $submitter);
 
-	if ((toTarget==='' || toTarget==='_ajax' || toTarget==='_current') && 'FormData' in window) {
+	if ((toTarget==='' || toTarget==='_ajax' || toTarget==='_current' || toTarget.indexOf('_this')===0 || toTarget[0]==='#') && 'FormData' in window) {
 		if (closure.uri.sameOrigin(endpoint)) {
 			const submitRequest = apiRequest.createSubmitRequest(e, $form, $submitter, endpoint);
 
@@ -320,7 +321,7 @@ export function ajaxPost($element, endpoint, data) {
 }
 
 
-function loadEndpoint(apiRequest, $element, endpoint, isAjax, toCurrent=null) {
+function loadEndpoint(apiRequest, $element, endpoint, isAjax, toCurrent=null, scrollTo=0) {
 	endpoint = history.getCanonizedLink(endpoint);
 
 	if (isAjax) {
@@ -328,7 +329,7 @@ function loadEndpoint(apiRequest, $element, endpoint, isAjax, toCurrent=null) {
 
 	} else {
 		const newPage = pushEndpoint(endpoint, {}, toCurrent);
-		return loadPage(apiRequest, $element, endpoint, newPage, 0);
+		return loadPage(apiRequest, $element, endpoint, newPage, scrollTo);
 	}
 }
 
