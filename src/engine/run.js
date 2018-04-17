@@ -643,10 +643,10 @@ function internalSwap(url, html, scrollTo)
 				forEach($script => $script.parentNode.removeChild($script));
 
 			const $script = document.createElement('script');
-			$script.onerror = () => internalSwapRequest(requestInto());
+			$script.onerror = () => internalSwapRequest(requestInto(), true);
 			$script.onload = () => {
 				if (typeof window.appgine!=='function') {
-					internalSwapRequest(requestInto());
+					internalSwapRequest(requestInto(), true);
 
 				} else {
 					internalDispose();
@@ -672,7 +672,7 @@ function internalSwap(url, html, scrollTo)
 		}, 0);
 
 	} else {
-		internalSwapRequest(requestInto());
+		internalSwapRequest(requestInto(), true);
 	}
 }
 
@@ -680,9 +680,9 @@ function internalSwap(url, html, scrollTo)
 let _internalScrollHash = '';
 let _internalRemoveScroll = null;
 
-function internalSwapRequest(requestInto) {
+function internalSwapRequest(requestInto, isRequestNew) {
 	_internalRemoveScroll && _internalRemoveScroll();
-	_options.swap(_request, _request=requestInto);
+	_options.swap(_request, _request=requestInto, isRequestNew);
 	internalScrollHash(null, _internalScrollHash, false);
 
 	const $canonical = requestInto.$fragment.querySelector('link[rel="canonical"]');
