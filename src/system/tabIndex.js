@@ -6,8 +6,13 @@ export default function create() {
 	let $active, shouldHandleTabEvent;
 
 	const onRequest = function() {
-		$active = document.activeElement;
 		shouldHandleTabEvent = true;
+		try {
+			$active = document.activeElement;
+
+		} catch (e) {
+			$active = null;
+		}
 	}
 
 	this.listen('app.request', 'stop', onRequest);
