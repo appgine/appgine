@@ -149,7 +149,6 @@ export default function run(options, scrollTo=0, bodyClassName) {
 		const request = _stack.loadRequest();
 
 		if (request) {
-			request.endpoint = endpoint;
 			const { canonize: _canonize, redirect: _redirect, swap: _swap } = request;
 
 			if (_canonize) {
@@ -634,14 +633,6 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 			}
 
 		} else {
-			if (isCurrent && headers) {
-				const canonical = headers.match(/link: <(.+)>; rel="canonical"/);
-
-				if (canonical) {
-					history.canonical(canonical[1]);
-				}
-			}
-
 			if (json!==undefined) {
 				apiRequest.onResponseUpdate();
 				willUpdate();
@@ -674,8 +665,22 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 				foundRequest.willSwap(endpoint, text, anchor.join('#')||scrollTo, newPage);
 			}
 
-			if (isCurrent && newPage) {
-				_options.dispatch('app.request', 'pageview', closure.uri.create());
+			const nowRequest = isCurrent ? _stack.findRequest($element) : foundRequest;
+
+			if (nowRequest && headers) {
+				const canonical = headers.match(/link: <(.+)>; rel="canonical"/i);
+
+				if (canonical) {
+					nowRequest.endpoint = closure.uri.canonical(canonical[1]);
+				}
+			}
+
+			if (isCurrent) {
+				history.canonical(nowRequest.endpoint);
+
+				if (newPage) {
+					_options.dispatch('app.request', 'pageview', closure.uri.create());
+				}
 			}
 		}
 	}
@@ -741,7 +746,7 @@ function internalSwapRequest(requestInto, isRequestNew) {
 	const $canonical = requestInto.$fragment.querySelector('link[rel="canonical"]');
 
 	if ($canonical) {
-		history.canonical($canonical.getAttribute('href'));
+		requestInto.endpoint = closure.uri.canonical($canonical.getAttribute('href'));
 	}
 }
 
