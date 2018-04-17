@@ -3,9 +3,14 @@ import closure from '../closure'
 import scrollIntoViewIfNeeded from './scrollIntoViewIfNeeded'
 
 let hashFixedEdge = null;
+let optionsScrollPosition = null;
 
 export function setHashFixedEdge(option) {
 	hashFixedEdge = option;
+}
+
+export function setScrollPosition(option) {
+	optionsScrollPosition = option;
 }
 
 export function scrollNodeToView($origin, $node, animated, onEnd) {
@@ -43,18 +48,19 @@ export function scrollFormToView($form, top=false) {
 
 		} while (($parent = $parent.parentNode) && ($parent instanceof Element));
 
-		if (top) {
+		if (top===true) {
 			return scrollNodeToView(null, $form)
 
 		} else {
 			const fixedEdge = findFixedEdge();
-			const [left, top, right, bottom] = findNodeOffset($form);
-			const screen = closure.rect.fromScreen()
+			const offset = findNodeOffset($form);
+			const bounds = $form.getBoundingClientRect();
+			const screen = closure.rect.fromScreen();
 
-			return window.scrollTo(
-				screen.left+screen.width < left ? left : Math.min(screen.left, left),
-				screen.top+screen.height < top ? Math.min(top-fixedEdge, bottom-screen.height) : Math.min(screen.top, top-fixedEdge)
-			);
+			let scrollLeft = screen.left + screen.width >= offset[0] ? Math.min(screen.left, offset[0]) : offset[0];
+			let scrollTop = Math.min(offset[1] - fixedEdge, screen.top + screen.height < offset[1] ? offset[3] - screen.height : screen.top);
+
+			return window.scrollTo(scrollLeft, scrollTop);
 		}
 	}
 }
@@ -64,8 +70,17 @@ function findScrollTo($node) {
 	const fixedEdge = findFixedEdge();
 	const [left, top] = findNodeOffset($node);
 
-	const scrollLeft = left;
-	const scrollTop = top-fixedEdge;
+	let scrollLeft = left;
+	let scrollTop = top-fixedEdge;
+
+	if (optionsScrollPosition) {
+		const nodeOptionsScrollPosition = optionsScrollPosition($node, left, top);
+
+		if (nodeOptionsScrollPosition) {
+			scrollLeft = Math.min(scrollLeft, nodeOptionsScrollPosition[0]);
+			scrollTop = Math.min(scrollTop, nodeOptionsScrollPosition[1]);
+		}
+	}
 
 	return [scrollLeft, scrollTop];
 }
