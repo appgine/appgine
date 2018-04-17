@@ -8,7 +8,7 @@ import { loadMain, update, unload, unloadMain } from './plugins'
 import loadHtml from '../lib/loadHtml'
 import loadTitle from '../lib/loadTitle'
 import createFragment from '../lib/createFragment'
-import { scrollNodeToView, scrollFormToView, setHashFixedEdge } from '../lib/scroll'
+import { scrollNodeToView, scrollFormToView, setHashFixedEdge, setScrollPosition } from '../lib/scroll'
 import * as apiRequest from '../api/request'
 import * as apiShortcut from '../api/shortcut'
 import * as tick from '../tick'
@@ -719,6 +719,7 @@ function internalScrollHash($origin, hash, toView=true) {
 
 		if (toView) {
 			setHashFixedEdge(_options.hashFixedEdge);
+			setScrollPosition(_options.nodeScrollPosition);
 			scrollNodeToView($origin, $node, true, () => _internalRemoveScroll && _options.onScroll($node));
 		}
 	}
