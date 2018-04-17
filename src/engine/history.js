@@ -176,7 +176,9 @@ export function cancelState() {
 
 export function canonical(link) {
 	if (_link!==closure.uri.create(link, true, true)) {
-		changeState(_state, link, 'replaceState', 'replace');
+		if (closure.uri.sameOrigin(link)) {
+			changeState(_state, link, 'replaceState', 'replace');
+		}
 	}
 }
 
