@@ -11,6 +11,7 @@ import createFragment from '../lib/createFragment'
 import createTargetScroll from '../lib/swap/createTargetScroll'
 import createElementScroll from '../lib/swap/createElementScroll'
 import createFormScroll from '../lib/swap/createFormScroll'
+import { createSwapping } from '../api/swap'
 import { scrollNodeToView, scrollFormToView, setHashFixedEdge, setScrollPosition } from '../lib/scroll'
 import * as apiRequest from '../api/request'
 import * as apiShortcut from '../api/shortcut'
@@ -643,7 +644,17 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 			if (json!==undefined) {
 				apiRequest.onResponseUpdate();
 				willUpdate();
-				update((isCurrent && document) || (foundRequest && foundRequest.$fragment) || $element.ownerDocument, $element, json);
+				const swapping = createSwapping(foundRequest, isCurrent);
+
+				if (json && typeof json==='object') {
+					Object.keys(json).
+						filter(key => String(key).indexOf('swap[')===0).
+						forEach(key => swapping.add(key.substr(5, key.length-6), json[key]));
+
+					update((isCurrent && document) || (foundRequest && foundRequest.$fragment) || $element.ownerDocument, $element, json);
+				}
+
+				swapping.process();
 				wasUpdated();
 
 			} else if (text && isCurrent) {
