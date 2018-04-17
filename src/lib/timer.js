@@ -5,16 +5,16 @@ var timers = {};
 
 const workerHandler = `function (e) {
 	if (e.data) {
-		let action = e.data.action;
-		let type = e.data.type;
-		let uid = e.data.uid;
-		let timeout = e.data.timeout;
+		var action = e.data.action;
+		var type = e.data.type;
+		var uid = e.data.uid;
+		var timeout = e.data.timeout;
 
 		if (action && type && uid) {
 			self['worker_timers'] = self['worker_timers'] || {};
 
 			if (e.data.action === 'start') {
-				self['worker_timers'][uid] = (type==='interval' ? setInterval : setTimeout)(() => self.postMessage(uid), timeout);
+				self['worker_timers'][uid] = (type==='interval' ? setInterval : setTimeout)(function() { self.postMessage(uid) }, timeout);
 
 			} else if (e.data.action === 'stop') {
 				if (self['worker_timers'][uid]) {
