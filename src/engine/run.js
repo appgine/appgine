@@ -505,8 +505,10 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 	}
 
 	createAjax($element).submit(formEndpoint, formMethod, submitData, function(...response) {
-		if (formMethod!=='GET' || _pushing) {
-			_stack.clearHistory();
+		if ($form.hasAttribute('data-immutable')===false) {
+			if (formMethod!=='GET' || _pushing) {
+				_stack.clearHistory();
+			}
 		}
 
 		bindSubmitRequest(...response);
