@@ -9,6 +9,8 @@ import loadHtml from '../lib/loadHtml'
 import loadTitle from '../lib/loadTitle'
 import createFragment from '../lib/createFragment'
 import createTargetScroll from '../lib/swap/createTargetScroll'
+import createElementScroll from '../lib/swap/createElementScroll'
+import createFormScroll from '../lib/swap/createFormScroll'
 import { scrollNodeToView, scrollFormToView, setHashFixedEdge, setScrollPosition } from '../lib/scroll'
 import * as apiRequest from '../api/request'
 import * as apiShortcut from '../api/shortcut'
@@ -438,6 +440,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 	const formId = closure.dom.shouldHaveFormId($form) ? closure.dom.createFormId($form) : null;
 	const formEndpoint = closure.uri.createForm($form, $submitter);
 	const formMethod = ($form.method||'GET').toUpperCase();
+	const formTarget = ($form.target||'');
 	const formData = closure.form.postData($form, $submitter);
 
 	let newPage;
@@ -456,13 +459,20 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 
 	const submitData = formMethod==='POST' ? _options.onFormData(formData) : '';
 
+	const elementScroll = createElementScroll($element, true);
+	const formScroll = createFormScroll($form, formName[0]==='#', _options.hashFixedEdge);
+	const targetScroll = createTargetScroll(formTarget);
+
 	let bindSubmitRequest;
 	if (isAjax) {
 		bindSubmitRequest = bindAjaxRequest(submitRequest, $element, formEndpoint, function() {
 			const $found = closure.dom.findForm(formName, formId);
 
-			if ($found && formName[0]==='#') {
-				internalScrollFormToView($found, true);
+			if (formTarget==='#') {
+				window.scrollTo(0, 0);
+
+			} else if ($found) {
+				formScroll($found);
 			}
 		});
 
@@ -471,8 +481,22 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 		bindSubmitRequest = bindRequest(submitRequest, $element, formEndpoint, newPage, function() {
 			const $found = closure.dom.findForm(formName, formId);
 
-			if ($found) {
-				internalScrollFormToView($found, formName[0]==='#');
+			if (targetScroll) {
+				targetScroll();
+
+			} else if (formTarget==='#') {
+				window.scrollTo(0, 0);
+
+			} else if (formTarget[0]==='#') {
+				internalScrollHashToView($element, formTarget.substr(1));
+
+			} else if ($found) {
+				if (formTarget.indexOf('_this')===-1) {
+					formScroll($found);
+				}
+
+			} else if (formId===null) {
+				elementScroll(true);
 
 			} else {
 				window.scrollTo(0, 0);
