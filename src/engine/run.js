@@ -341,12 +341,12 @@ function leave(endpoint) {
 	_options.dispatch('app.request', 'start', endpoint, { requestnum });
 
 	if (_options.onRedirect(endpoint)) {
-		_options.dispatch('app.request', 'stop', { requestnum });
+		_options.dispatch('app.request', 'leave', { requestnum });
 
 		if (_pending) {
 			_pending = 0;
 
-			if (newPage) {
+			if (_pushing) {
 				history.cancelState();
 			}
 		}
