@@ -2,11 +2,11 @@
 import closure from '../closure'
 import scrollIntoViewIfNeeded from './scrollIntoViewIfNeeded'
 
-let hashFixedEdge = null;
+let optionsHashFixedEdge = null;
 let optionsScrollPosition = null;
 
 export function setHashFixedEdge(option) {
-	hashFixedEdge = option;
+	optionsHashFixedEdge = option;
 }
 
 export function setScrollPosition(option) {
@@ -110,20 +110,20 @@ function findFixedEdge() {
 
  	let fixedEdge = 0;
 
- 	let _hashFixedEdge = hashFixedEdge;
- 	if (typeof _hashFixedEdge==='function') {
- 		_hashFixedEdge = _hashFixedEdge();
+ 	let hashFixedEdge = optionsHashFixedEdge;
+ 	if (typeof hashFixedEdge==='function') {
+ 		hashFixedEdge = hashFixedEdge();
  	}
 
- 	if (typeof _hashFixedEdge==='string') {
- 		_hashFixedEdge = [_hashFixedEdge];
+ 	if (typeof hashFixedEdge==='string') {
+ 		hashFixedEdge = [hashFixedEdge];
 
- 	} else if (_hashFixedEdge instanceof Element) {
- 		_hashFixedEdge = [_hashFixedEdge];
+ 	} else if (hashFixedEdge instanceof Element) {
+ 		hashFixedEdge = [hashFixedEdge];
  	}
 
- 	if (Array.isArray(_hashFixedEdge)) {
- 		_hashFixedEdge.forEach(function(val) {
+ 	if (Array.isArray(hashFixedEdge)) {
+ 		hashFixedEdge.forEach(function(val) {
  			if (typeof val==='function') {
  				val = val();
  			}
