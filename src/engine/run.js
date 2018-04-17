@@ -595,6 +595,7 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 	const [, ...anchor] = endpoint.split('#');
 	const foundRequest = _stack.findRequest($element);
+	const elementScroll = createElementScroll($element);
 
 	return function(text, json, headers) {
 		const isCurrent = foundRequest===_stack.loadRequest();
@@ -656,6 +657,10 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 
 				swapping.process();
 				wasUpdated();
+
+				if (isCurrent) {
+					elementScroll(false);
+				}
 
 			} else if (text && isCurrent) {
 				if (foundRequest) {
