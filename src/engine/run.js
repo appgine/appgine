@@ -161,31 +161,41 @@ export default function run(options, scrollTo=0, bodyClassName) {
 				request.redirect = null;
 				redirect(..._redirect);
 
-			} else if (_swap) {
+			} else {
+				if (_swap) {
 				request.swap = null;
 				const [_swapUrl, _swapHtml, _swapScrollTo, _swapNewPage] = _swap;
 
-				_swapNewPage && history.changeId();
-				internalSwap(_swapUrl, _swapHtml, _swapScrollTo);
-				_options.dispatch('app.request', 'pageview', endpoint);
+					_swapNewPage && history.changeId();
+					internalSwap(_swapUrl, _swapHtml, _swapScrollTo);
+					history.canonical(_stack.loadRequest().endpoint);
+					_options.dispatch('app.request', 'pageview', closure.uri.create());
 
-			} else if (request!==_request) {
-				if (closure.uri.getPart(endpoint, 'hash')[0]) {
-					request.scrolled = closure.uri.getPart(endpoint, 'hash')[0].substr(1);
+				} else if (request!==_request) {
+					if (closure.uri.getPart(endpoint, 'hash')[0]) {
+						request.scrolled = closure.uri.getPart(endpoint, 'hash')[0].substr(1);
+
+					} else {
+						request.scrolled = -1;
+					}
+
+					internalSwapRequest(request, false);
+					history.canonical(request.endpoint);
+					_options.dispatch('app.request', 'pageview', closure.uri.create());
+
+				} else if (closure.uri.getPart(endpoint, 'hash')[0]) {
+					internalScrollHashToView(null, closure.uri.getPart(endpoint, 'hash')[0].substr(1));
 
 				} else {
 					request.scrolled = -1;
+					request.scrollTop = history.state('scrollTop', 0);
 				}
 
-				internalSwapRequest(request);
-				_options.dispatch('app.request', 'pageview', endpoint);
-
-			} else if (closure.uri.getPart(endpoint, 'hash')[0]) {
-				internalScrollHashToView(null, closure.uri.getPart(endpoint, 'hash')[0].substr(1));
-
-			} else {
-				request.scrolled = -1;
-				request.scrollTop = history.state('scrollTop', 0);
+				if (request.endpoint!==endpoint) {
+					willUpdate();
+					_pushing = true;
+					_poping = endpoint;
+				}
 			}
 
 		} else {
@@ -754,12 +764,6 @@ function internalSwapRequest(requestInto, isRequestNew) {
 function internalScrollHashToView($origin, hash) {
 	$origin = $origin || document.querySelector('a[href="#'+hash+'"]');
 	internalScrollHash($origin, hash, true);
-}
-
-
-function internalScrollFormToView($form, top) {
-	setHashFixedEdge(_options.hashFixedEdge);
-	scrollFormToView($form, top);
 }
 
 
