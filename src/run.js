@@ -33,6 +33,10 @@ export default function(options={}) {
 			bindApi('bus', require('./api/bus').default);
 		}
 
+		if (options.bindApi.swap!==false) {
+			bindApi('swap', require('./api/swap').default);
+		}
+
 		if (options.bindApi.shortcut!==false) {
 			bindApi('shortcut', require('./api/shortcut').default);
 		}
