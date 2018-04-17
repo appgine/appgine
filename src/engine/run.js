@@ -284,7 +284,9 @@ export function onSubmitForm(e, $form, $submitter, toTarget) {
 export function onReload() {
 	const endpoint = closure.uri.create(history.getLink(), {});
 	const httpRequest = apiRequest.createHttpRequest(document.body, endpoint);
-	loadPage(httpRequest, document.body, endpoint, false, _stack.loadRequest() && _stack.loadRequest().scrollTop);
+	loadPageWithContext(createAjax(document.body, false), httpRequest, document.body, endpoint, false, _stack.loadRequest() && _stack.loadRequest().scrollTop);
+}
+
 
 export function onLeave(url) {
 	_options.onLeave(url);
@@ -398,11 +400,11 @@ function pushEndpoint(endpoint, state={}, replacing=null) {
 }
 
 
-function createAjax($element) {
+function createAjax($element, allowSwap=true) {
 	const headers = {};
 	const foundRequest = _stack.findRequest($element);
 
-	if (foundRequest) {
+	if (foundRequest && allowSwap) {
 		headers['X-Appgine-Referer'] = foundRequest.endpoint;
 	}
 
@@ -411,12 +413,22 @@ function createAjax($element) {
 
 
 function loadAjax(apiRequest, $element, endpoint, scrollTo) {
-	createAjax($element).load(endpoint, bindAjaxRequest(apiRequest, $element, endpoint, scrollTo));
+	loadAjaxWithContext(createAjax($element), apiRequest, $element, endpoint, scrollTo)
+}
+
+
+function loadAjaxWithContext(ajaxContext, apiRequest, $element, endpoint, scrollTo) {
+	ajaxContext.load(endpoint, bindAjaxRequest(apiRequest, $element, endpoint, scrollTo));
 }
 
 
 function loadPage(apiRequest, $element, endpoint, newPage, scrollTo) {
-	createAjax($element).load(endpoint, bindRequest(apiRequest, $element, endpoint, newPage, scrollTo));
+	loadPageWithContext(createAjax($element), apiRequest, $element, endpoint, newPage, scrollTo)
+}
+
+
+function loadPageWithContext(ajaxContext, apiRequest, $element, endpoint, newPage, scrollTo) {
+	ajaxContext.load(endpoint, bindRequest(apiRequest, $element, endpoint, newPage, scrollTo));
 }
 
 
