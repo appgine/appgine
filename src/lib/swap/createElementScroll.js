@@ -1,37 +1,33 @@
 
 import closure from '../../closure'
+import { setHashFixedEdge, findFixedEdge } from '../scroll'
 
 
-export default function createElementScroll($element, scrollTop=false) {
-	const selector = createSelector($element);
+export default function createElementScroll($element, scrollTop=false, hashFixedEdge=null) {
+	const selectors = createSelectors($element);
 	const bounds = computeBounds($element);
 
 	return function(keepScroll) {
 		let scrolled = false;
 		try {
-			let $found;
-			if (closure.dom.contains(document, $element)) {
-				$found = $element;
+			const scroll = createSelectorsScroll($element, bounds, selectors);
 
-			} else if (selector) {
-				$found = findElement([...selector]);
-			}
+			if (scroll) {
+				setHashFixedEdge(hashFixedEdge);
+				const fixedEdge = findFixedEdge();
 
-			const nowBounds = $found && computeBounds($found);
-
-			if (bounds && nowBounds) {
 				scrolled = true;
 
 				if (keepScroll) {
 					window.scrollTo(
-						closure.scrollLeft()+nowBounds.left-bounds.left,
-						closure.scrollTop()+nowBounds.top-bounds.top
+						closure.scrollLeft()+scroll.now.left-scroll.prev.left,
+						closure.scrollTop()+scroll.now.top-scroll.prev.top
 					);
 
 				} else {
 					window.scrollTo(
-						closure.scrollLeft() + Math.min(0, nowBounds.left),
-						closure.scrollTop() + Math.min(0, nowBounds.top)
+						closure.scrollLeft() + Math.max(scroll.now.left-scroll.prev.left, Math.min(0, scroll.now.left)),
+						closure.scrollTop() + Math.max(scroll.now.top-scroll.prev.top, Math.min(0, scroll.now.top-fixedEdge))
 					);
 				}
 			}
@@ -45,50 +41,73 @@ export default function createElementScroll($element, scrollTop=false) {
 }
 
 
-function createSelector($element) {
-	const selector = [];
+function createSelectors($element) {
+	const selectors = [];
 
 	let $parent = $element;
 	do {
 		const tagName = $parent.tagName.toLowerCase();
 
 		if ($parent.id) {
-			selector.push('#' + $parent.id);
-			break;
+			selectors.push({
+				selector: '#' + $parent.id,
+				bounds: computeBounds($parent),
+			});
 
 		} else if (tagName==='form' && $parent.name) {
-			selector.push('form[name="'+$parent.name+'"]');
-			break;
+			selectors.push({
+				selector: 'form[name="'+$parent.name+'"]',
+				bounds: computeBounds($parent),
+			});
 
 		} else if ($parent.parentNode) {
-			selector.push([tagName, Array.from($parent.parentNode.children||[]).indexOf($parent)]);
+			selectors.push({
+				tagName,
+				index: Array.from($parent.parentNode.children||[]).indexOf($parent),
+				bounds: computeBounds($parent),
+			});
 
 		} else {
-			return null;
+			return [];
 		}
-
 
 	} while (($parent = $parent.parentNode) && $parent instanceof Element);
 
-	return selector;
+	return selectors;
 }
 
 
-function findElement(selector) {
-	let $tree = selector.length && document.querySelector(selector.pop());
+function createSelectorsScroll($element, oldBounds, selectors) {
 
-	while (selector.length) {
-		let [tagName, index] = selector.pop();
+	let active = false;
+	let $tree;
+	let treeBounds;
 
-		if ($tree && $tree.children[index] && $tree.children[index].tagName.toLowerCase()===tagName) {
-			$tree = $tree.children[index];
+	if (closure.dom.contains(document, $element)) {
+		$tree = $element;
+		treeBounds = oldBounds;
 
-		} else {
-			$tree = null;
+	} else {
+		while (selectors.length) {
+			const item = selectors.pop();
+
+			if (item.selector) {
+				$tree = document.querySelector(item.selector);
+				treeBounds = $tree ? item.bounds : null;
+				active = !!$tree;
+
+			} else if (active && $tree.children[item.index] && $tree.children[item.index].tagName.toLowerCase()===item.tagName) {
+				$tree = $tree.children[item.index];
+				treeBounds = item.bounds;
+
+			} else {
+				active = false;
+			}
 		}
 	}
 
-	return $tree;
+	const now = $tree && computeBounds($tree);
+	return now ? { prev: treeBounds, now } : null;
 }
 
 

@@ -66,46 +66,7 @@ export function scrollFormToView($form, top=false) {
 }
 
 
-function findScrollTo($node) {
-	const fixedEdge = findFixedEdge();
-	const [left, top] = findNodeOffset($node);
-
-	let scrollLeft = left;
-	let scrollTop = top-fixedEdge;
-
-	if (optionsScrollPosition) {
-		const nodeOptionsScrollPosition = optionsScrollPosition($node, left, top);
-
-		if (nodeOptionsScrollPosition) {
-			scrollLeft = Math.min(scrollLeft, nodeOptionsScrollPosition[0]);
-			scrollTop = Math.min(scrollTop, nodeOptionsScrollPosition[1]);
-		}
-	}
-
-	return [scrollLeft, scrollTop];
-}
-
-
-function findScrollToWithOrigin($node, $origin) {
-	const [nodeScrollLeft, nodeScrollTop] = findScrollTo($node);
-	const [originScrollLeft, originScrollTop] = findScrollTo($origin);
-	const { left, top, width, height } = closure.rect.fromScreen();
-
-	const originScreen = {
-		left: Math.min(left, originScrollLeft),
-		top: originScrollTop,
-		width, height
-	};
-
-	if (isWithinScreen(nodeScrollLeft, nodeScrollTop, originScreen)) {
-		return [originScreen.left, originScreen.top];
-	}
-
-	return [nodeScrollLeft, nodeScrollTop];
-}
-
-
-function findFixedEdge() {
+export function findFixedEdge() {
 	const scrollTop = closure.scrollTop();
 
  	let fixedEdge = 0;
@@ -147,46 +108,59 @@ function findFixedEdge() {
  	return fixedEdge;
 }
 
-function findNodeOffset($node) {
-	if ($node.tagName.toLowerCase()==='tr') {
-		return findTrOffset($node);
-	}
 
-	return _findNodeOffset($node);
-}
+function findScrollTo($node) {
+	const fixedEdge = findFixedEdge();
+	const nodeOffset = findNodeOffset($node);
+	const siblingOffset = findSiblingOffset($node);
 
-function findTrOffset($node) {
-	const siblings = Array.from($node.parentNode.children).filter(function($child) {
-		return String($child.tagName.toLowerCase())==='tr';
-	});
+	let scrollLeft = siblingOffset ? siblingOffset[0] : nodeOffset[0];
+	let scrollTop = (siblingOffset ? siblingOffset[1] : nodeOffset[1])-fixedEdge;
 
-	if (siblings.indexOf($node)===0) {
-		const table = _findNodeOffset(closure.dom.getAncestor($node, 'table'));
-		const tr = _findNodeOffset($node);
+	if (optionsScrollPosition) {
+		const optionsNodeOffset = optionsScrollPosition($node, nodeOffset[0], nodeOffset[1]);
 
-		if (table[1]===tr[1]) {
-			table[1] = table[1]-Math.min(60, closure.style.getSize($node).height);
+		if (optionsNodeOffset) {
+			scrollLeft = Math.min(scrollLeft, optionsNodeOffset[0]);
+			scrollTop = Math.min(scrollTop, optionsNodeOffset[1]);
 		}
-
-		return table;
 	}
 
-	return _findNodeOffset(siblings[siblings.indexOf($node)-1]);
+	return [scrollLeft, scrollTop];
 }
 
-function _findNodeOffset($node) {
+
+function findScrollToWithOrigin($node, $origin) {
+	const [nodeScrollLeft, nodeScrollTop] = findScrollTo($node);
+	const [originScrollLeft, originScrollTop] = findScrollTo($origin);
+	const { left, top, width, height } = closure.rect.fromScreen();
+
+	const originScreen = {
+		left: Math.min(left, originScrollLeft),
+		top: originScrollTop,
+		width, height
+	};
+
+	if (isWithinScreen(nodeScrollLeft, nodeScrollTop, originScreen)) {
+		return [originScreen.left, originScreen.top];
+	}
+
+	return [nodeScrollLeft, nodeScrollTop];
+}
+
+
+function findNodeOffset($node) {
 	const bounds = closure.style.getBounds($node);
 	const margins = closure.style.getMarginBox($node);
-
 	const point = [
 		bounds.left-margins.left, bounds.top-margins.top,
 		bounds.left+bounds.width+margins.right, bounds.top+bounds.height+margins.bottom
 	];
 
-	if (areChildrenAvailable($node)) {
+	if (closure.style.isOverflow($node)===false) {
 		[].map.call($node.children, function($child) {
-			if (isNodeAvailable($child)) {
-				const [left, top, right, bottom] = _findNodeOffset($child);
+			if (closure.style.isVisible($child)) {
+				const [left, top, right, bottom] = findNodeOffset($child);
 				point[0] = Math.min(point[0], left);
 				point[1] = Math.min(point[1], top);
 				point[2] = Math.max(point[2], right);
@@ -198,12 +172,44 @@ function _findNodeOffset($node) {
 	return point;
 }
 
-function areChildrenAvailable($node) {
-	return closure.style.isOverflow($node)===false;
+function findSiblingOffset($node) {
+	if ($node.tagName.toLowerCase()==='tr') {
+		return findTrOffset($node);
+	}
+
+	return null;
 }
 
-function isNodeAvailable($node) {
-	return closure.style.isVisible($node);
+function findTrOffset($node) {
+	const siblings = Array.from($node.parentNode.children).filter(function($child) {
+		return String($child.tagName.toLowerCase())==='tr';
+	});
+
+	const nodeHeight = closure.style.getSize($node).height;
+	const nodeOffset = findNodeOffset($node);
+	const index = siblings.indexOf($node);
+
+	if (index===-1) {
+		return null;
+
+	} else if (index===0) {
+		const tableOffset = findNodeOffset(closure.dom.getAncestor($node, 'table'));
+
+		tableOffset[1] = Math.max(tableOffset[1], nodeOffset[1]-nodeHeight-60);
+		tableOffset[1] = Math.min(tableOffset[1], nodeOffset[1]-Math.min(60, nodeHeight));
+		return tableOffset;
+	}
+
+	for (let i=index-1; i>=0; i--) {
+		const siblingOffset = findNodeOffset(siblings[i]);
+
+		if (siblingOffset[1]<nodeOffset[1]-10) {
+			siblingOffset[1] = Math.max(siblingOffset[1], nodeOffset[1]-nodeHeight-60);
+			return siblingOffset;
+		}
+	}
+
+	return null;
 }
 
 
