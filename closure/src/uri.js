@@ -43,11 +43,19 @@ exports.sameOrigin = function(location) {
 }
 
 exports.areSame = function(location1, location2) {
-	return ($link.href=location1, $link.href = $link.href)===($link.href=location2, $link.href = $link.href);
+	return exports.createCanonical(location1)===exports.createCanonical(location2);
 }
 
 exports.isSame = function(location) {
-	return $location.href===($link.href=location, $link.href = $link.href);
+	return exports.createCanonical($location.href)===exports.createCanonical(location);
+}
+
+exports.createCanonical = function(location) {
+	$link.href = location;
+	// Fix: IE bug with relative location
+	$link.href = $link.href;
+	$link.hash = '';
+	return $link.href;
 }
 
 exports.create = function(location, params, hash) {
@@ -67,7 +75,7 @@ exports.canonical = function(location, params, hash) {
 
 	uriQuery.forEach(function(value, key) {
 		if (query.containsKey(key)===false) {
-			query.add(key, value);	
+			query.add(key, value);
 		}
 	});
 
