@@ -5,11 +5,13 @@ import { onTick } from '../../lib/tick'
 
 const connectors = {};
 let buckets = {};
+let lastScreen = null;
 
 onTick((screen, updated) => {
 	if (updated) buckets = {};
 	sortBuckets();
-	loadBuckets(screen);
+	loadBuckets(screen, lastScreen===null || lastScreen.top!==screen.top);
+	lastScreen = screen;
 });
 
 
@@ -20,7 +22,7 @@ export function connect(props) {
 		delete buckets[bucket];
 	});
 
-	return connectors[bucket].connect(props);
+	return connectors[bucket].connect(props, { state: { resolved: 0 } });
 }
 
 
@@ -41,36 +43,47 @@ function sortBuckets() {
 }
 
 
-function loadBuckets({top, height, left, width}) {
+function loadBuckets({top, height, left, width}, scrolling) {
 	const removed = {};
 	const resolved = [];
+	const now = Date.now();
 
 	Object.keys(connectors).
 		filter(bucket => buckets[bucket].length).
 		forEach(bucket => {
 			removed[bucket] = [];
 
-			buckets[bucket].some(handler => {
-				const props = handler.props;
-				const offsetTop = closure.style.getPageOffsetTop(props.$node);
-				const offsetLeft = closure.style.getPageOffsetLeft(props.$node);
+			let checkVisibility = true;
+			for (let handler of buckets[bucket]) {
+				if (checkVisibility) {
+					const props = handler.props;
+					const offsetTop = closure.style.getPageOffsetTop(props.$node);
+					const offsetLeft = closure.style.getPageOffsetLeft(props.$node);
 
-				const isTop = offsetTop+props.size.height+props.paddings>=top;
-				const isBottom = offsetTop-props.paddings<=top+height;
-				const isLeft = offsetLeft+props.size.width+props.paddings>=left;
-				const isRight = offsetLeft-props.paddings<=left+width;
+					const isTop = offsetTop+props.size.height+props.paddings>=top;
+					const isBottom = offsetTop-props.paddings<=top+height;
+					const isLeft = offsetLeft+props.size.width+props.paddings>=left;
+					const isRight = offsetLeft-props.paddings<=left+width;
 
-				if (isTop && isBottom && isLeft && isRight) {
-					removed[bucket].push(handler);
-					resolved.push(handler);
-					return false;
+					if (isTop && isBottom && isLeft && isRight) {
+						handler.state.resolved = handler.state.resolved || now;
 
-				} else if (bucket==='' || isBottom || isRight) {
-					return false;
+						if (now-handler.state.resolved >= (handler.props.delay||0)) {
+							if (handler.props.whilescrolling!==false || scrolling===false) {
+								removed[bucket].push(handler);
+								resolved.push(handler);
+							}
+						}
+
+					} else if (bucket==='' || isBottom || isRight) {
+						handler.state.resolved = 0;
+						checkVisibility = false;
+					}
+
+				} else {
+					handler.state.resolved = 0;
 				}
-
-				return true;
-			});
+			}
 		});
 
 	Object.keys(removed).
