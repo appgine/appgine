@@ -53,6 +53,11 @@ export default function create() {
 			event.initEvent('submit', true, true);
 		}
 
+		let defaultPrevented = false;
+		event.preventDefault = function() {
+			defaultPrevented = true;
+		}
+
 		const $form = document.body.contains(this) ? this : this.cloneNode(true);
 
 		if ($form!==this) {
@@ -61,7 +66,7 @@ export default function create() {
 
 		$form.dispatchEvent(event);
 
-		if (!event.defaultPrevented) {
+		if (defaultPrevented===false && !event.defaultPrevented) {
 			submit.call($form);
 		}
 
