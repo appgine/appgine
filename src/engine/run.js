@@ -163,12 +163,12 @@ export default function run(options, scrollTo=0, bodyClassName) {
 
 			} else {
 				if (_swap) {
-				request.swap = null;
-				const [_swapUrl, _swapHtml, _swapScrollTo, _swapNewPage] = _swap;
+					request.swap = null;
+					const [_swapUrl, _swapHtml, _swapScrollTo, _swapNewPage] = _swap;
 
 					_swapNewPage && history.changeId();
 					internalSwap(_swapUrl, _swapHtml, _swapScrollTo);
-					history.canonical(_stack.loadRequest().endpoint);
+					history.canonical(_stack.loadRequest().endpoint, true);
 					_options.dispatch('app.request', 'pageview', closure.uri.create());
 
 				} else if (request!==_request) {
@@ -180,7 +180,7 @@ export default function run(options, scrollTo=0, bodyClassName) {
 					}
 
 					internalSwapRequest(request, false);
-					history.canonical(request.endpoint);
+					history.canonical(request.endpoint, true);
 					_options.dispatch('app.request', 'pageview', closure.uri.create());
 
 				} else if (closure.uri.getPart(endpoint, 'hash')[0]) {
@@ -191,7 +191,7 @@ export default function run(options, scrollTo=0, bodyClassName) {
 					request.scrollTop = history.state('scrollTop', 0);
 				}
 
-				if (request.endpoint!==endpoint) {
+				if (closure.uri.isSame(request.endpoint)===false) {
 					willUpdate();
 					_pushing = true;
 					_poping = endpoint;
@@ -686,7 +686,7 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 			}
 
 			if (isCurrent) {
-				history.canonical(nowRequest.endpoint);
+				history.canonical(nowRequest.endpoint, false);
 
 				if (newPage) {
 					_options.dispatch('app.request', 'pageview', closure.uri.create());

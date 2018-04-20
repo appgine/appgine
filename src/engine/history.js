@@ -174,10 +174,15 @@ export function cancelState() {
 	_supported ? window.history.back() : null;
 }
 
-export function canonical(link) {
+export function canonical(link, deferred) {
 	if (_link!==closure.uri.create(link, true, true)) {
 		if (closure.uri.sameOrigin(link)) {
-			changeState(_state, link, 'replaceState', 'replace');
+			if (deferred) {
+				_link = closure.uri.change(link);
+
+			} else {
+				changeState(_state, link, 'replaceState', 'replace');
+			}
 		}
 	}
 }
