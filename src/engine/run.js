@@ -342,7 +342,7 @@ function loadEndpoint(apiRequest, $element, endpoint, isAjax, toCurrent=null, sc
 		return loadAjax(apiRequest, $element, endpoint, false);
 
 	} else {
-		const newPage = pushEndpoint(endpoint, {}, toCurrent);
+		const newPage = pushEndpoint(endpoint, {}, toCurrent) || toCurrent || false;
 		return loadPage(apiRequest, $element, endpoint, newPage, scrollTo);
 	}
 }
@@ -575,7 +575,7 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 		apiRequest.onResponse(status, response, isLast);
 
 		if (status===closure.ajax.ABORT) {
-			if (newPage && isLast) {
+			if (_pushing && isLast) {
 				history.cancelState();
 			}
 
@@ -585,7 +585,7 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 		} else if (response.error || response.json===undefined) {
 			onError(response.error);
 
-			if (newPage && isLast) {
+			if (_pushing && isLast) {
 				history.cancelState();
 			}
 		}
@@ -668,7 +668,7 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 					apiRequest.onResponseSwap(foundRequest);
 				}
 
-				newPage && history.changeId();
+				_pushing && history.changeId();
 				internalSwap(endpoint, text, anchor.join('#')||scrollTo);
 
 			} else if (text && foundRequest) {
