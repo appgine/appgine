@@ -659,7 +659,7 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 				swapping.process();
 				wasUpdated();
 
-				if (isCurrent) {
+				if (isCurrent && !scrollTo) {
 					elementScroll(false);
 				}
 
