@@ -469,7 +469,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 
 	const submitData = formMethod==='POST' ? _options.onFormData(formData) : '';
 
-	const elementScroll = createElementScroll($element, true);
+	const elementScroll = createElementScroll($element, true, _options.hashFixedEdge);
 	const formScroll = createFormScroll($form, formName[0]==='#', _options.hashFixedEdge);
 	const targetScroll = createTargetScroll(formTarget);
 
@@ -604,7 +604,7 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 	const [, ...anchor] = endpoint.split('#');
 	const foundRequest = _stack.findRequest($element);
-	const elementScroll = createElementScroll($element);
+	const elementScroll = createElementScroll($element, false, _options.hashFixedEdge);
 
 	return function(text, json, headers) {
 		const isCurrent = foundRequest===_stack.loadRequest();
