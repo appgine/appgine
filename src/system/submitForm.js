@@ -53,9 +53,11 @@ export default function create() {
 			event.initEvent('submit', true, true);
 		}
 
+		const preventDefault = event.preventDefault && event.preventDefault.bind(event);
 		let defaultPrevented = false;
 		event.preventDefault = function() {
 			defaultPrevented = true;
+			preventDefault && preventDefault();
 		}
 
 		const $form = document.body.contains(this) ? this : this.cloneNode(true);
