@@ -48,15 +48,15 @@ function createSelectors($element) {
 	do {
 		const tagName = $parent.tagName.toLowerCase();
 
-		if ($parent.id) {
+		if (tagName==='form' && $parent.name) {
 			selectors.push({
-				selector: '#' + $parent.id,
+				selector: 'form[name="'+$parent.name+'"]' + ($parent.id ? ('#' + $parent.id) : ''),
 				bounds: computeBounds($parent),
 			});
 
-		} else if (tagName==='form' && $parent.name) {
+		} else if ($parent.id) {
 			selectors.push({
-				selector: 'form[name="'+$parent.name+'"]',
+				selector: '#' + $parent.id,
 				bounds: computeBounds($parent),
 			});
 
