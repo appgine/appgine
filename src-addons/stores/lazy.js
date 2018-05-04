@@ -75,9 +75,12 @@ function loadBuckets({top, height, left, width}, scrolling) {
 							}
 						}
 
-					} else if (bucket==='' || isBottom || isRight) {
+					} else {
 						handler.state.resolved = 0;
-						checkVisibility = false;
+
+						if (bucket && isBottom===false && isRight===false) {
+							checkVisibility = false;
+						}
 					}
 
 				} else {
