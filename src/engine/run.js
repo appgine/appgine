@@ -11,6 +11,7 @@ import createFragment from '../lib/createFragment'
 import createTargetScroll from '../lib/swap/createTargetScroll'
 import createElementScroll from '../lib/swap/createElementScroll'
 import createFormScroll from '../lib/swap/createFormScroll'
+import createLoadingStatus from '../lib/swap/createLoadingStatus'
 import { createSwapping } from '../api/swap'
 import { scrollNodeToView, scrollFormToView, setHashFixedEdge, setScrollPosition } from '../lib/scroll'
 import * as apiRequest from '../api/request'
@@ -28,6 +29,27 @@ var _stack = new RequestStack();
 var _request = null;
 var _poping = null;
 var _pushing = false;
+let _loadingStatus = createLoadingStatus();
+
+var _loaderReporting = null;
+function loaderReporting(type, value) {
+	clearTimeout(_loaderReporting);
+	_loaderReporting = setTimeout(function() {
+		if (window.dataLayer) {
+			window.dataLayer.push({
+				event: 'app.event',
+				eventCategory: 'appgine',
+				eventAction: type,
+				eventLabel: closure.uri.create(),
+				eventValue: value,
+			});
+
+		} else if (typeof ga !== 'undefined') {
+			ga('send', 'event', 'appgine', type, label, value);
+		}
+	}, 6000);
+}
+
 
 export const requestStack = _stack;
 
@@ -139,6 +161,8 @@ export default function run(options, scrollTo=0, bodyClassName) {
 	internalSwap(closure.uri.create(), html, scrollTo);
 
 	history.popstate(function(e, endpoint) {
+		_loadingStatus.end();
+
 		if (_pending) {
 			_pending = 0;
 			_pushing = false;
@@ -217,6 +241,7 @@ export function onClickHash(e, $link, hash, toTarget) {
 		}
 
 		if (_stack.loadRequest() && _stack.loadRequest().shouldReloadForHash(hash)) {
+			loaderReporting('clickHash');
 			const clickRequest = apiRequest.createClickRequest(e, $link, endpoint);
 
 			if (!e.defaultPrevented) {
@@ -252,6 +277,7 @@ export function onClick(e, $link, toTarget) {
 					internalScrollHashToView($link, hash);
 
 				} else {
+					loaderReporting('click');
 					const clickRequest = apiRequest.createClickRequest(e, $link, endpoint);
 
 					if (!e.defaultPrevented) {
@@ -279,6 +305,7 @@ export function onSubmitForm(e, $form, $submitter, toTarget) {
 
 	if ((toTarget==='' || toTarget==='_ajax' || toTarget==='_current' || toTarget.indexOf('_this')===0 || toTarget[0]==='#') && 'FormData' in window) {
 		if (closure.uri.sameOrigin(endpoint)) {
+			loaderReporting('submit', String($submitter && $submitter.name || ''));
 			const submitRequest = apiRequest.createSubmitRequest(e, $form, $submitter, endpoint);
 
 			if (!e.defaultPrevented) {
@@ -350,6 +377,7 @@ function loadEndpoint(apiRequest, $element, endpoint, isAjax, toCurrent=null, sc
 
 function leave(endpoint) {
 	const requestnum = ++_requestnum;
+	_loadingStatus.end();
 	_options.dispatch('app.request', 'start', endpoint, { requestnum });
 
 	if (_options.onRedirect(endpoint)) {
@@ -359,7 +387,7 @@ function leave(endpoint) {
 			_pending = 0;
 
 			if (_pushing) {
-				history.cancelState();
+				// history.cancelState();
 			}
 		}
 
@@ -600,11 +628,12 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 	})
 }
 
-
 function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 	const [, ...anchor] = endpoint.split('#');
 	const foundRequest = _stack.findRequest($element);
 	const elementScroll = createElementScroll($element, false, _options.hashFixedEdge);
+
+	_loadingStatus.start($element, endpoint);
 
 	return function(text, json, headers) {
 		const isCurrent = foundRequest===_stack.loadRequest();
@@ -686,12 +715,15 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 			}
 
 			if (isCurrent) {
+				_loadingStatus.loaded(nowRequest.endpoint);
 				history.canonical(nowRequest.endpoint, false);
 
 				if (newPage) {
 					_options.dispatch('app.request', 'pageview', closure.uri.create());
 				}
 			}
+
+			clearTimeout(_loaderReporting);
 		}
 	}
 }
