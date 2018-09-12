@@ -25,7 +25,6 @@ export default class RequestStack {
 		this._clear(this._clearPending);
 		this._clearPending = [];
 
-		request.start();
 		this._active[id] = request;
 		this._history[id] = request;
 

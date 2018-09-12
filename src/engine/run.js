@@ -127,8 +127,6 @@ export function isRequestCurrent() {
 export default function run(options, scrollTo=0, bodyClassName) {
 	history.init();
 
-	const _bodyClassName = document.body.className;
-
 	if (bodyClassName!==undefined) {
 		document.body.className = bodyClassName;
 	}
@@ -137,10 +135,6 @@ export default function run(options, scrollTo=0, bodyClassName) {
 	_options.initHTML(document.documentElement);
 
 	const html = loadHtml(document.documentElement);
-
-	if (document.body.className!==_bodyClassName) {
-		document.body.className = _bodyClassName
-	}
 
 	if (_options.abortOnEscape) {
 		apiShortcut.listen('esc', function(e) {
@@ -704,7 +698,7 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 				foundRequest.willSwap(endpoint, text, anchor.join('#')||scrollTo, newPage);
 			}
 
-			const nowRequest = isCurrent ? _stack.findRequest($element) : foundRequest;
+			const nowRequest = isCurrent ? _stack.loadRequest() : foundRequest;
 
 			if (nowRequest && headers) {
 				const canonical = headers.match(/link: <(.+)>; rel="canonical"/i);
@@ -715,8 +709,11 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 			}
 
 			if (isCurrent) {
-				_loadingStatus.loaded(nowRequest.endpoint);
-				history.canonical(nowRequest.endpoint, false);
+				_loadingStatus.loaded();
+
+				if (nowRequest) {
+					history.canonical(nowRequest.endpoint, false);
+				}
 
 				if (newPage) {
 					_options.dispatch('app.request', 'pageview', closure.uri.create());
@@ -732,7 +729,7 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 function internalSwap(url, html, scrollTo)
 {
 	const $fragment = createFragment(html);
-	const requestInto = () => _stack.createRequest(_options.createRequest(url, $fragment, scrollTo));
+	const requestInto = _stack.createRequest(_options.createRequest(url, $fragment, scrollTo));
 
 	const $appgineNext = $fragment.querySelector('script[data-appgine]')
 	const $appginePrev = document.querySelector('script[data-appgine]');
@@ -743,10 +740,10 @@ function internalSwap(url, html, scrollTo)
 				forEach($script => $script.parentNode.removeChild($script));
 
 			const $script = document.createElement('script');
-			$script.onerror = () => internalSwapRequest(requestInto(), true);
+			$script.onerror = () => internalSwapRequest(requestInto.initialize(), true);
 			$script.onload = () => {
 				if (typeof window.appgine!=='function') {
-					internalSwapRequest(requestInto(), true);
+					internalSwapRequest(requestInto.initialize(), true);
 
 				} else {
 					internalDispose();
@@ -772,7 +769,7 @@ function internalSwap(url, html, scrollTo)
 		}, 0);
 
 	} else {
-		internalSwapRequest(requestInto(), true);
+		internalSwapRequest(requestInto.initialize(), true);
 	}
 }
 

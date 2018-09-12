@@ -31,11 +31,12 @@ export default class Request {
 		this.swap = null;
 	}
 
-	start() {
+	initialize() {
 		loadScripts(this.$fragment);
 		loadGlobal(this.$fragment);
 		reloadStatic(this.$fragment);
 		loadAtomic(this.$fragment, this);
+		return this;
 	}
 
 	willRedirect(...redirect) { this.redirect = redirect; }
