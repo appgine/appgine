@@ -56,7 +56,11 @@ export default function create($input, Component, activeSelector, endpoint, stat
 	}
 
 	function canonizeText(text) {
-		return string.toAscii(string.collapseWhitespace(text)).toLowerCase();
+		if (text.normalize) {
+			text = text.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+		}
+
+		return string.collapseWhitespace(text).toLowerCase();
 	}
 
 	this.event($input, 'focus', () => {
