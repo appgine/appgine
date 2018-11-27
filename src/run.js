@@ -48,6 +48,10 @@ export default function(options={}) {
 		if (options.bindApi.event!==false) {
 			bindApi('event', require('./api/event').default);
 		}
+
+		if (options.bindApi.ajax!==false) {
+			bindApi('ajax', require('./api/ajax').default);
+		}
 	});
 
 	require('./plugins').loader(function({ bindApi, bindSelector, bindSystem }) {
