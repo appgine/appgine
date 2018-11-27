@@ -14,8 +14,9 @@ function runDev() {
 
 function runBuild() {
 	return function(callback) {
-		child_process.execSync('rm -rf ./lib && ./node_modules/.bin/babel src --out-dir ./lib');
-		child_process.execSync('rm -rf ./addons && ./node_modules/.bin/babel src-addons --out-dir ./addons');
+		child_process.execSync('rm -rf ./lib && cp -a ./src ./lib');
+		child_process.execSync('./node_modules/.bin/babel ./src/closure.js --out-file ./lib/closure.js');
+		child_process.execSync('rm -rf ./addons && cp -a ./src-addons ./addons');
 
 		process.env.NODE_ENV = 'production';
 
