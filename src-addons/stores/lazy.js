@@ -1,28 +1,77 @@
 
-import { createConnector } from '../../lib/helpers'
+import { style } from '../../lib/closure'
+import { createConnector } from '../../lib/helpers/createConnector'
 import { onTick } from '../../lib/tick'
 
 
 const connectors = {};
+const observers = {};
 let buckets = {};
-let lastScreen = null;
 
-onTick((screen, updated) => {
-	if (updated) buckets = {};
-	sortBuckets();
-	loadBuckets(screen, lastScreen===null || lastScreen.top!==screen.top);
-	lastScreen = screen;
-});
-
-
-export function connect(props) {
-	const { bucket } = props;
-
-	connectors[bucket] = connectors[bucket] || createConnector(function() {
-		delete buckets[bucket];
+if (!window.IntersectionObserver) {
+	let lastScreen = null;
+	onTick((screen, updated) => {
+		if (updated) buckets = {};
+		sortBuckets();
+		loadBuckets(screen, lastScreen===null || lastScreen.top!==screen.top);
+		lastScreen = screen;
 	});
+}
 
-	return connectors[bucket].connect(props, { state: { resolved: 0 } });
+
+export function connect($node, bucket, paddings) {
+	let props = $node;
+	if (props instanceof Element) {
+		props = { $node, bucket, paddings };
+
+	} else {
+		$node = props.$node;
+		bucket = props.bucket;
+		paddings = props.paddings;
+	}
+
+	if (window.IntersectionObserver) {
+		connectors[paddings] = connectors[paddings] || createConnector();
+
+		observers[paddings] = observers[paddings] || new window.IntersectionObserver(onIntersectionObserver.bind(null, connectors[paddings]), {
+			root: null,
+			rootMargin: paddings ? String(paddings) + 'px' : '0px',
+			threshold: 0.01,
+		});
+
+		return connectors[paddings].connect(props, {
+			onConnect: observers[paddings].observe.bind(observers[paddings], $node),
+			onDisconnect: observers[paddings].unobserve.bind(observers[paddings], $node),
+		});
+
+	} else {
+		connectors[bucket] = connectors[bucket] || createConnector(function() {
+			delete buckets[bucket];
+		});
+
+		return connectors[bucket].connect(props, { state: { resolved: 0 } });
+	}
+}
+
+
+function onIntersectionObserver(handlers, entries, observer) {
+	const observed = [];
+	for (let entry of entries) {
+		if (entry.isIntersecting) {
+			observed.push(entry.target);
+			observer.unobserve(entry.target);
+		}
+	}
+
+	if (observed.length) {
+		window.requestIdleCallback(function() {
+			for (let handler of handlers) {
+				if (observed.indexOf(handler.props.$node)!==-1) {
+					handler.resolve();
+				}
+			}
+		});
+	}
 }
 
 
@@ -34,8 +83,8 @@ function sortBuckets() {
 				filter(({props}) => document.contains(props.$node));
 
 			visible.forEach(({props}) => {
-				props.size = closure.style.getSize(props.$node);
-				props.offset = closure.style.getPageOffsetTop(props.$node);
+				props.size = style.getSize(props.$node);
+				props.offset = style.getPageOffsetTop(props.$node);
 			})
 
 			buckets[bucket] = visible.sort((a, b) => a.props.offset-b.props.offset);
@@ -57,8 +106,8 @@ function loadBuckets({top, height, left, width}, scrolling) {
 			for (let handler of buckets[bucket]) {
 				if (checkVisibility) {
 					const props = handler.props;
-					const offsetTop = closure.style.getPageOffsetTop(props.$node);
-					const offsetLeft = closure.style.getPageOffsetLeft(props.$node);
+					const offsetTop = style.getPageOffsetTop(props.$node);
+					const offsetLeft = style.getPageOffsetLeft(props.$node);
 
 					const isTop = offsetTop+props.size.height+props.paddings>=top;
 					const isBottom = offsetTop-props.paddings<=top+height;
