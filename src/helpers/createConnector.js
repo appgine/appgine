@@ -25,7 +25,8 @@ export function createConnector(onTick, tickdelay=null) {
 		});
 
 		handler.reconnect = props => {
-			handler.props = onConnect ? onConnect(props) : props;
+			handler.props = onConnect && onConnect(props);
+			handler.props = handler.props===undefined ? props : handler.props;
 			handler.dirty = true;
 			_onTick();
 		}
