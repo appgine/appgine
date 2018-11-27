@@ -593,11 +593,11 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 	_options.dispatch('app.request', 'start', endpoint, { $element, requestnum });
 
 	return _options.onResponse(function(status, response) {
-		const isLast = requestnum===_requestnum;
-		apiRequest.onResponse(status, response, isLast);
+		const isLast = () => requestnum===_requestnum;
+		apiRequest.onResponse(status, response, isLast());
 
 		if (status===closure.ajax.ABORT) {
-			if (_pushing && isLast) {
+			if (_pushing && isLast()) {
 				history.cancelState();
 			}
 
@@ -607,17 +607,17 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 		} else if (response.error || response.json===undefined) {
 			onError(response.error);
 
-			if (_pushing && isLast) {
+			if (_pushing && isLast()) {
 				history.cancelState();
 			}
 		}
 
-		if (isLast) {
+		if (isLast()) {
 			_pending = 0;
 			_pushing = false;
 		}
 
-		apiRequest.onComplete(isLast)
+		apiRequest.onComplete(isLast())
 		_options.dispatch('app.request', 'stop', { $element, requestnum });
 	})
 }
