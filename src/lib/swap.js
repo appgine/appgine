@@ -2,6 +2,7 @@
 import { swapDocument, load, loadStatic, unload, unloadStatic } from '../engine/plugins'
 import createFormFocus from './swap/createFormFocus'
 import createKeepScroll from './swap/createKeepScroll'
+import swapSelectorClasses from './swap/selectorClasses'
 
 import { willUpdate } from '../update'
 import closure from '../closure'
@@ -64,7 +65,7 @@ export default function swap(from, into, isRequestNew) {
 			Array.from(document.body.childNodes).forEach($child => $lastBody.appendChild($child));
 			Array.from($nextFragment.querySelector('body').childNodes).forEach($child => document.body.appendChild($child));
 
-			closure.classes.swap('body', from && from.$fragment || null, $into);
+			swapSelectorClasses('body', from && from.$fragment || null, $into);
 
 			$staticList.filter(({ $prevStatic }) => $prevStatic).forEach(({ keepScroll }) => keepScroll());
 

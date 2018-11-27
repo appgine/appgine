@@ -73,7 +73,7 @@ export function createLayer($element, layerId) {
 
 export function createNavigation($element, [ navigationActive, toggleActive ]) {
 	let toggled = true;
-	closure.classes.enable($element, navigationActive, toggled);
+	$element.classList.toggle(navigationActive, toggled);
 
 	function toggle() {
 		toggled = !toggled;
@@ -81,9 +81,9 @@ export function createNavigation($element, [ navigationActive, toggleActive ]) {
 	}
 
 	function showToggle() {
-		closure.classes.enable($element, navigationActive, toggled);
+		$element.classList.toggle(navigationActive, toggled);
 		targets.findAllElement('toggle').forEach(function($toggle) {
-			closure.classes.enable($toggle, toggleActive, toggled);
+			$toggle.classList.toggle(toggleActive, toggled);
 		});
 	}
 

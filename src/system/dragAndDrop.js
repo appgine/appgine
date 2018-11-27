@@ -5,17 +5,17 @@ import closure from '../closure'
 export default function createDragAndDrop(bodyClass) {
 	return function create() {
 		const eventList = [
-			['dragstart', 'add', false],
-			['dragend', 'remove', false],
-			['drop', 'remove', true], // Fix: Firefox redirect ondrop into <a/>
+			['dragstart', true, false],
+			['dragend', false, false],
+			['drop', false, true], // Fix: Firefox redirect ondrop into <a/>
 		];
 
 		eventList.map(eventObj => {
-			const [event, fn, prevent] = eventObj;
+			const [event, toggle, prevent] = eventObj;
 			const listener = function(e) {
 				prevent && e.preventDefault();
 				setTimeout(function() {
-					closure.classes[fn](document.body, bodyClass);
+					document.body.classList.toggle(bodyClass, toggle)
 				}, 200);
 			}
 

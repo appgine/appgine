@@ -1,6 +1,4 @@
 
-import { classes } from 'appgine/lib/closure'
-
 export const shouldShowRequestProgress = 'shouldShowRequestProgress'
 
 
@@ -12,7 +10,7 @@ export default function create($root) {
 	let _requestnum = 0;
 	let _animation = $container.animate ? createJSAnimation($container) : createCSSAnimation($root, $container);
 
-	classes.add($root, 'progress');
+	$root.classList.add('progress');
 	$root.appendChild($container);
 
 	this.listen('app.request', 'start', function(endpoint, { $element, requestnum }) {
@@ -54,7 +52,7 @@ export default function create($root) {
 		destroy() {
 			_animation.destroy();
 			$root.removeChild($container);
-			classes.remove($root, 'progress');
+			$root.classList.remove('progress');
 		},
 	}
 }
@@ -68,29 +66,29 @@ function createCSSAnimation($root, $container)
 		start() {
 			clearTimeout(_pendingHidden);
 
-			classes.remove($root, 'progress-loading');
-			classes.remove($root, 'progress-loaded');
-			classes.remove($root, 'progress-hidden');
+			$root.classList.remove('progress-loading');
+			$root.classList.remove('progress-loaded');
+			$root.classList.remove('progress-hidden');
 
 			setTimeout(() => {
-				classes.add($root, 'progress-loading');
+				$root.classList.add('progress-loading');
 				$container.style.animationDuration = '';
 			}, 0);
 		},
 		end() {
-			classes.remove($root, 'progress-loading');
+			$root.classList.remove('progress-loading');
 			$container.style.animationDuration = '';
-			classes.add($root, 'progress-loaded');
+			$root.classList.add('progress-loaded');
 
-			_pendingHidden = setTimeout(() => classes.add($root, 'progress-hidden'), 1000);
+			_pendingHidden = setTimeout(() => $root.classList.add('progress-hidden'), 1000);
 		},
 		abort() {
-			classes.remove($root, 'progress-loading');
+			$root.classList.remove('progress-loading');
 			$container.style.animationDuration = '';
 		},
 		destroy() {
 			$container.style.animationDuration = '';
-			classes.remove($root, 'progress-loading', 'progress-loaded', 'progress-hidden');
+			$root.classList.remove('progress-loading', 'progress-loaded', 'progress-hidden');
 		},
 	}
 }

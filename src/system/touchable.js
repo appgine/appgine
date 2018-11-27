@@ -18,8 +18,8 @@ function debouncer(fn, delay) {
 	return handler;
 }
 
-const enable = $el => closure.classes.enable($el, 'hover', true);
-const disable = $el => closure.classes.enable($el, 'hover', false);
+const enable = $el => $el.classList.toggle('hover', true);
+const disable = $el => $el.classList.toggle('hover', false);
 
 
 export default function create() {
