@@ -1,5 +1,5 @@
 
-import { ajax, dom } from '../closure'
+import * as ajax from '../lib/ajax'
 import createListeners from './createListeners'
 
 

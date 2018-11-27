@@ -1,5 +1,6 @@
 
 import closure from '../closure'
+import * as ajax from '../lib/ajax'
 
 
 export default function bridgeTracy(options={}) {
@@ -49,7 +50,7 @@ export default function bridgeTracy(options={}) {
 	}
 
 	options.onResponse = function(status, response) {
-		if (tracyStaticId && status===closure.ajax.ERROR && !response.html && !response.json) {
+		if (tracyStaticId && status===ajax.ERROR && !response.html && !response.json) {
 			response.html = "ERROR: " + response.error;
 		}
 	}

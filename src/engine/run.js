@@ -21,6 +21,7 @@ import { willUpdate, wasUpdated } from '../update'
 import * as history from './history'
 
 import closure from '../closure'
+import * as ajax from '../lib/ajax'
 
 var _options = createOptions({});
 var _pending = 0;
@@ -141,7 +142,7 @@ export default function run(options, scrollTo=0, bodyClassName) {
 			if (_pending) {
 				e.stopPropagation();
 				e.preventDefault();
-				closure.ajax.abort();
+				ajax.abort();
 			}
 		});
 	}
@@ -441,7 +442,7 @@ function createAjax($element, allowSwap=true) {
 		headers['X-Appgine-Referer'] = foundRequest.endpoint;
 	}
 
-	return closure.ajax.createAjax(headers, _options.timeout);
+	return ajax.create(headers, _options.timeout);
 }
 
 
@@ -596,7 +597,7 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 		const isLast = () => requestnum===_requestnum;
 		apiRequest.onResponse(status, response, isLast());
 
-		if (status===closure.ajax.ABORT) {
+		if (status===ajax.ABORT) {
 			if (_pushing && isLast()) {
 				history.cancelState();
 			}
@@ -700,8 +701,8 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 
 			const nowRequest = isCurrent ? _stack.loadRequest() : foundRequest;
 
-			if (nowRequest && headers) {
-				const canonical = headers.match(/link: <(.+)>; rel="canonical"/i);
+			if (nowRequest && headers && headers.link) {
+				const canonical = headers.link.match(/<(.+)>; rel="canonical"/i);
 
 				if (canonical) {
 					nowRequest.endpoint = closure.uri.canonical(canonical[1]);
