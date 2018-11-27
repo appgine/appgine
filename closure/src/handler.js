@@ -32,6 +32,9 @@ exports.createHandler = function(fn) {
 		var isValid = handler.isValidShortcut_(e);
 		handler.setAllShortcutsAreGlobal(true);
 
+		goog.exportProperty(e, 'preventDefault', e.preventDefault);
+		goog.exportProperty(e, 'stopPropagation', e.stopPropagation);
+
 		return fn(e, e.identifier, isValid);
 	});
 
