@@ -1,6 +1,6 @@
 
-import { createConnector } from '../../lib/helpers'
-import { imageloader } from '../../lib/closure'
+import { createConnector } from '../../lib/helpers/createConnector'
+import loadImage from '../loadImage'
 
 
 const images = {};
@@ -44,7 +44,7 @@ function onTick() {
 		.filter(src => images[src]===undefined)
 		.forEach(src => {
 			images[src] = false;
-			imageloader(src, (...args) => publish(src, ...args));
+			loadImage(src, publish.bind(null, src));
 		});
 
 	Object.keys(images).
