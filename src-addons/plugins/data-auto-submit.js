@@ -45,10 +45,10 @@ export default function create($element) {
 		let delayTimeout = 400;
 
 		if (isInput && $emails.indexOf(target)!==-1) {
-			if ((new RegExp(/@[^\.]*$/, 'i')).test(target.value)) {
+			if (/@[^\.]*$/i.test(target.value)) {
 				delayTimeout = 2000;
 
-			} else if ((new RegExp(/@.+\.([a-z]|co|ne)$/, 'i')).test(target.value)) {
+			} else if (/@.+\.([a-z]|co|ne)$/i.test(target.value)) {
 				delayTimeout = 1000;
 			}
 		}
@@ -120,16 +120,13 @@ export default function create($element) {
 	}
 }
 
+const isEmailValidRegexp = /^\s*[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\s*$/i;
 
 function isInputValid($input) {
 	const type = String($input.type||'').toLowerCase();
 
 	if (type==='email') {
-		const regexp = /^\s*[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\s*$/;
-		const modifier = 'i';
-		const reg = new RegExp(regexp, modifier);
-
-		return reg.test(String($input.value||''));
+		return isEmailValidRegexp.test(String($input.value||''));
 
 	} else if (typeof $input.checkValidity === 'function') {
 		return $input.checkValidity();
