@@ -109,7 +109,7 @@ export default class TargetList
 				for (let targetId of Object.keys(this._targets)) {
 					const targetObj = this._targets[targetId];
 					const { $element, target } = this._targets[targetId];
-					
+
 					if (every.target==='' || every.target===target) {
 						every.ids[targetId] = every($element, targetObj)||{};
 						targetObj.instances.push(every.ids[targetId]);
@@ -216,6 +216,10 @@ export default class TargetList
 		for (let id of Object.keys(targets)) {
 			this.addTarget(id, targets[id]);
 		}
+	}
+
+	isCompleted() {
+		return this._completed;
 	}
 
 	findOne(target) {
