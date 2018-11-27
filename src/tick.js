@@ -1,5 +1,5 @@
 
-import Kefir from 'kefir'
+import Kefir from './kefir'
 import { onUpdated, isUpdating } from './update'
 import { isRequestCurrent } from './engine/run'
 import closure from './closure'

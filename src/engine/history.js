@@ -1,5 +1,5 @@
 
-import Kefir from 'kefir'
+import Kefir from '../kefir'
 import shallowEqual from '../lib/shallowEqual'
 import closure from '../closure'
 
