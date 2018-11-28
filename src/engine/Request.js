@@ -9,6 +9,7 @@ export default class Request {
 
 
 	constructor(endpoint, $fragment, scrollTo) {
+		this.created = Date.now();
 		this.endpoint = endpoint;
 		this.$fragment = $fragment;
 		this.formSubmitted = [];

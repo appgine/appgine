@@ -56,6 +56,10 @@ export default function(options={}) {
 		if (options.bindApi.tick!==false) {
 			bindApi('tick', require('./api/tick').default);
 		}
+
+		if (options.bindApi.now!==false) {
+			bindApi('now', require('./api/now').default);
+		}
 	});
 
 	require('./plugins').loader(function({ bindApi, bindSelector, bindSystem }) {
