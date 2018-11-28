@@ -52,6 +52,10 @@ export default function(options={}) {
 		if (options.bindApi.ajax!==false) {
 			bindApi('ajax', require('./api/ajax').default);
 		}
+
+		if (options.bindApi.tick!==false) {
+			bindApi('tick', require('./api/tick').default);
+		}
 	});
 
 	require('./plugins').loader(function({ bindApi, bindSelector, bindSystem }) {
