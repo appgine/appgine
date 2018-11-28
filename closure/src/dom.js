@@ -46,10 +46,19 @@ exports.getAncestor = function(target, matcher) {
 	}, true);
 }
 
-exports.getSubmitter = function(target) {
-	return goog.dom.getAncestor(target.target || target, function($node) {
+exports.getSubmitter = function($form, target) {
+	var $submitter = goog.dom.getAncestor(target.target || target, function($node) {
 		return String($node.type||'').toLowerCase()==='submit';
 	}, true);
+
+	if (!$form) {
+		return $submitter;
+
+	} else if ($submitter && $submitter.form===$form) {
+		return $submitter;
+	}
+
+	return null;
 }
 
 exports.isFormTag = function($element) {

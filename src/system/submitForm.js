@@ -22,7 +22,7 @@ export default function create() {
 
 	const onSubmit = function onSubmit(e) {
 		const _$form = e.target;
-		const _$submitter = (_submitterEvent && closure.dom.contains(e.target, _submitterEvent.target)) ? closure.dom.getSubmitter(_submitterEvent) : undefined;
+		const _$submitter = _submitterEvent && closure.dom.getSubmitter(_$form, _submitterEvent);
 		const _toTarget = (function() {
 			if (_submitterEvent && (_submitterEvent.metaKey || _submitterEvent.ctrlKey)) {
 				return '_blank';
