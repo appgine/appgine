@@ -4,7 +4,9 @@ import shallowEqual from '../lib/shallowEqual'
 import closure from '../closure'
 
 if (window.history && window.history.scrollRestoration) {
-	window.history.scrollRestoration = 'manual';
+	if ((/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream)===false) {
+		window.history.scrollRestoration = 'manual';
+	}
 }
 
 const _supported = !!(window.history && window.history.pushState);
