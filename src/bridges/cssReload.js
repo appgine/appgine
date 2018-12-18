@@ -210,7 +210,7 @@ function loadCssStylesheet() {
 	for (let item of window.appgineCssReload.loading) {
 		const { $link } = item;
 
-		if ($link.tagName==='style') {
+		if ($link.tagName.toLowerCase()==='style') {
 			try {
 				$link.sheet.cssRules; // see: https://www.phpied.com/when-is-a-stylesheet-really-loaded/
 				window.appgineCssReload.loading.splice(window.appgineCssReload.loading.indexOf(item), 1);
