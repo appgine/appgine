@@ -29,13 +29,16 @@ export default function createLoadingStatus() {
 				$link.href = endpoint;
 				$link.href = $link.href;
 
-				let linkQuery;
+				let linkQuery, linkHref;
 				linkQuery = $link.pathname + $link.search;
-				linkQuery = decodeURIComponent('/' + linkQuery.replace(/^\//, ''));
+				linkQuery = linkQuery.replace(/["\\]/g, '\\$&');
+
+				linkHref = $link.href;
+				linkHref = linkHref.replace(/["\\]/g, '\\$&');
 
 				const $found = [].concat(
 					Array.from($element.ownerDocument.querySelectorAll('a[href="'+linkQuery+'"]')),
-					Array.from($element.ownerDocument.querySelectorAll('a[href="'+($link.href)+'"]'))
+					Array.from($element.ownerDocument.querySelectorAll('a[href="'+linkHref+'"]'))
 				);
 
 				for (let $a of $found) {
