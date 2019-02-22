@@ -9,6 +9,7 @@ import 'core-js/modules/es6.array.find'
 import 'core-js/modules/es6.object.assign'
 import 'core-js/modules/es7.object.values'
 import 'core-js/modules/es7.object.entries'
+import 'core-js/modules/es7.array.includes'
 import 'babel-regenerator-runtime'
 
 
