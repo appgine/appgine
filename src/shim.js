@@ -45,6 +45,11 @@ if (document.contains===undefined) {
         window.cancelAnimationFrame = function(id) {
             clearTimeout(id);
         };
+
+    if (!window.requestIdleCallback) {
+      window.requestIdleCallback = window.requestAnimationFrame;
+      window.cancelIdleCallback = window.cancelAnimationFrame;
+    }
 }());
 
 
