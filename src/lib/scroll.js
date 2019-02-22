@@ -110,7 +110,7 @@ export function findFixedEdge() {
 
 
 function findScrollTo($node) {
-	const fixedEdge = findFixedEdge();
+	const fixedEdge = $node.hasAttribute('data-scrollToEdge') ? 0 : findFixedEdge();
 	const nodeOffset = findNodeOffset($node);
 	const siblingOffset = findSiblingOffset($node);
 
