@@ -115,11 +115,16 @@ exports.createFormId = function($form) {
 		String($form.name||'')
 	];
 
-	if ($form.elements.length>0) {
-		goog.array.forEach($form.elements, function($element) {
-			names.push(String($element.name||''));
-		});
+	for (i=0; i<$form.elements.length; i++) {
+		var $element = $form.elements[i];
+		var elName = String($element.name||'');
+
+		if (names.indexOf(elName)===-1 && elName) {
+			names.push(elName);
+		}
 	}
+
+	names.sort();
 
 	md5 = md5 || new goog.crypt.Md5();
 	md5.reset();
