@@ -47,8 +47,11 @@ if (matched) {
 _requestTree[_state._position] = _state._id;
 
 export function init() {
-	_link = closure.uri.change(window.location.href);
-	_origin = _state.origin = _link;
+	const link = closure.uri.change(window.location.href);
+
+	if (_link!==link) {
+		changeState(_state, link, 'replaceState');
+	}
 }
 
 function getStateId() {
@@ -224,8 +227,10 @@ function changeState(state, link, method, invoke) {
 		window.redirect(_link);
 	}
 
-	dispatch(invoke);
-	dispatch('change');
+	if (invoke) {
+		dispatch(invoke);
+		dispatch('change');
+	}
 }
 
 export function changeId() {

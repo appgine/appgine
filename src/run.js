@@ -1,12 +1,17 @@
 
 import ready from './lib/ready'
+import * as history from './engine/history'
 import run, { onClick, onClickHash, onSubmitForm, onReload, onLeave } from './engine/run'
 import { addListener } from './api/channel'
-import { scrollTop } from './closure'
+import { scrollTop, uri } from './closure'
 
 
 export default function(options={}) {
 	options = {...{bindApi: {}}, ...options}
+
+	if (options.ignoreURIParams) {
+		uri.ignoreURIParams(options.ignoreURIParams);
+	}
 
 	require('./plugins').loaderGlobal(function({ bindApi }) {
 		if (options.bindApi.channel!==false) {
@@ -95,11 +100,13 @@ export default function(options={}) {
 	if (window.appgine) {
 		window.appgine = function(scrollTo, bodyClassName) {
 			window.appgine = true;
+			history.init();
 			run(options, String(window.location.hash).substr(1) || scrollTo, bodyClassName);
 		}
 
 	} else {
 		window.appgine = true;
+		history.init();
 		ready(() => run(options, String(window.location.hash).substr(1) || scrollTop()));
 	}
 }

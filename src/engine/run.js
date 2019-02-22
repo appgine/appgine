@@ -126,8 +126,6 @@ export function isRequestCurrent() {
 }
 
 export default function run(options, scrollTo=0, bodyClassName) {
-	history.init();
-
 	if (bodyClassName!==undefined) {
 		document.body.className = bodyClassName;
 	}
@@ -145,10 +143,6 @@ export default function run(options, scrollTo=0, bodyClassName) {
 				ajax.abort();
 			}
 		});
-	}
-
-	if (_options.ignoreURIParams) {
-		closure.uri.ignoreURIParams(_options.ignoreURIParams);
 	}
 
 	willUpdate(loadMain);

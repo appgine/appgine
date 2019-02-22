@@ -55,6 +55,11 @@ exports.createCanonical = function(location) {
 	// Fix: IE bug with relative location
 	$link.href = $link.href;
 	$link.hash = '';
+
+	if ($link.search) {
+		$link.search = '?'+createUri($link.href).getQueryData().toString();
+	}
+
 	return $link.href;
 }
 
