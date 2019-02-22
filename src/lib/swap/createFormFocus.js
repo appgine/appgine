@@ -15,30 +15,42 @@ export default function createFormFocus(isRequestNew) {
 			const selectionEnd = selection.getEnd($active);
 
 			return function() {
+				let $inputs = [];
 				const $found = dom.findForm(formName, formId);
 
-				let $input = null;
-				if ($found) {
-					if (Array.isArray($found[inputName])) {
-						$found[inputName].forEach(function(_$input) {
-							if (_$input && _$input.value===inputValue) {
-								$input = _$input;
-							}
-						});
+				if ($found && $found[inputName] instanceof RadioNodeList) {
+					$inputs = Array.from($found[inputName]);
 
-					} else if ($found[inputName] instanceof Element) {
-						$input = $found[inputName];
-					}
+				} else if ($found && $found[inputName]) {
+					$inputs = [$found[inputName]];
 				}
 
-				if ($input) {
-					$input.focus && $input.focus();
-					selection.setCursorAtEnd($input);
+				$inputs = $inputs.filter($input => $input instanceof HTMLInputElement);
+				$inputs.sort(function($a, $b) {
+					if ($a.value===inputValue) {
+						return -1;
 
-					if ($input.hasAttribute('value') && isRequestNew) {
-						$input.value = inputValue;
-						selection.setStart($input, selectionStart);
-						selection.setEnd($input, selectionEnd);
+					} else if ($b.value===inputValue) {
+						return 1;
+
+					} else if ($a.value==='') {
+						return -1;
+
+					} else if ($b.value==='') {
+						return 1;
+					}
+
+					return $a.hasAttribute('value') ? -1 : 1;
+				});
+
+				if ($inputs[0]) {
+					$inputs[0].focus && $inputs[0].focus();
+					selection.setCursorAtEnd($inputs[0]);
+
+					if ($inputs[0].hasAttribute('value') && isRequestNew) {
+						$inputs[0].value = inputValue;
+						selection.setStart($inputs[0], selectionStart);
+						selection.setEnd($inputs[0], selectionEnd);
 					}
 				}
 			}
