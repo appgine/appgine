@@ -29,6 +29,12 @@ export default function create($root) {
 		}
 	});
 
+	this.listen('app.request', 'response', function({ requestnum }) {
+		if (_visible && requestnum===_requestnum) {
+			_animation.response();
+		}
+	});
+
 	this.listen('app.request', 'stop', function({ requestnum }) {
 		setTimeout(function() {
 			if (_visible && requestnum===_requestnum) {
@@ -72,11 +78,17 @@ function createCSSAnimation($root, $container)
 
 			setTimeout(() => {
 				$root.classList.add('progress-loading');
+				$container.style.width = '';
 				$container.style.animationDuration = '';
 			}, 0);
 		},
+		response() {
+			$container.style.width = $container.getBoundingClientRect().width + 'px';
+			$root.classList.remove('progress-loading');
+		},
 		end() {
 			$root.classList.remove('progress-loading');
+			$container.style.width = '';
 			$container.style.animationDuration = '';
 			$root.classList.add('progress-loaded');
 
@@ -84,9 +96,11 @@ function createCSSAnimation($root, $container)
 		},
 		abort() {
 			$root.classList.remove('progress-loading');
+			$container.style.width = '';
 			$container.style.animationDuration = '';
 		},
 		destroy() {
+			$container.style.width = '';
 			$container.style.animationDuration = '';
 			$root.classList.remove('progress-loading', 'progress-loaded', 'progress-hidden');
 		},
@@ -134,6 +148,9 @@ function createJSAnimation($container)
 				}
 			}, 0);
 		},
+		response() {
+
+		},
 		end() {
 			if (!_animation || _animation.finished) {
 				this._end();
@@ -154,6 +171,7 @@ function createJSAnimation($container)
 			_animation && _animation.cancel();
 		},
 		_end() {
+			_animation && _animation.finish();
 			_animation = $container.animate([
 				{width: '80%', offset: 0.0},
 				{width: '100%', offset: 0.25},
