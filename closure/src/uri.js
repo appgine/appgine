@@ -93,9 +93,12 @@ exports.createFormAction = function($form) {
 }
 
 exports.createForm = function($form, $submitter) {
-	var createdUri = createUri(exports.createFormAction($form));
+	const action = $submitter && $submitter.getAttribute('formaction') || $form.getAttribute('action');
+	const isMethodGET = 'GET'===($submitter && $submitter.getAttribute('formmethod') || $form.getAttribute('method') || 'GET').toUpperCase();
 
-	if (form.isMethod($form, 'GET')) {
+	var createdUri = createUri(action, !isMethodGET, action ? undefined : '');
+
+	if (isMethodGET) {
 		createdUri.setQueryData(form.queryData($form, $submitter));
 	}
 
