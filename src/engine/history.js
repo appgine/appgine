@@ -1,5 +1,4 @@
 
-import Kefir from '../kefir'
 import shallowEqual from '../lib/shallowEqual'
 import closure from '../closure'
 
@@ -11,15 +10,8 @@ if (window.history && window.history.scrollRestoration) {
 
 const _supported = !!(window.history && window.history.pushState);
 let _merging = false;
-let _mergeEmitter = null;
-
-Kefir.stream(emitter => { _mergeEmitter = emitter; })
-	.filter(value => isSupported())
-	.map(value => ({..._state, ...value}))
-	.filter(state => _merging = _merging || !shallowEqual(_state, state))
-	.onValue(state => _state = state)
-	.debounce(100)
-	.onValue(commitMergeState);
+let _mergingDebounce;
+let _mergingInvoke;
 
 const _events = {};
 const _popstateListeners = [];
@@ -54,20 +46,15 @@ export function init() {
 	}
 }
 
-function getStateId() {
-	return (_state && _state._id) || createStateId();
-}
-
-function createStateId() {
-	return _session + '_' + String(++_id);
+function createStateId(position) {
+	return _session + '_' + String(++_id) + '_' + position;
 }
 
 function createState(state={}, increment=false, initial=false) {
-	return {...state,
-		_id: getStateId(),
-		_position: initial ? 0 : (_state._position + (increment ? 1 : 0)),
-		initial: initial,
-	};
+	const _position = initial ? 0 : (_state._position + (increment ? 1 : 0));
+	const _id = (_state && _state._id) || createStateId(_position);
+
+	return {...state, _id, _position, initial }
 }
 
 export function isSupported() {
@@ -160,18 +147,41 @@ function dispatch(name) {
 	(_events[name]||[]).forEach(fn => fn());
 }
 
-export function mergeState(state={}) {
-	_mergeEmitter.emit(state);
+export function mergeState(value={}, method, invoke) {
+	const state = {..._state, ...value};
+
+	if (method || !shallowEqual(_state, state)) {
+		const delay = !!method;
+		_state = state;
+
+		if (_merging!=='pushState') {
+			_merging = method || 'replaceState';
+		}
+
+		clearTimeout(_mergingDebounce);
+
+		if (method) {
+			_mergingInvoke = invoke;
+			setTimeout(commitMergeState, 0);
+
+		} else {
+			_mergingDebounce = setTimeout(commitMergeState, 100);
+		}
+	}
 }
 
 function commitMergeState() {
-	if (_merging) {
-		_merging = false;
-
-		if (_supported) {
-			window.history.replaceState(_state, document.title, getLink());
-		}
+	if (_merging && _supported) {
+		window.history[_merging](_state, document.title, closure.uri.createCanonical(getLink()));
 	}
+
+	if (_mergingInvoke) {
+		dispatch(_mergingInvoke);
+		dispatch('change');
+		_mergingInvoke = null;
+	}
+
+	_merging = false;
 }
 
 export function cancelState() {
@@ -203,6 +213,7 @@ export function pushState(state={}, link) {
 		replaceState(state, link);
 
 	} else {
+		_mergingInvoke = false;
 		commitMergeState();
 		changeState(createState(state, true), link, 'pushState', 'push');
 		_requestTree.splice(_state._position, _requestTree.length, _state._id);
@@ -221,20 +232,15 @@ function changeState(state, link, method, invoke) {
 	_origin = _state.origin || _link;
 
 	if (_supported) {
-		window.history[method](_state, '', _link);
+		mergeState({}, method, invoke);
 
 	} else {
 		window.redirect(_link);
 	}
-
-	if (invoke) {
-		dispatch(invoke);
-		dispatch('change');
-	}
 }
 
 export function changeId() {
-	const _id = createStateId(true);
+	const _id = createStateId(_state._position);
 	_requestTree[_state._position] = _id;
 	return mergeState({ _id });
 }
