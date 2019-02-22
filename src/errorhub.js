@@ -26,6 +26,7 @@ export const ERROR = {
 	PLUGINS: 1,
 	CONSOLE: 2,
 	REQUEST: 3,
+	OPTIONS: 4,
 }
 
 

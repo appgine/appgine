@@ -1,4 +1,5 @@
 
+import * as errorhub from '../errorhub'
 import swap from '../lib/swap'
 import Request from './Request'
 import { dispatch } from '../api/channel'
@@ -75,7 +76,9 @@ function patchTryCatch(options) {
 				try {
 					return val.apply(options, arguments);
 
-				} catch(e) {}
+				} catch(e) {
+					errorhub.dispatch(errorhub.ERROR.OPTIONS, 'Failed to handle options.' +key+ '().\n' + String(e||''), e);
+				}
 			}
 		}
 	}
