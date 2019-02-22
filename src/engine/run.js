@@ -590,6 +590,7 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 	return _options.onResponse(function(status, response) {
 		const isLast = () => requestnum===_requestnum;
 		apiRequest.onResponse(status, response, isLast());
+		_options.dispatch('app.request', 'response', { $element, requestnum });
 
 		if (status===ajax.ABORT) {
 			if (_pushing && isLast()) {
