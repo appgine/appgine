@@ -3,7 +3,7 @@ import { scrollLeft, scrollTop } from '../../closure';
 
 
 export default function createTargetScroll(toTarget) {
-	if (toTarget.indexOf('_this')===0) {
+	if (toTarget.indexOf('_this')===0 && toTarget.indexOf('#')>0) {
 		const [, hash] = toTarget.split('#');
 		const $element = hash && document.getElementById(hash);
 		const boundsElement = $element && $element.getBoundingClientRect();
