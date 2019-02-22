@@ -786,7 +786,8 @@ function internalSwapRequest(requestInto, isRequestNew) {
 
 
 function internalScrollHashToView($origin, hash) {
-	$origin = $origin || document.querySelector('a[href="#'+hash+'"]');
+	const selectorHash = String(hash||'').replace(/["\\]/g, '\\$&');
+	$origin = $origin || document.querySelector('a[href="#'+selectorHash+'"]');
 	internalScrollHash($origin, hash, true);
 }
 
