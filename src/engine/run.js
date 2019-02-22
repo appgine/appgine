@@ -75,6 +75,10 @@ tick.onEachTick(function(screen, updated, done) {
 				internalScrollHashToView(null, request.scrolled);
 				request.scrolled = true;
 
+			} else if (request.scrolled instanceof Element) {
+				internalScrollNode(request.scrolled, request.scrolled, true);
+				request.scrolled = true;
+
 			} else if (typeof request.scrolled === 'function') {
 				request.scrolled();
 				request.scrolled = true;
@@ -766,6 +770,14 @@ function internalSwap(url, html, scrollTo)
 
 	} else {
 		internalSwapRequest(requestInto.initialize(), true);
+
+		if (scrollTo===0) {
+			const $scrollToElement = document.querySelector('[data-scrollTo],[data-scrollToEdge]');
+
+			if ($scrollToElement) {
+				requestInto.scrollToElement($scrollToElement);
+			}
+		}
 	}
 }
 

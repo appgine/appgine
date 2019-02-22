@@ -24,12 +24,17 @@ export default class Request {
 
 		} else {
 			this.scrollTop = parseInt(scrollTo||0, 10);
-			this.scrolled = -1;
+			this.scrolled = $fragment.querySelector('[data-scrollTo],[data-scrollToEdge]') ? -2 : -1;
 		}
 
 		this.redirect = null;
 		this.canonize = null;
 		this.swap = null;
+	}
+
+	scrollToElement($scrollToElement) {
+		this.scrollTop = 0;
+		this.scrolled = $scrollToElement;
 	}
 
 	initialize() {
