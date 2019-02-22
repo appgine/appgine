@@ -799,17 +799,22 @@ function internalScrollHash($origin, hash, toView=true) {
 	const $node = hash && document.getElementById(hash);
 
 	if ($node) {
-		_options.onBeforeScroll($node);
-		_internalRemoveScroll = function() {
-			_internalRemoveScroll = null;
-			_options.onRemoveScroll($node);
-		}
+		internalScrollNode($origin, $node, toView);
+	}
+}
 
-		if (toView) {
-			setHashFixedEdge(_options.hashFixedEdge);
-			setScrollPosition(_options.nodeScrollPosition);
-			scrollNodeToView($origin, $node, true, () => _internalRemoveScroll && _options.onScroll($node));
-		}
+
+function internalScrollNode($origin, $node, toView) {
+	_options.onBeforeScroll($node);
+	_internalRemoveScroll = function() {
+		_internalRemoveScroll = null;
+		_options.onRemoveScroll($node);
+	}
+
+	if (toView) {
+		setHashFixedEdge(_options.hashFixedEdge);
+		setScrollPosition(_options.nodeScrollPosition);
+		scrollNodeToView($origin, $node, true, () => _internalRemoveScroll && _options.onScroll($node));
 	}
 }
 
