@@ -130,7 +130,10 @@ export function isRequestCurrent() {
 }
 
 export default function run(options, scrollTo=0, bodyClassName) {
-	if (bodyClassName!==undefined) {
+	if (bodyClassName===undefined) {
+		Array.from(document.querySelectorAll('script[data-runtime]')).forEach($script => $script.removeAttribute('data-runtime'));
+
+	} else {
 		document.body.className = bodyClassName;
 	}
 

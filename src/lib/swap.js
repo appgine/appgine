@@ -3,6 +3,7 @@ import { swapDocument, load, loadStatic, unload, unloadStatic } from '../engine/
 import createFormFocus from './swap/createFormFocus'
 import createKeepScroll from './swap/createKeepScroll'
 import swapSelectorClasses from './swap/selectorClasses'
+import runtimeScript from './swap/runtimeScript'
 
 import { willUpdate } from '../update'
 import closure from '../closure'
@@ -123,6 +124,8 @@ export default function swap(from, into, isRequestNew) {
 
 			unloadStatic($lastBody);
 			unload($lastBody);
+
+			Array.from(document.querySelectorAll('body script[data-runtime]')).forEach(runtimeScript);
 
 			formFocus();
 
