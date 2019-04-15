@@ -3,33 +3,31 @@ import { dom } from '../closure'
 
 
 export default function createFragment(htmlString) {
-	let $fragment;
+	const $fragment = _createFragmentElement();
 
 	try {
-		_createFragment($fragment = _createFragmentElement(), htmlString);
+		_createFragment($fragment, htmlString);
 
 	} catch (e) {
-		_createFragmentPartially($fragment = _createFragmentElement(), htmlString);
+		_createFragmentPartially($fragment, htmlString);
 	}
 
 	Array.from($fragment.querySelectorAll('script')).forEach(function($script) {
 		$script.textContent = String($script.textContent).replace('__END_SCRIPT_TAG__', '<');
 	});
 
+	const matched = htmlString.match(/<html\s+([^>]+)>/);
+
+	if (matched) {
+		copyAttributes($fragment, matched[1]);
+	}
+
 	return $fragment;
 }
 
 
 function _createFragmentElement() {
-	// TODO: Remove when React fixes issue https://github.com/facebook/react/issues/7986
 	return document.createElement('iframe');
-
-	if (navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform)) {
-		return document.createElement('iframe');
-
-	} else {
-		return document.implementation.createHTMLDocument('').createDocumentFragment();
-	}
 }
 
 
@@ -76,4 +74,19 @@ function _createFragmentPart(htmlString, part) {
 		dom.setProperties($part, attrs);
 		return $part;
 	}
+}
+
+
+function copyAttributes($element, attrs) {
+	try {
+		if ($element.setAttribute) {
+			const tempDiv = document.createElement('div');
+			tempDiv.innerHTML = '<div '+ attrs +'></div>';
+
+			for (let attr of Array.from(tempDiv.firstChild.attributes)) {
+				$element.setAttribute(attr.name, attr.value);
+			}
+		}
+
+	} catch (e) {}
 }
