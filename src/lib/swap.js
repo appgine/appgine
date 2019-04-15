@@ -108,6 +108,7 @@ export default function swap(from, into, isRequestNew) {
 			} while ($bodyNodes.length>bodyIndex || $nextNodes.length>0);
 
 			swapSelectorClasses('body', from && from.$fragment || null, $into);
+			swapSelectorClasses('html', from && from.$fragment || null, $into);
 
 			$staticList.filter(({ $prevStatic }) => $prevStatic).forEach(({ keepScroll }) => keepScroll && keepScroll());
 
