@@ -18,6 +18,16 @@ export default function swap(selector, $from, $into) {
 
 
 function getClasses(selector, $dom) {
-	const $found = $dom && $dom.querySelector(selector);
+	let $found;
+
+	if ($dom) {
+		if (selector==='html' && $dom.tagName.toLowerCase()==='iframe') {
+			$found = $dom;
+
+		} else if ($dom.querySelector) {
+			$found = $dom.querySelector(selector);
+		}
+	}
+
 	return $found ? Array.from($found.classList) : [];
 }
