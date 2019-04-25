@@ -76,7 +76,7 @@ tick.onEachTick(function(screen, updated, done) {
 				request.scrolled = true;
 
 			} else if (request.scrolled instanceof Element) {
-				internalScrollNode(request.scrolled, request.scrolled, true);
+				internalScrollNode(request.scrolled, request.scrolled);
 				request.scrolled = true;
 
 			} else if (typeof request.scrolled === 'function') {
@@ -338,6 +338,12 @@ export function location($element, endpoint, isAjax=false) {
 	} else {
 		leave(endpoint);
 	}
+}
+
+
+export function scroll($element, animated)
+{
+	internalScrollNode($element, $element, true, animated);
 }
 
 
@@ -808,19 +814,19 @@ function internalScrollHashToView($origin, hash) {
 }
 
 
-function internalScrollHash($origin, hash, toView=true) {
+function internalScrollHash($origin, hash, toView=true, animated=true) {
 	_internalScrollHash = hash;
 	_internalRemoveScroll && _internalRemoveScroll();
 
 	const $node = hash && document.getElementById(hash);
 
 	if ($node) {
-		internalScrollNode($origin, $node, toView);
+		internalScrollNode($origin, $node, toView, animated);
 	}
 }
 
 
-function internalScrollNode($origin, $node, toView) {
+function internalScrollNode($origin, $node, toView=true, animated=true) {
 	_options.onBeforeScroll($node);
 	_internalRemoveScroll = function() {
 		_internalRemoveScroll = null;
@@ -830,7 +836,7 @@ function internalScrollNode($origin, $node, toView) {
 	if (toView) {
 		setHashFixedEdge(_options.hashFixedEdge);
 		setScrollPosition(_options.nodeScrollPosition);
-		scrollNodeToView($origin, $node, true, () => _internalRemoveScroll && _options.onScroll($node));
+		scrollNodeToView($origin, $node, animated, () => _internalRemoveScroll && _options.onScroll($node));
 	}
 }
 
