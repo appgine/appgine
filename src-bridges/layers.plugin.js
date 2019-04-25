@@ -1,7 +1,7 @@
 
-import * as closure from '../closure'
-import * as history from '../engine/history'
-import { requestStack } from '../engine/run'
+import * as closure from 'appgine/lib/closure'
+import * as history from 'appgine/lib/engine/history'
+import { requestStack } from 'appgine/lib/engine/run'
 
 
 export function createLayer($element, layerId) {

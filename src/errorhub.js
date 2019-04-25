@@ -47,35 +47,3 @@ export function dispatch(errno, error, e, ...payload) {
 		console_error(errno, error, e);
 	}
 }
-
-
-export function createRavenHandler(endpoint, config) {
-	return function(errno, error, e, ...payload) {
-		loadScript(endpoint, function(first) {
-			if (window.Raven) {
-				if (first) {
-					window.Raven.config(config);
-				}
-
-				if (isError(e)) {
-					window.Raven.captureException(e, cloneToSerializable({ errno, error, payload }));
-
-				} else {
-					window.Raven.captureMessage(error, cloneToSerializable({ errno, error, payload }));
-				}
-			}
-		});
-	}
-}
-
-
-// Yanked from https://git.io/vS8DV re-used under CC0
-// with some tiny modifications
-function isError(value) {
-  switch ({}.toString.call(value)) {
-    case '[object Error]': return true;
-    case '[object Exception]': return true;
-    case '[object DOMException]': return true;
-    default: return value instanceof Error;
-  }
-}

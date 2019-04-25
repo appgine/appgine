@@ -1,5 +1,5 @@
 
-import { md5, browser } from '../closure'
+import { md5, browser } from 'appgine/lib/closure'
 
 
 function defaultTransform(href) {

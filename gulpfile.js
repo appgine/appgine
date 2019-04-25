@@ -17,6 +17,7 @@ function runBuild() {
 		child_process.execSync('rm -rf ./lib && cp -a ./src ./lib');
 		child_process.execSync('./node_modules/.bin/babel ./src/closure.js --out-file ./lib/closure.js');
 		child_process.execSync('rm -rf ./addons && cp -a ./src-addons ./addons');
+		child_process.execSync('rm -rf ./bridges && cp -a ./src-bridges ./bridges');
 
 		process.env.NODE_ENV = 'production';
 
