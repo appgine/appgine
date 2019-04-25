@@ -18,7 +18,7 @@ export default function createFormFocus(isRequestNew) {
 				let $inputs = [];
 				const $found = dom.findForm(formName, formId);
 
-				if ($found && $found[inputName] instanceof RadioNodeList) {
+				if ($found && $found[inputName] instanceof NodeList) {
 					$inputs = Array.from($found[inputName]);
 
 				} else if ($found && $found[inputName]) {
