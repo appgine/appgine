@@ -65,6 +65,10 @@ export default function(options={}) {
 		if (options.bindApi.now!==false) {
 			bindApi('now', require('./api/now').default);
 		}
+
+		if (options.bindApi.scroll!==false) {
+			bindApi('scroll', require('./api/scroll').default);
+		}
 	});
 
 	require('./plugins').loader(function({ bindApi, bindSelector, bindSystem }) {
