@@ -3,75 +3,70 @@ import closure from 'appgine/lib/closure'
 
 
 export default function create($element, { step=1, infinite=false, duration=300, delay=0 }, state) {
-	state.initial({move: false, moving: false, infinite: false});
+	state.initial({move: false, moving: 0, duration: 0, infinite: false});
 
 	$element.classList.toggle('scroll-webkit', 'webkitRequestAnimationFrame' in window);
 
 	const targets = this.createTargets(function(targets) {
-		targets.every('next', registerMovingEvent('mousedown', 'next'));
-		targets.every('next', registerMovingEvent('mouseup', false));
-		targets.every('next', registerMovingEvent('mouse', false));
-		targets.every('prev', registerMovingEvent('mousedown', 'prev'));
-		targets.every('prev', registerMovingEvent('mouseup', false));
-		targets.every('prev', registerMovingEvent('mouse', false));
+		targets.every('next', registerMoveEvent('mousedown', 'next'));
+		targets.every('next', registerMoveEvent('mouseup', false));
+		targets.every('next', registerMoveEvent('mouse', false));
+		targets.every('prev', registerMoveEvent('mousedown', 'prev'));
+		targets.every('prev', registerMoveEvent('mouseup', false));
+		targets.every('prev', registerMoveEvent('mouse', false));
 
 		targets.complete(function() {
 			const $items = targets.findAllElement('item');
-			const $parent = targets.findElement('parent') || ($items.length && getScrollParent($items[0])) || null;
+			const $parent = targets.findElement('parent') || ($items[0] && getScrollParent($items[0])) || null;
+			const itemWidth = $items[0] && $items[0].getBoundingClientRect().width;
+			const parentWidth = $parent && $parent.getBoundingClientRect().width;
+
+			if (parentWidth && itemWidth && step) {
+				state.duration = duration/step/itemWidth;
+				state.infinite = infinite && itemWidth*($items.length-step) > parentWidth;
+			}
+
+			changeMove();
 
 			if ($parent) {
-				if (infinite && state.infinite===false && $items.length) {
-					const parentWidth = $parent.getBoundingClientRect().width;
-					const itemWidth = $items[0].getBoundingClientRect().width;
-
-					state.infinite = itemWidth*($items.length-step) > parentWidth;
-				}
-
 				$parent.addEventListener('scroll', onScroll);
 				return () => $parent.removeEventListener('scroll', onScroll);
 			}
 		});
-
-		targets.complete(changeMove);
 	});
 
-	this.event(window, 'resize', () => changeMove());
+	this.event(window, 'resize', changeMove);
 
 	let scrollTimeout;
 	function onScroll(e) {
-		if (e) {
-			clearTimeout(scrollTimeout);
-			scrollTimeout = setTimeout(onScroll, 10);
-		}
+		clearTimeout(scrollTimeout);
 
-		if (state.moving===false) {
-			if (!e) {
-				changeMove(false);
+		if (state.moving===0) {
+			scrollTimeout = setTimeout(changeMove, 10);
 
-			} else if (e.target.scrollLeft>0 && e.target.scrollLeft+e.target.offsetWidth<e.target.scrollWidth) {
-				changeMove(false);
+			if (e.target.scrollLeft>0 && e.target.scrollLeft+e.target.offsetWidth<e.target.scrollWidth) {
+				changeMove();
 			}
 		}
 	}
 
-	function changeMove(move=state.move) {
-		state.move = move;
+	function changeMove() {
+		const $items = targets.findAllElement('item');
+		const $parent = targets.findElement('parent') || ($items[0] && getScrollParent($items[0])) || null;
 
-		if (state.moving || targets.findAllElement('item').length===0) {
+		if ($items.length===0 || $parent===null) {
+			targets.findAllElement('prev', $prev => $prev.disabled = true);
+			targets.findAllElement('next', $next => $next.disabled = true);
 			return false;
 		}
 
-		let $currentItems;
-		const $items = targets.findAllElement('item');
-		const $parent = targets.findElement('parent') || ($items.length && getScrollParent($items[0])) || null;
+		const $currentItems = Array.from($items[0].parentNode.children);
 
-		$currentItems = $items.length ? Array.from($items[0].parentNode.children) : []
+		if (state.infinite && state.moving!==1) {
+			const prevCount = state.move==='prev' ? step : (state.move ? 0 : 1);
+			const nextCount = state.move==='next' ? step : (state.move ? 0 : 1);
 
-		const parentBounds = $parent.getBoundingClientRect();
-
-		if (state.infinite) {
-			const prevCount = move==='prev' ? step : (move ? 0 : 1);
-			const nextCount = move==='next' ? step : (move ? 0 : 1);
+			const parentBounds = $parent.getBoundingClientRect();
 			let scrollLeft = $parent.scrollLeft;
 
 			for (let i=0; i<prevCount; i++) {
@@ -109,43 +104,45 @@ export default function create($element, { step=1, infinite=false, duration=300,
 			}
 		}
 
-		if (!$parent) {
-			targets.findAllElement('prev', $prev => $prev.disabled = true);
-			targets.findAllElement('next', $next => $next.disabled = true);
+		const scrollToPrev = resolveScrollTo($parent, $currentItems, step, false);
+		const scrollToNext = resolveScrollTo($parent, $currentItems, step, true);
+		const scrollTo = (state.move==='prev' ? scrollToPrev : (state.move==='next' ? scrollToNext : 0));
 
-		} else {
-			const scrollToPrev = resolveScrollTo($parent, $currentItems, step, false);
-			const scrollToNext = resolveScrollTo($parent, $currentItems, step, true);
+		targets.findAllElement('prev', $prev => $prev.disabled = scrollToPrev===0);
+		targets.findAllElement('next', $next => $next.disabled = scrollToNext===0);
 
-			targets.findAllElement('prev', $prev => $prev.disabled = scrollToPrev===$parent.scrollLeft);
-			targets.findAllElement('next', $next => $next.disabled = scrollToNext===$parent.scrollLeft);
+		if (scrollTo===0) {
+			state.move = false;
 
-			if (state.move) {
-				const scrollTo = (state.move==='next' ? scrollToNext : scrollToPrev);
+		} else if (state.moving===0) {
+			state.moving = 1;
 
-				if (scrollTo!=$parent.scrollLeft) {
-					state.moving = true;
+			function onAnimationEnd() {
+				state.moving = 2;
+				changeMove();
 
-					function onAnimationEnd() {
-						state.moving = false;
-						changeMove();
-					}
-
-					closure.animation.scrollElementTo(
-						$parent,
-						$parent.scrollLeft, $parent.scrollTop,
-						scrollTo, $parent.scrollTop,
-						() => setTimeout(onAnimationEnd, delay),
-						duration
-					);
-				}
+				setTimeout(function() {
+					state.moving = 0;
+					changeMove();
+				}, delay);
 			}
+
+			closure.animation.scrollElementTo(
+				$parent,
+				$parent.scrollLeft, $parent.scrollTop,
+				$parent.scrollLeft + scrollTo, $parent.scrollTop,
+				onAnimationEnd, Math.ceil(Math.abs(state.duration*scrollTo)) || duration
+			);
 		}
 	}
 
-	function registerMovingEvent(eventName, move) {
+	function registerMoveEvent(eventName, move) {
 		return function($element) {
-			const onEvent = changeMove.bind(null, move);
+			function onEvent() {
+				state.move = move;
+				changeMove();
+			}
+
 			$element.addEventListener(eventName, onEvent);
 			return () => $element.removeEventListener(eventName, onEvent);
 		}
@@ -159,6 +156,7 @@ function resolveScrollTo($parent, $items, step, next) {
 		$items.reverse();
 	}
 
+	const parentMaxScroll = $parent.scrollWidth-$parent.offsetWidth;
 	const parentScroll = $parent.scrollLeft;
 	const parentLeft = $parent.getBoundingClientRect().x;
 	const scrollLeft = [];
@@ -166,14 +164,14 @@ function resolveScrollTo($parent, $items, step, next) {
 	for (let i=0; i<$items.length; i++) {
 		const itemBounds = $items[i].getBoundingClientRect();
 
-		scrollLeft.push(parentScroll + (itemBounds.x - parentLeft));
+		scrollLeft.push(Math.min(parentMaxScroll, Math.max(0, itemBounds.x - parentLeft + parentScroll)) - parentScroll);
 
 		if ((next ? -1 : 1)*(parentLeft-itemBounds.x)-itemBounds.width*0.33 < 0) {
-			return Math.min($parent.scrollWidth-$parent.offsetWidth, scrollLeft[Math.max(0, scrollLeft.length-1-step)]);
+			return scrollLeft[Math.max(0, scrollLeft.length-1-step)];
 		}
 	}
 
-	return parentLeft;
+	return 0;
 }
 
 function getScrollParent($element) {
