@@ -4,7 +4,7 @@ export const shouldShowRequestProgress = 'shouldShowRequestProgress'
 
 export default function create($root) {
 	const plugin = this;
-	const $container = document.createElement('div');
+	const $container = $root.children[0] && $root.children[0].tagName=='DIV' && $root.children[0] || document.createElement('div');
 
 	let _visible = false;
 	let _requestnum = 0;
@@ -53,14 +53,6 @@ export default function create($root) {
 			_animation.abort();
 		}
 	});
-
-	return {
-		destroy() {
-			_animation.destroy();
-			$root.removeChild($container);
-			$root.classList.remove('progress');
-		},
-	}
 }
 
 
