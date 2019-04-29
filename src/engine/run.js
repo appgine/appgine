@@ -763,7 +763,7 @@ function internalSwap(url, html, scrollTo)
 					Array.from(document.body.childNodes).forEach($child => $lastBody.appendChild($child));
 					Array.from($fragment.querySelector('head').childNodes).forEach($child => document.head.appendChild($child));
 					Array.from($fragment.querySelector('body').childNodes).forEach($child => document.body.appendChild($child));
-					document.title = loadTitle($fragment);
+					document.title = loadTitle(document);
 
 					window.appgine(scrollTo, $fragment.querySelector('body').className);
 				}
