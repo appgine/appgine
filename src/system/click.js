@@ -10,7 +10,7 @@ export default function create() {
 			if ($link.protocol==='http:' || $link.protocol==='https:') {
 				const href = String($link.href||'');
 
-				if (href && !e.defaultPrevented) {
+				if (href && !e.defaultPrevented && (e.which!==2 && e.which!==3)) {
 					const toTarget = (function() {
 						if (e && (e.metaKey || e.ctrlKey)) {
 							return '_blank';
