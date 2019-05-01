@@ -1,11 +1,11 @@
 
-import closure from 'appgine/lib/closure'
+import { animation, browser } from 'appgine/lib/closure'
 
 
 export default function create($element, { step=1, infinite=false, duration=300, delay=0 }, state) {
 	state.initial({move: false, moving: 0, duration: 0, infinite: false});
 
-	$element.classList.toggle('scroll-webkit', 'webkitRequestAnimationFrame' in window);
+	$element.classList.toggle('scroll-webkit', browser.isChrome());
 
 	const targets = this.createTargets(function(targets) {
 		targets.every('next', registerMoveEvent('mousedown', 'next'));
@@ -127,7 +127,7 @@ export default function create($element, { step=1, infinite=false, duration=300,
 				}, delay);
 			}
 
-			closure.animation.scrollElementTo(
+			animation.scrollElementTo(
 				$parent,
 				$parent.scrollLeft, $parent.scrollTop,
 				$parent.scrollLeft + scrollTo, $parent.scrollTop,
