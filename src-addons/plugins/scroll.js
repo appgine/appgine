@@ -72,7 +72,7 @@ export default function create($element, { step=1, infinite=false, duration=300,
 			for (let i=0; i<prevCount; i++) {
 				const itemBounds = $currentItems[i].getBoundingClientRect();
 
-				if ((parentBounds.x-itemBounds.x)-itemBounds.width*0.33 < 0) {
+				if ((parentBounds.left-itemBounds.left)-itemBounds.width*0.33 < 0) {
 					for (let j=0; j<prevCount-i; j++) {
 						scrollLeft += $currentItems[$currentItems.length-1-j].getBoundingClientRect().width;
 					}
@@ -89,7 +89,7 @@ export default function create($element, { step=1, infinite=false, duration=300,
 			for (let i=0; i<nextCount; i++) {
 				const itemBounds = $currentItems[$currentItems.length-1-i].getBoundingClientRect();
 
-				if (-(parentBounds.x-itemBounds.x)-itemBounds.width*0.33 < scrollLeft) {
+				if (-(parentBounds.left-itemBounds.left)-itemBounds.width*0.33 < scrollLeft) {
 					for (let j=0; j<nextCount-i; j++) {
 						scrollLeft -= $currentItems[j].getBoundingClientRect().width;
 					}
@@ -158,15 +158,15 @@ function resolveScrollTo($parent, $items, step, next) {
 
 	const parentMaxScroll = $parent.scrollWidth-$parent.offsetWidth;
 	const parentScroll = $parent.scrollLeft;
-	const parentLeft = $parent.getBoundingClientRect().x;
+	const parentLeft = $parent.getBoundingClientRect().left;
 	const scrollLeft = [];
 
 	for (let i=0; i<$items.length; i++) {
 		const itemBounds = $items[i].getBoundingClientRect();
 
-		scrollLeft.push(Math.min(parentMaxScroll, Math.max(0, itemBounds.x - parentLeft + parentScroll)) - parentScroll);
+		scrollLeft.push(Math.min(parentMaxScroll, Math.max(0, itemBounds.left - parentLeft + parentScroll)) - parentScroll);
 
-		if ((next ? -1 : 1)*(parentLeft-itemBounds.x)-itemBounds.width*0.33 < 0) {
+		if ((next ? -1 : 1)*(parentLeft-itemBounds.left)-itemBounds.width*0.33 < 0) {
 			return scrollLeft[Math.max(0, scrollLeft.length-1-step)];
 		}
 	}
