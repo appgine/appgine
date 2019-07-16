@@ -46,8 +46,8 @@ export default function create($input, Component, activeSelector, endpoint, stat
 		state.results = results.map((result, i) => {
 			return Object.assign({}, result, {
 				active: i===0 && (hilitate || canonizeText(result.title)===canonizeText(token)),
-				onClick: () => dispatch('redirect', result.url||result.redirect),
-				onMouseMove: () => renderIndex(i, false),
+				onClick() { dispatch('redirect', result.url||result.redirect) },
+				onMouseMove() { renderIndex(i) },
 			});
 		});;
 
@@ -95,11 +95,12 @@ export default function create($input, Component, activeSelector, endpoint, stat
 
 		for (let target of targets.findAll('content')) {
 			if (target.$element===e.target) {
+				$input.focus();
 				e.preventDefault();
 				return true;
 
 			} else if (target.$element.contains(e.target)) {
-				e.preventDefault();
+				$input.focus();
 				return true;
 			}
 		}
