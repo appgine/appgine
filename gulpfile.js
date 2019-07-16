@@ -1,50 +1,43 @@
 
-var path = require('path');
 var fs = require('fs');
+var path = require('path');
 var child_process = require('child_process');
+
 var gulp = require('gulp')
-var config = require('./webpack/makeconfig')
+var webpackConfig = require('./webpack/makeconfig')
 var webpackBuild = require('./webpack/build')
-var webpackDev = require('./webpack/devserver')
 
-function runDev() {
-	process.env.NODE_ENV = 'development';
-	return webpackDev(config(true).apply(null, arguments));
-}
+var babel = require("@babel/core");
 
-function runBuild() {
-	return function(callback) {
-		child_process.execSync('rm -rf ./lib && cp -a ./src ./lib');
-		child_process.execSync('./node_modules/.bin/babel ./src/closure.js --out-file ./lib/closure.js');
-		child_process.execSync('rm -rf ./addons && cp -a ./src-addons ./addons');
-		child_process.execSync('rm -rf ./bridges && cp -a ./src-bridges ./bridges');
+gulp.task('build', function(done) {
+	child_process.execSync('rm -rf ./lib && cp -a ./src ./lib');
+	child_process.execSync('rm -rf ./addons && cp -a ./src-addons ./addons');
+	child_process.execSync('rm -rf ./bridges && cp -a ./src-bridges ./bridges');
 
-		process.env.NODE_ENV = 'production';
+	process.env.NODE_ENV = 'production';
 
-		webpackBuild(config(false)(path.resolve('src/closure.js')))(function() {
-			var file, closureFile;
+	webpackBuild(webpackConfig(false)(path.resolve('src/closure.js')))(function() {
+		var file, closureFile;
 
-			closureFile = fs.readFileSync('./dist/closure.js');
-			closureFile = closureFile.toString();
-			closureFile = closureFile.replace(/^[\s!]*/, '');
+		closureFile = fs.readFileSync('./dist/closure.js');
+		closureFile = closureFile.toString();
+		closureFile = closureFile.replace(/^[\s!]*/, '');
+		closureFile = closureFile.replace(/[;\s]*$/, '');
+		closureFile = closureFile.replace(/,(([a-z])\(\2\.[a-z]\=1\))/, function(_, match) { return '; return ' + match; })
 
-			file = fs.readFileSync('./lib/closure.js');
-			file = file.toString();
-			file = file.replace("'use strict';", '');
+		file = fs.readFileSync('./src/closure.js');
+		file = babel.transform(file, {presets: [["@babel/preset-env"]]});
+		file = file.code;
+		file = file.replace("'use strict';", '');
 
-			var replace = "require('../closure');";
-			var index = file.indexOf(replace);
+		var replace = 'require("../closure")';
+		var index = file.indexOf(replace);
 
-			if (index!==-1) {
-				file = file.substr(0, index) + closureFile + file.substr(index+replace.length);
-			}
+		if (index!==-1) {
+			file = file.substr(0, index) + closureFile + file.substr(index+replace.length);
+		}
 
-			fs.writeFileSync('./lib/closure.js', file);
-			callback();
-		});
-	}
-}
-
-gulp.task('default', runDev(path.resolve('src/app.js')));
-gulp.task('dev', runDev(path.resolve('lib/app.js')));
-gulp.task('build', runBuild());
+		fs.writeFileSync('./lib/closure.js', file);
+		done();
+	});
+});
