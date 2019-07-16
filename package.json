@@ -46,7 +46,7 @@
     "@babel/preset-env": "^7.5.4",
     "babel-loader": "8.0.4",
     "extend": "^3.0.0",
-    "goog-loader": "git+https://github.com/aleskafka/goog-loader.git",
+    "goog-loader": "^0.9.0",
     "gulp": "^4.0.2",
     "node-notifier": "^4.4.0",
     "script-loader": "^0.6.1",
