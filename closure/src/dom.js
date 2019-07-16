@@ -89,7 +89,7 @@ exports.isFormElement = function($element) {
 }
 
 exports.shouldHaveFormId = function($form) {
-	for (i=0; i<$form.elements.length; i++) {
+	for (var i=0; i<$form.elements.length; i++) {
 		var $element = $form.elements[i];
 		var tagName = String($element.tagName).toLowerCase();
 		var type = String($element.type||'').toLowerCase();
@@ -115,7 +115,7 @@ exports.createFormId = function($form) {
 		String($form.name||'')
 	];
 
-	for (i=0; i<$form.elements.length; i++) {
+	for (var i=0; i<$form.elements.length; i++) {
 		var $element = $form.elements[i];
 		var elName = String($element.name||'');
 
