@@ -1,21 +1,17 @@
-/* @flow weak */
-
-"use strict"
 
 var webpack = require('webpack')
-var gutil = require('gulp-util')
 
 module.exports = function(webpackConfig) {
-	return function(callback) {
+	return function(done) {
 		webpack(webpackConfig, function(fatalError, stats) {
-      var jsonStats = stats.toJson()
+			var jsonStats = stats.toJson()
 			var buildError = fatalError || jsonStats.errors[0] || jsonStats.warnings[0]
 
-      if (buildError) {
-				throw new gutil.PluginError('webpack', buildError)
+			if (buildError) {
+				throw new Error(buildError)
 			}
 
-			gutil.log('[webpack]', stats.toString({
+			console.log('[webpack]', stats.toString({
 				colors: true,
 				version: false,
 				hash: false,
@@ -24,7 +20,7 @@ module.exports = function(webpackConfig) {
 				chunkModules: false
 			}))
 
-      callback()
+			done()
 		})
 	}
 }
