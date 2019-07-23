@@ -17,6 +17,9 @@ export default function create() {
 
 						} else if ($link.getAttribute('target')) {
 							return $link.getAttribute('target');
+
+						} else if ($link.getAttribute('data-target')) {
+							return $link.getAttribute('data-target');
 						}
 
 						return '';

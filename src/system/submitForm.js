@@ -30,8 +30,14 @@ export default function create() {
 			} else if (_$submitter && _$submitter.getAttribute('formtarget')) {
 				return _$submitter.getAttribute('formtarget');
 
+			} else if (_$submitter && _$submitter.getAttribute('data-target')) {
+				return _$submitter.getAttribute('data-target');
+
 			} else if (e.target && e.target.getAttribute('target')) {
 				return e.target.getAttribute('target');
+
+			} else if (e.target && e.target.getAttribute('data-target')) {
+				return e.target.getAttribute('data-target');
 			}
 
 			return '';
