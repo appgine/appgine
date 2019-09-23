@@ -2,6 +2,18 @@
 import { destroy } from 'plugin-macro-loader/lib/lib/destroy'
 
 
+function matchTarget(targets, target) {
+	if (targets==='' || targets===target) {
+		return true;
+
+	} else if (Array.isArray(targets) && targets.indexOf(target)!==-1) {
+		return true;
+	}
+
+	return false;
+}
+
+
 export default class TargetList
 {
 
@@ -95,7 +107,7 @@ export default class TargetList
 					const targetObj = this._targets[targetId];
 					const { $element, target } = this._targets[targetId];
 
-					if (first.id===undefined && (first.target==='' || first.target===target)) {
+					if (first.id===undefined && (matchTarget(first.target, target))) {
 						first.id = targetId;
 						first.result = first($element, targetObj)||{};
 						targetObj.instances.push(first.result);
@@ -110,7 +122,7 @@ export default class TargetList
 					const targetObj = this._targets[targetId];
 					const { $element, target } = this._targets[targetId];
 
-					if (every.target==='' || every.target===target) {
+					if (matchTarget(every.target, target)) {
 						every.ids[targetId] = every($element, targetObj)||{};
 						targetObj.instances.push(every.ids[targetId]);
 					}
