@@ -41,6 +41,13 @@ export function createSwapping(request, isCurrent) {
 
 					} else if ($swap) {
 						$swap.innerHTML = pending[swapId];
+
+					} else if (swapId==='title' || swapId==='document-title') {
+						const $titleSwap = request.$fragment.querySelector('title');
+
+						if ($titleSwap) {
+							$titleSwap.textContent = pending[swapId];
+						}
 					}
 				});
 			}
@@ -60,6 +67,9 @@ export function createSwapping(request, isCurrent) {
 
 						} else if ($documentSwap) {
 							swapElement($documentSwap, pending[swapId], load, unload);
+
+						} else if (swapId==='title' || swapId==='document-title') {
+							document.title = pending[swapId];
 						}
 					});
 				});
