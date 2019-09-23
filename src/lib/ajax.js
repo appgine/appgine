@@ -1,4 +1,6 @@
 
+import { locale } from '../locale'
+
 
 export const ABORT = 'abort';
 export const ERROR = 'error';
@@ -76,50 +78,79 @@ export default create();
  */
 function bindRequest(request, timeout, fn)
 {
+	const nativeAbort = request.abort.bind(request);
+
 	let handled = false;
-	function handleResponse(status, error) {
+	function handleResponse(status) {
 		if (handled===false) {
 			handled = true;
 
-			fn(status, {
-				code: request.status,
-				headers: parseHeaders(request.getAllResponseHeaders()),
-				error: error,
-				json: handleResponseJson(request.responseText),
-				html: request.responseText
-			});
+			let code = request.status;
+			let headers = parseHeaders(request.getAllResponseHeaders());
+			let html = request.responseText;
+			let json = handleResponseJson(request.responseText);
+			let error = requestError(status, code, html, json);
+
+			status = requestStatus(status, error);
+			html = status===SUCCESS ? html : '';
+			json = status===SUCCESS ? json : undefined;
+
+			fn(status, { code, headers, error, json, html });
 		}
+	}
+
+	function requestError(status, code, html, json) {
+		if (status===TIMEOUT) {
+			return locale.error.request.timeout;
+
+		} else if (status===ABORT) {
+			return locale.error.request.abort;
+
+		} else if (code>=400) {
+			if ((typeof json==='object') && json && json.error===undefined) {
+				return null;
+			}
+
+			if (code>=500) {
+				return locale.error.request.status500;
+			}
+
+			return locale.error.request.status400;
+
+		} else if (status===ERROR) {
+			return locale.error.request.nointernet;
+
+		} else if (!html && json===undefined) {
+			return locale.error.request.empty;
+		}
+
+		return null;
+	}
+
+	function requestStatus(status, error) {
+		if (status===TIMEOUT || status===ABORT) {
+			return status;
+
+		} else if (error) {
+			return ERROR;
+		}
+
+		return SUCCESS;
 	}
 
 	setTimeout(function() {
 		if (handled===false) {
-			handleResponse(TIMEOUT, 'Server did not respond in time.');
-			request.abort();
+			handleResponse(TIMEOUT);
+			nativeAbort();
 		}
 	}, timeout);
 
-	request.onload = function() {
-		handleResponse(SUCCESS, null);
-	}
+	request.onload = handleResponse.bind(null, SUCCESS);
+	request.onerror = handleResponse.bind(null, ERROR);
 
-	request.onerror = function() {
-		if (request.status>=500) {
-			handleResponse(ERROR, 'Server responded with unexpected error.');
-
-		} else if (request.status>=400) {
-			handleResponse(ERROR, 'Server denied this request.');
-
-		} else {
-			handleResponse(ERROR, 'Check your Internet connection.');
-		}
-	}
-
-	const nativeAbort = request.abort.bind(request);
 	request.abort = function() {
-		if (handled===false) {
-			handleResponse(ABORT, 'Request aborted.');
-			nativeAbort();
-		}
+		handleResponse(ABORT);
+		nativeAbort();
 	}
 }
 

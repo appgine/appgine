@@ -3,6 +3,7 @@ import * as errorhub from '../errorhub'
 import swap from '../lib/swap'
 import Request from './Request'
 import { dispatch } from '../api/channel'
+import * as locale from '../locale'
 
 
 export default function createOptions(options={}) {
@@ -12,6 +13,7 @@ export default function createOptions(options={}) {
 			options.onDispose && options.onDispose();
 		},
 		timeout: options.timeout ? Math.max(0, parseInt(options.timeout, 10)) : undefined,
+		locale: (options.lang==='locale' || locale[options.lang]===undefined) ? locale.en : locale[options.lang],
 		ignoreURIParams: [],
 		dragAndDropClass: options.dragAndDropClass || '',
 		abortOnEscape: options.abortOnEscape===undefined || options.abortOnEscape,

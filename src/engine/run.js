@@ -3,6 +3,7 @@ import * as errorhub from '../errorhub'
 import RequestStack from './RequestStack'
 
 import createOptions from './createOptions'
+import { locale } from '../locale'
 
 import { loadMain, update, unload, unloadMain } from './plugins'
 import loadHtml from '../lib/loadHtml'
@@ -563,9 +564,10 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
  * @param {mixed}
  */
 function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
-	return _bindRequest(apiRequest, _pushing ? 0 : ++_requestnum, $element, endpoint, false, scrollTo, function(err) {
-		errorhub.dispatch(errorhub.ERROR.REQUEST, 'Failed to handle request.\n' + String(err||''), undefined, endpoint);
-		_options.onError('Failed to handle request.\n' + String(err||''));
+	return _bindRequest(apiRequest, _pushing ? 0 : ++_requestnum, $element, endpoint, false, scrollTo, function(errno) {
+		const error = _options.locale[locale.error.request.ajax] + '\n' + String(_options.locale[errno]||'');
+		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
+		_options.onError(error);
 	});
 }
 
@@ -578,9 +580,10 @@ function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
  * @param {mixed}
  */
  function bindRequest(apiRequest, $element, endpoint, newPage, scrollTo) {
-	return _bindRequest(apiRequest, ++_requestnum, $element, endpoint, newPage, scrollTo, function(err) {
-		errorhub.dispatch(errorhub.ERROR.REQUEST, 'Failed to load requested page.\n' + String(err||''), undefined, endpoint);
-		_options.onError('Failed to load requested page.\n' + String(err||''));
+	return _bindRequest(apiRequest, ++_requestnum, $element, endpoint, newPage, scrollTo, function(errno) {
+		const error = _options.locale[locale.error.request.page] + '\n' + String(_options.locale[errno]||'');
+		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
+		_options.onError(error);
 	});
 }
 
