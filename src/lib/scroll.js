@@ -14,23 +14,44 @@ export function setScrollPosition(option) {
 }
 
 export function scrollNodeToView($origin, $node, animated, onEnd) {
-	setTimeout(() => {
-		scrollIntoViewIfNeeded($node, animated, function(scrolled) {
-			const bindFindScrollTo = (scrolled && $origin)
-				? findScrollToWithOrigin.bind(null, $node, $origin)
-				: findScrollTo.bind(null, $node);
+	let internalCounter = 0;
+	let internalLastScrollTo = [0, 0];
 
+	function internalFindScrollTo(scrolled) {
+		const found = (scrolled && $origin)
+			? findScrollToWithOrigin($node, $origin)
+			: findScrollTo($node);
+
+		return internalLastScrollTo = found;
+	}
+
+	function internalOnEnd() {
+		setTimeout(function() {
+			const lastScrollTo = [...internalLastScrollTo];
+			const thisScrollTo = internalFindScrollTo();
+
+			if (internalCounter<3 && (lastScrollTo[0]!==thisScrollTo[0] || lastScrollTo[1]!==thisScrollTo[1])) {
+				internalCounter++;
+				return internalRun();
+			}
+
+			onEnd && onEnd();
+		}, 0)
+	}
+
+	function internalRun() {
+		scrollIntoViewIfNeeded($node, animated, function(scrolled) {
 			if (animated) {
-				return closure.animation.scrollToLazy(bindFindScrollTo, function() {
-					onEnd && onEnd();
-				});
+				return closure.animation.scrollToLazy(internalFindScrollTo.bind(null, scrolled), internalOnEnd);
 
 			} else {
-				window.scrollTo(...bindFindScrollTo());
-				onEnd && onEnd();
+				window.scrollTo(...internalFindScrollTo(scrolled));
+				internalOnEnd();
 			}
 		});
-	}, 0);
+	}
+
+	setTimeout(internalRun, 0);
 }
 
 export function scrollFormToView($form, top=false) {
@@ -100,7 +121,9 @@ export function findFixedEdge() {
  				val.
  					filter($node => $node instanceof Element).
  					map(closure.style.getBounds).
- 					forEach(({ top, height }) => fixedEdge = Math.max(fixedEdge, top + height - scrollTop));
+ 					forEach(({ top, height }) => {
+ 						fixedEdge = Math.max(fixedEdge, top + height - scrollTop)
+ 					});
  			}
  		});
  	}
@@ -152,6 +175,7 @@ function findScrollToWithOrigin($node, $origin) {
 function findNodeOffset($node) {
 	const bounds = closure.style.getBounds($node);
 	const margins = closure.style.getMarginBox($node);
+
 	const point = [
 		bounds.left-margins.left, bounds.top-margins.top,
 		bounds.left+bounds.width+margins.right, bounds.top+bounds.height+margins.bottom
