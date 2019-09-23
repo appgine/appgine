@@ -4,10 +4,13 @@ const listeners = [];
 export default {
 	initialState: [],
 	listen(state, type, action, fn) {
-		state.push(createListener(type, action, fn));
+		state.push(createListener(null, type, action, fn));
+	},
+	listenWorld(state, type, action, fn) {
+		state.push(createListener(state, type, action, fn));
 	},
 	dispatch(state, type, action, ...args) {
-		dispatch(type, action, ...args);
+		processDispatch(state, type, action, ...args);
 	},
 	destroy(state) {
 		state.forEach(listener => listener());
@@ -16,19 +19,25 @@ export default {
 
 
 export function addListener(type, action, fn) {
-	return createListener(type, action, fn);
+	return createListener(null, type, action, fn);
 }
 
 
-export function dispatch(type, action, ...args) {
+export function dispatch(...args) {
+	processDispatch(null, ...args);
+}
+
+
+function processDispatch(origin, type, action, ...args) {
 	listeners.
+		filter(listener => listener.checkOrigin===null || origin===null || listener.checkOrigin!==origin).
 		filter(listener => listener.type===null || listener.type===type).
 		filter(listener =>  listener.action===null || listener.action===action).
-		forEach(({ fn }) => fn(...arguments));
+		forEach(({ fn }) => fn(type, action, ...args));
 }
 
 
-function createListener(type, action, fn) {
+function createListener(checkOrigin, type, action, fn) {
 	if (typeof type==='function') {
 		const _fn = type;
 		action = null;
@@ -45,7 +54,7 @@ function createListener(type, action, fn) {
 		fn = function(type, action, ...args) { _fn(...args); };
 	}
 
-	const listener = { type, action, fn };
+	const listener = { checkOrigin, type, action, fn };
 	listeners.push(listener);
 
 	return function() {
