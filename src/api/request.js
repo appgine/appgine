@@ -2,6 +2,8 @@
 import * as ajax from '../lib/ajax'
 import createListeners from './createListeners'
 
+import { dom } from '../closure'
+
 
 const listeners = createListeners();
 
