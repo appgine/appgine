@@ -8,6 +8,19 @@ if (window.history && window.history.scrollRestoration) {
 	}
 }
 
+let _allowedReplaceUrl = null;
+if (window.history && window.history.replaceState) {
+	const _bindHistoryReplaceState = window.history.replaceState.bind(window.history);
+
+	window.history.replaceState = function(state, title, url) {
+		if (url!==null && url===_allowedReplaceUrl) {
+			_allowedReplaceUrl = null;
+			return _bindHistoryReplaceState(state, title, url);
+		}
+	}
+}
+
+
 const _supported = !!(window.history && window.history.pushState);
 let _merging = false;
 let _mergingDebounce;
@@ -172,7 +185,9 @@ export function mergeState(value={}, method, invoke) {
 
 function commitMergeState() {
 	if (_merging && _supported) {
-		window.history[_merging](_state, document.title, closure.uri.createCanonical(getLink()));
+		_allowedReplaceUrl = closure.uri.createCanonical(getLink(), true);
+		window.history[_merging](_state, document.title, _allowedReplaceUrl);
+		_allowedReplaceUrl = null;
 	}
 
 	if (_mergingInvoke) {

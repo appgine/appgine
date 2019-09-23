@@ -50,11 +50,14 @@ exports.isSame = function(location) {
 	return exports.createCanonical($location.href)===exports.createCanonical(location);
 }
 
-exports.createCanonical = function(location) {
+exports.createCanonical = function(location, allowHash) {
 	$link.href = location;
 	// Fix: IE bug with relative location
 	$link.href = $link.href;
-	$link.hash = '';
+
+	if (allowHash!==true) {
+		$link.hash = '';
+	}
 
 	if ($link.search) {
 		$link.search = '?'+createUri($link.href).getQueryData().toString();
