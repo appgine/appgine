@@ -20,6 +20,9 @@ export default function createTargetScroll(toTarget) {
 				);
 			}
 		}
+
+	} else if (toTarget.indexOf('_this')===0) {
+		return function() {}
 	}
 
 	return 0;
