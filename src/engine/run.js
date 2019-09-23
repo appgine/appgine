@@ -106,6 +106,11 @@ tick.onEachTick(function(screen, updated, done) {
 				request.scrolled = true;
 			}
 
+			if (request.scrolled===true) {
+				request.scrollTop = screen.top;
+				history.mergeState({scrollTop: screen.top});
+			}
+
 		} else if (history.state('scrollTop', 0)!==screen.top) {
 			request.scrollTop = screen.top;
 			history.mergeState({scrollTop: screen.top});
@@ -279,7 +284,7 @@ export function onClick(e, $link, toTarget) {
 
 					if (!e.defaultPrevented) {
 						e.preventDefault();
-						loadEndpoint(clickRequest, $link, endpoint, toTarget==='_ajax', toTarget==='_current'||null, createTargetScroll(toTarget));
+						loadEndpoint(clickRequest, $link, endpoint, toTarget==='_ajax', toTarget==='_current'||null, hash||createTargetScroll(toTarget));
 
 					} else {
 						clickRequest.prevented();
@@ -694,7 +699,10 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 				swapping.process();
 				wasUpdated();
 
-				if (isCurrent && !scrollTo) {
+				if (scrollTo) {
+					foundRequest.scrolled = scrollTo;
+
+				} else if (isCurrent) {
 					elementScroll(false);
 				}
 
