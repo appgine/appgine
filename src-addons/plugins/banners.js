@@ -7,6 +7,16 @@ export default function create(ButtonsComponent, $element, { autoInterval }, sta
 	state.initial({active: 0});
 	let autorotate = null;
 
+	this.listen('modal', 'open', function() {
+		$element.classList.add('paused');
+		clearAutoRotate();
+	});
+
+	this.listen('modal', 'close', function() {
+		$element.classList.remove('paused');
+		startAutoRotate();
+	});
+
 	const targets = this.createTargets(function(targets) {
 		targets.every('buttons', function($element) {
 			return () => ReactDOM.unmountComponentAtNode($element);
@@ -37,12 +47,23 @@ export default function create(ButtonsComponent, $element, { autoInterval }, sta
 		const $banners = targets.findAllElement('banner');
 
 		if ($banners[index]) {
-			$banners.forEach($banner => $banner.classList.remove('active'));
 			$banners[index].classList.add('visible');
+
+			$banners.forEach($banner => $banner.classList.remove('fadeout'));
+
+			$banners.
+				filter($banner => $banner.classList.contains('active')).
+				forEach($banner => {
+					$banner.classList.add('fadeout');
+					$banner.classList.remove('active');
+					$banner.classList.remove('fadein');
+				});
+
 
 			setTimeout(function() {
 				if (state.active===index) {
 					$banners[index].classList.add('active');
+					$banners[index].classList.add('fadein');
 				}
 			}, 200);
 		}
