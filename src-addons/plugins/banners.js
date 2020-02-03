@@ -35,9 +35,11 @@ export default function create(ButtonsComponent, $element, { autoInterval }, sta
 
 	function startAutoRotate() {
 		clearAutoRotate();
-		autorotate = setTimeout(function() {
-			changeIndex((state.active+1)%targets.findAll('banner').length);
-		}, autoInterval||5000);
+		if (autoInterval!==false) {
+			autorotate = setTimeout(function() {
+				changeIndex((state.active+1)%targets.findAll('banner').length);
+			}, autoInterval||5000);
+		}
 	}
 
 	function changeIndex(index) {
