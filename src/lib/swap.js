@@ -19,6 +19,7 @@ export default function swap(from, into, isRequestNew) {
 
 	willUpdate(function() {
 		swapDocument(function() {
+			document.title = ''; // fix: popstate bug
 			document.title = loadTitle($into);
 
 			const formFocus = createFormFocus(isRequestNew);
