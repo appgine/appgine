@@ -162,7 +162,11 @@ export default function run(options, scrollTo=0, bodyClassName) {
 
 	internalSwap(closure.uri.create(), html, scrollTo);
 
-	history.popstate(function(e, endpoint) {
+	history.popstate(function(e, endpoint, initial) {
+		if (initial && _stack.loadRequest()) {
+			return history.canonical(_stack.loadRequest().endpoint, false);
+		}
+
 		_loadingStatus.end();
 
 		if (_pending) {

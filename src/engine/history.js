@@ -32,13 +32,14 @@ let _canceling = false;
 let _session = '';
 let _id = 0;
 let _firstlink = window.location.href;
+let _initialLink = true;
 let _state = window.history.state||{};
 let _link = closure.uri.change(window.location.href);
 let _origin = _state.origin || _link;
 
 let _requestTree = [];
 
-const matched = String(_state._id).match(/^(.*)_([0-9]+)$/);
+const matched = String(_state._id).match(/^(.*)_([0-9]+)_([0-9]+)$/);
 
 if (matched) {
 	_session = matched[1];
@@ -95,7 +96,7 @@ export function state(key, defval) {
 }
 
 export function popstate(fn) {
-	const popstate = e => fn(e, window.location.href);
+	const popstate = e => fn(e, window.location.href, _initialLink);
 	const dispose = function() {
 		_supported && window.removeEventListener('popstate', popstate);
 
@@ -109,26 +110,20 @@ export function popstate(fn) {
 	return _popstateListeners.push(dispose);
 }
 
-popstate((e, link) => {
-	if (_canceling===false && link===_firstlink) {
-		_firstlink = null;
+popstate((e, link, initial) => {
+	_initialLink = initial && _canceling===false && link===_firstlink;
+	_merging = false;
+	_firstlink = null;
+	_state = window.history.state||{};
+	_link = closure.uri.change(link);
+	_origin = _state.origin || _link;
+
+	dispatch('change');
+
+	if (_canceling) {
+		_canceling = false;
 		e.stopPropagation();
 		e.stopImmediatePropagation();
-
-	} else {
-		_merging = false;
-		_firstlink = null;
-		_state = window.history.state||{};
-		_link = closure.uri.change(link);
-		_origin = _state.origin || _link;
-
-		dispatch('change');
-
-		if (_canceling) {
-			_canceling = false;
-			e.stopPropagation();
-			e.stopImmediatePropagation();
-		}
 	}
 })
 
