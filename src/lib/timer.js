@@ -26,21 +26,31 @@ const workerHandler = `function (e) {
 }`;
 
 let worker;
-if (window.Worker && (window.URL || window.webkitURL)) {
-	worker = new Worker((window.URL || window.webkitURL).createObjectURL(new Blob(["self.addEventListener('message', " + workerHandler + ");"])));
-	worker.addEventListener('message', function(e) {
-		if (timers[e.data]) {
-			timers[e.data]();
-		}
-	});
+function getWorker() {
+	if (worker) {
+		return worker;
+
+	} else if (window.Worker && (window.URL || window.webkitURL)) {
+		worker = new Worker((window.URL || window.webkitURL).createObjectURL(new Blob(["self.addEventListener('message', " + workerHandler + ");"])));
+		worker.addEventListener('message', function(e) {
+			if (timers[e.data]) {
+				timers[e.data]();
+			}
+		});
+
+		return worker;
+	}
+
+	return null;
 }
 
 
+
 export function setInterval(cb, timeout) {
-	if (worker) {
+	if (getWorker()) {
 		uid++;
 		timers[uid] = cb;
-		worker.postMessage({action: "start", type: "interval", uid, timeout});
+		getWorker().postMessage({action: "start", type: "interval", uid, timeout});
 		return uid;
 
 	} else {
@@ -50,10 +60,10 @@ export function setInterval(cb, timeout) {
 
 
 export function clearInterval(uid) {
-	if (worker) {
+	if (getWorker()) {
 		if (timers[uid]!==undefined) {
 			delete timers[uid];
-			if (--counter===0) worker.postMessage({action: "stop", type: "interval", uid});
+			if (--counter===0) getWorker().postMessage({action: "stop", type: "interval", uid});
 		}
 
 	} else {
@@ -63,10 +73,10 @@ export function clearInterval(uid) {
 
 
 export function setTimeout(cb, timeout) {
-	if (worker) {
+	if (getWorker()) {
 		uid++;
 		timers[uid] = cb;
-		worker.postMessage({action: "start", type: "timeout", uid, timeout});
+		getWorker().postMessage({action: "start", type: "timeout", uid, timeout});
 		return uid;
 
 	} else {
@@ -76,10 +86,10 @@ export function setTimeout(cb, timeout) {
 
 
 export function clearTimeout(uid) {
-	if (worker) {
+	if (getWorker()) {
 		if (timers[uid]!==undefined) {
 			delete timers[uid];
-			if (--counter===0) worker.postMessage({action: "stop", type: "timeout", uid});
+			if (--counter===0) getWorker().postMessage({action: "stop", type: "timeout", uid});
 		}
 
 	} else {
