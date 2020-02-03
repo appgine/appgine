@@ -3,7 +3,6 @@ import Kefir from './kefir'
 import { onUpdated, isUpdating } from './update'
 import { isRequestCurrent } from './engine/run'
 import closure from './closure'
-import * as timer from './lib/timer'
 
 const TICK = {
 	DELAYED: 0,
@@ -17,27 +16,40 @@ let updated = false;
 
 const streamEvents = Kefir.stream(function(emitter) {
 	let throttled = 0;
-	timer.setInterval(function() {
-		if (throttled && throttled+100<Date.now()) {
-			throttled = 0;
+	let interval = null;
+	function throttleTick() {
+		if (throttled+100<Date.now()) {
+			clearInterval(interval);
+			interval = null;
 			emitter.emit();
 		}
-	}, 10);
+	}
 
 	Kefir.fromEvents(window, 'scroll').onValue(function() {
 		throttled = Date.now();
+		interval = interval || setInterval(throttleTick, 10);
 	});
 
 	Kefir.fromEvents(window, 'resize').onValue(function() {
 		ticks.forEach(tick => tick.updated = true);
 		throttled = Date.now();
+		interval = interval || setInterval(throttleTick, 10);
 	});
 });
 
 const stream1 = Kefir.merge([
 	streamEvents,
 	Kefir.stream(function(emitter) {
-		timer.setInterval(() => emitter.emit(), 300);
+		let lastEmitted = 0;
+		setInterval(function() {
+			if (document.hidden!==true) {
+				lastEmitted = Date.now()
+			}
+
+			if (lastEmitted+5000>Date.now()) {
+				emitter.emit();
+			}
+		}, 300);
 	}),
 	Kefir.stream(emitter => onUpdated(() => {
 		updated = true;
@@ -59,15 +71,22 @@ const stream2 = Kefir.stream(emitter => stream1.onValue(() => window.requestAnim
 	.onValue(screen => ticking = false);
 
 Kefir.stream(function(emitter) {
-	const delayed = [];
-	timer.setInterval(function() {
-		while (delayed[0] && Date.now()-delayed[0][1]>300) {
-			const screen = delayed.shift()[0];
-			window.requestAnimationFrame(() => emitter.emit(screen));
-		}
-	}, 10);
+	let delayed = null;
+	let delayedInterval = null;
 
-	stream2.onValue(screen => delayed.push([screen, Date.now()]));
+	stream2.onValue(screen => {
+		delayed = [screen, Date.now()];
+		delayedInterval = delayedInterval || setInterval(function() {
+			const [time, screen] = delayed;
+
+			if (Date.now()-time>300) {
+				clearInterval(delayedInterval)
+				delayedInterval = null;
+				delayed = null;
+				window.requestAnimationFrame(() => emitter.emit(screen));
+			}
+		}, 10);
+	});
 })
 	.filter(() => !isUpdating())
 	.map(screen => closure.rect.intersection(screen, closure.rect.fromScreen()))
