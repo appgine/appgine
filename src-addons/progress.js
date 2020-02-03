@@ -12,27 +12,29 @@ export default function createProgress(e, onValue, events={})
 
 		const { left, width } = e.currentTarget.getBoundingClientRect();
 
-		const value = onValue(Math.max(0, Math.min(width, e.screenX-left))/width);
+		let value = onValue(Math.max(0, Math.min(width, e.screenX-left))/width);
 		events.onStart && events.onStart(value);
 		events.onProgress && events.onProgress(value);
 
 		function onMouseMove(e) {
 			if (e.which) {
-				const value = onValue(Math.max(0, Math.min(width, e.screenX-left))/width);
+				value = onValue(Math.max(0, Math.min(width, e.screenX-left))/width);
 				events.onProgress && events.onProgress(value);
 
-			} else {
-				events.onEnd && events.onEnd();
+			} else if (end()) {
+				events.onDone && events.onDone(value);
 			}
 		}
 
 		function onDragStart(e) {
-			events.onEnd && events.onEnd();
+			if (end()) {
+				events.onEnd && events.onEnd();
+			}
 		}
 
 		function onMouseUp(e) {
 			if (end()) {
-				const value = onValue(Math.max(0, Math.min(width, e.screenX-left))/width);
+				value = onValue(Math.max(0, Math.min(width, e.screenX-left))/width);
 				events.onProgress && events.onProgress(value);
 				events.onDone && events.onDone(value);
 			}
@@ -58,7 +60,7 @@ export default function createProgress(e, onValue, events={})
 		return {
 			abort() {
 				if (end()) {
-					const value = onValue(Math.max(0, Math.min(width, e.screenX-left))/width);
+					value = onValue(Math.max(0, Math.min(width, e.screenX-left))/width);
 					events.onAbort && events.onAbort(value);
 				}
 			}
