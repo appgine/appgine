@@ -94,11 +94,18 @@ export default function(options={}) {
 		bindSelector('noscript[data-render-visible]', require('../addons/plugins/data-render-visible'));
 	});
 
-	addListener('app.event', 'click', onClick);
-	addListener('app.event', 'clickHash', onClickHash);
-	addListener('app.event', 'submit', onSubmitForm);
-	addListener('app.event', 'reload', onReload);
+	if (options.ajax!==false) {
+		addListener('app.event', 'click', onClick);
+		addListener('app.event', 'clickHash', onClickHash);
+	}
 
+	addListener('app.event', 'submit', function(e, ...args) {
+		if (options.ajax!==false || e.isTrusted===false) {
+			onSubmitForm(e, ...args);
+		}
+	});
+
+	addListener('app.event', 'reload', onReload);
 	addListener('meta-reload', 'reload', url => url ? onLeave(url) : onReload())
 
 	if (window.appgine) {
