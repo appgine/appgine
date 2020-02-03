@@ -144,7 +144,7 @@ function createJSAnimation($container)
 
 		},
 		end() {
-			if (!_animation || _animation.finished) {
+			if (!_animation || _animation.playState==='running') {
 				this._end();
 
 			} else if (_animation.playbackRate===undefined) {
