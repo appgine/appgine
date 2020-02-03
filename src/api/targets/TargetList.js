@@ -245,7 +245,7 @@ export default class TargetList
 	findAll(target='', fn) {
 		const found = [];
 		for (let _target of Object.values(this._targets)) {
-			if (target==='' || _target.target===target) {
+			if (target==='' || _target.target===target || (Array.isArray(target) && target.indexOf(_target.target)!==-1)) {
 				found.push(_target);
 				fn && fn(_target);
 			}
