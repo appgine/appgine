@@ -102,7 +102,7 @@ function createCSSAnimation($root, $container)
 
 function createJSAnimation($container)
 {
-	let _animation = null;
+	let jsAnimation = null;
 
 	return {
 		start() {
@@ -110,8 +110,8 @@ function createJSAnimation($container)
 			$container.style.visibility = '';
 
 			setTimeout(() => {
-				_animation && _animation.cancel();
-				_animation = $container.animate([
+				jsAnimation && jsAnimation.cancel();
+				jsAnimation = $container.animate([
 					{width: '5%', offset: 0.0},
 					{width: '8%', offset: 0.008},
 					{width: '10%', offset: 0.015},
@@ -134,9 +134,12 @@ function createJSAnimation($container)
 					duration: 50000,
 				});
 
-				_animation.onfinish = function() {
-					_animation = undefined;
-					$container.style.width = '80%';
+				const animation = jsAnimation;
+				jsAnimation.onfinish = function() {
+					if (jsAnimation===animation) {
+						jsAnimation = undefined;
+						$container.style.width = '80%';
+					}
 				}
 			}, 0);
 		},
@@ -144,37 +147,46 @@ function createJSAnimation($container)
 
 		},
 		end() {
-			if (!_animation || _animation.playState==='running') {
+			if (!jsAnimation || jsAnimation.playState==='running') {
 				this._end();
 
-			} else if (_animation.playbackRate===undefined) {
-				_animation.cancel();
+			} else if (jsAnimation.playbackRate===undefined) {
+				jsAnimation.cancel();
 				this._end();
 
 			} else {
-				_animation.onfinish = this._end;
-				_animation.playbackRate = 500;
+				jsAnimation.onfinish = this._end;
+				jsAnimation.playbackRate = 500;
 			}
 		},
 		abort() {
 			$container.style.visibility = 'hidden';
 		},
 		destroy() {
-			_animation && _animation.cancel();
+			jsAnimation && jsAnimation.cancel();
 		},
 		_end() {
-			_animation && _animation.finish();
-			_animation = $container.animate([
-				{width: '80%', offset: 0.0},
-				{width: '100%', offset: 0.25},
+			jsAnimation && jsAnimation.pause();
+
+			const width = $container.getBoundingClientRect().width;
+			const parentWidth = $container.parentNode.getBoundingClientRect().width;
+			const start = width/parentWidth*100;
+
+			jsAnimation && jsAnimation.cancel();
+			jsAnimation = $container.animate([
+				{width: String(start)+'%', offset: 0.0},
+				{width: '100%', offset: start<50 ? 0.5 : 0.25},
 				{width: '100%', offset: 1.00},
 			], {
 				duration: 500,
 			});
 
-			_animation.onfinish = function() {
-				_animation = undefined;
-				$container.style.visibility = 'hidden';
+			const animation = jsAnimation;
+			jsAnimation.onfinish = function() {
+				if (jsAnimation===animation) {
+					jsAnimation = undefined;
+					$container.style.visibility = 'hidden';
+				}
 			}
 		}
 	}
