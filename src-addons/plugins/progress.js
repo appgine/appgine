@@ -1,6 +1,4 @@
 
-export const shouldShowRequestProgress = 'shouldShowRequestProgress'
-
 
 export default function create($root) {
 	const plugin = this;
@@ -16,14 +14,7 @@ export default function create($root) {
 	this.listen('app.request', 'start', function(endpoint, { $element, requestnum }) {
 		_requestnum = Math.max(_requestnum, requestnum);
 
-		let showProgress = true;
-		if ($element) {
-			for (let method of plugin.findElementMethods(shouldShowRequestProgress, $element)) {
-				showProgress = showProgress && method($element);
-			}
-		}
-
-		if (_visible===false && showProgress) {
+		if (_visible===false) {
 			_visible = true;
 			_animation.start();
 		}

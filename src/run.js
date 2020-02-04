@@ -22,10 +22,6 @@ export default function(options={}) {
 			bindApi('update', require('./api/update').default);
 		}
 
-		if (options.bindApi.method!==false) {
-			bindApi('method', require('./api/method').default);
-		}
-
 		if (options.bindApi.targets!==false) {
 			bindApi('targets', require('./api/targets').default);
 		}
