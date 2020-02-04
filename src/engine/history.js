@@ -22,9 +22,6 @@ if (window.history && window.history.replaceState) {
 
 
 const _supported = !!(window.history && window.history.pushState);
-let _merging = false;
-let _mergingDebounce;
-let _mergingInvoke;
 
 const _events = {};
 const _popstateListeners = [];
@@ -34,6 +31,7 @@ let _id = 0;
 let _firstlink = window.location.href;
 let _initialLink = true;
 let _state = window.history.state||{};
+let _mergingState = null;
 let _link = closure.uri.change(window.location.href);
 let _origin = _state.origin || _link;
 
@@ -45,9 +43,15 @@ if (matched) {
 	_session = matched[1];
 	_id = parseInt(matched[2], 10);
 
+	try {
+		if (window.sessionStorage) {
+			mergeStateImmediatelly(JSON.parse(window.sessionStorage.getItem('appgine.history.state')||'{}')||{});
+		}
+	} catch (e) {}
+
 } else {
 	_session = closure.string.getRandomString();
-	mergeState(createState({}, false, true))
+	mergeStateImmediatelly(createState({}, null, true))
 }
 
 _requestTree[_state._position] = _state._id;
@@ -56,7 +60,7 @@ export function init() {
 	const link = closure.uri.change(window.location.href);
 
 	if (_link!==link) {
-		changeState(_state, link, 'replaceState');
+		changeState(_state, link);
 	}
 }
 
@@ -112,7 +116,7 @@ export function popstate(fn) {
 
 popstate((e, link, initial) => {
 	_initialLink = initial && _canceling===false && link===_firstlink;
-	_merging = false;
+	_mergingState = null;
 	_firstlink = null;
 	_state = window.history.state||{};
 	_link = closure.uri.change(link);
@@ -155,43 +159,52 @@ function dispatch(name) {
 	(_events[name]||[]).forEach(fn => fn());
 }
 
-export function mergeState(value={}, method, invoke) {
+export function mergeState(value={})
+{
 	const state = {..._state, ...value};
 
-	if (method || !shallowEqual(_state, state)) {
-		const delay = !!method;
+	if (!shallowEqual(_state, state)) {
 		_state = state;
+		_mergingState = {..._mergingState, ...value}
 
-		if (_merging!=='pushState') {
-			_merging = method || 'replaceState';
-		}
+		if (Object.keys(_mergingState).length===1 && _mergingState.scrollTop===undefined) {
+			commitMergeState();
 
-		clearTimeout(_mergingDebounce);
-
-		if (method) {
-			_mergingInvoke = invoke;
-			setTimeout(commitMergeState, 0);
+		} else if (Object.keys(_mergingState).length>1) {
+			commitMergeState();
 
 		} else {
-			_mergingDebounce = setTimeout(commitMergeState, 100);
+			if (window.sessionStorage) {
+				window.sessionStorage.setItem('appgine.history.state', JSON.stringify(_mergingState));
+			}
 		}
 	}
 }
 
-function commitMergeState() {
-	if (_merging && _supported) {
+function mergeStateImmediatelly(value, pushState=false, invoke=null)
+{
+	_state = {..._state, ...value};
+	commitMergeState(pushState, invoke);
+}
+
+function commitMergeState(pushState=false, invoke=null) {
+	if (_supported) {
 		_allowedReplaceUrl = closure.uri.createCanonical(getLink(), true);
-		window.history[_merging](_state, document.title, _allowedReplaceUrl);
+		const method = pushState ? 'pushState' : 'replaceState';
+		window.history[method](_state, document.title, _allowedReplaceUrl);
 		_allowedReplaceUrl = null;
 	}
 
-	if (_mergingInvoke) {
-		dispatch(_mergingInvoke);
+	if (invoke) {
+		dispatch(invoke);
 		dispatch('change');
-		_mergingInvoke = null;
 	}
 
-	_merging = false;
+	_mergingState = null
+
+	if (window.sessionStorage) {
+		window.sessionStorage.removeItem('appgine.history.state');
+	}
 }
 
 export function cancelState() {
@@ -206,7 +219,7 @@ export function canonical(link, deferred) {
 				_link = closure.uri.change(link);
 
 			} else {
-				changeState(_state, link, 'replaceState', 'replace');
+				changeState(_state, link, false, 'replace');
 			}
 		}
 	}
@@ -214,7 +227,7 @@ export function canonical(link, deferred) {
 
 export function replaceState(state={}, link) {
 	closure.uri.isSame(link) && _link!==_origin && (state.origin = _origin);
-	changeState(createState(state, false), link, 'replaceState', 'replace');
+	changeState(createState(state, false), link, false, 'replace');
 }
 
 export function pushState(state={}, link) {
@@ -223,26 +236,27 @@ export function pushState(state={}, link) {
 		replaceState(state, link);
 
 	} else {
-		_mergingInvoke = false;
-		commitMergeState();
-		changeState(createState(state, true), link, 'pushState', 'push');
+		changeState(createState(state, true), link, true, 'push');
 		_requestTree.splice(_state._position, _requestTree.length, _state._id);
 	}
 }
 
 export function redirectState(state={}, link) {
-	changeState(createState({...state, origin: _origin}, false), link, 'replaceState', 'replace');
+	changeState(createState({...state, origin: _origin}, false), link, false, 'replace');
 }
 
-function changeState(state, link, method, invoke) {
+function changeState(state, link, pushState, invoke) {
+	if (pushState && _mergingState) {
+		commitMergeState();
+	}
+
 	_firstlink = null;
-	_merging = false;
 	_state = state;
 	_link = closure.uri.change(link);
 	_origin = _state.origin || _link;
 
 	if (_supported) {
-		mergeState({}, method, invoke);
+		mergeStateImmediatelly({}, pushState, invoke);
 
 	} else {
 		window.redirect(_link);
@@ -252,7 +266,7 @@ function changeState(state, link, method, invoke) {
 export function changeId() {
 	const _id = createStateId(_state._position);
 	_requestTree[_state._position] = _id;
-	return mergeState({ _id });
+	return mergeStateImmediatelly({ _id });
 }
 
 export function getCurrentId() {
