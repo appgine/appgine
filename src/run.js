@@ -69,6 +69,10 @@ export default function(options={}) {
 		if (options.bindApi.scroll!==false) {
 			bindApi('scroll', require('./api/scroll').default);
 		}
+
+		if (options.bindApi.redirect!==false) {
+			bindApi('redirect', require('./api/redirect').default);
+		}
 	});
 
 	require('./plugins').loader(function({ bindApi, bindSelector, bindSystem }) {

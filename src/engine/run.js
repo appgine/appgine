@@ -338,6 +338,17 @@ export function onLeave(url) {
 }
 
 
+export function onRedirect($element, url)
+{
+	if (_options.ajax!==false) {
+		location($element, url);
+
+	} else {
+		_options.onLeave(url);
+	}
+}
+
+
 export function location($element, endpoint, isAjax=false) {
 	endpoint = closure.uri.create(endpoint, {});
 
