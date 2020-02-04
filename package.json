@@ -31,7 +31,7 @@
     "es5-shim": "^4.1.10",
     "classlist-polyfill": "^1.0.2",
     "kefir": "^3.1.0",
-    "plugin-macro-loader": "^1.12.1",
+    "plugin-macro-loader": "^1.13.1",
     "prop-types": ">=15.0.0",
     "react": ">=15.0.0",
     "react-dom": ">=15.0.0"
