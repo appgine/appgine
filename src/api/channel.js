@@ -13,7 +13,7 @@ export default {
 		processDispatch(state, type, action, ...args);
 	},
 	destroy(state) {
-		state.forEach(listener => listener());
+		state.splice(0, state.length).forEach(fn => fn());
 	},
 }
 

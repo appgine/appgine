@@ -15,8 +15,7 @@ export default {
 		}, ...args));
 	},
 	destroy(state) {
-		state.forEach(fn => fn && fn());
-		state.splice(0, state.length);
+		state.splice(0, state.length).forEach(fn => fn && fn());
 	}
 }
 

@@ -15,8 +15,6 @@ export default {
 		}
 	},
 	destroy(state) {
-		for (let methods of state) {
-			destroy(methods);
-		}
+		state.splice(0, state.length).forEach(methods => destroy(methods));
 	},
 }

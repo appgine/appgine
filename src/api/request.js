@@ -28,7 +28,7 @@ const api = {
 		state.push(listeners.create(api.onSubmit, this.$element, ...args));
 	},
 	destroy(state) {
-		state.forEach(listener => listener());
+		state.splice(0, state.length).forEach(fn => fn());
 	}
 }
 

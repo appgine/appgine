@@ -17,7 +17,7 @@ const api = {
 		state.push(tick.onEachTick(this.$element, fn));
 	},
 	destroy(state) {
-		state.forEach(tick => tick());
+		state.splice(0, state.length).forEach(fn => fn());
 	}
 }
 
