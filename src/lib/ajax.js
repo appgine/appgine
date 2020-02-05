@@ -58,6 +58,9 @@ export function create(headers, timeout) {
 			localRequest && localRequest.abort();
 			globalRequest && globalRequest.abort();
 		},
+		canAbort() {
+			return !!(localRequest || globalRequest);
+		},
 		get(endpoint, fn) {
 			localRequest && localRequest.abort();
 			localRequest = new XMLHttpRequest();
