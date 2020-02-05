@@ -46,6 +46,10 @@ export default function(options={}) {
 			bindApi('reload', require('./api/reload').default);
 		}
 
+		if (options.bindApi.reloadPlugins!==false) {
+			bindApi('reloadPlugins', require('./api/reloadPlugins').default);
+		}
+
 		if (options.bindApi.event!==false) {
 			bindApi('event', require('./api/event').default);
 		}

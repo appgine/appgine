@@ -1,12 +1,10 @@
 
-import { reloadPlugins } from '../engine/plugins'
+import { onReload } from '../engine/run'
 
 
 const api = {
-	reload($element, itself) {
-		itself = $element===true || itself;
-		$element = $element instanceof Element && $element || null;
-		reloadPlugins($element||this.$element, itself ? undefined : this.pluginObj);
+	reload() {
+		onReload();
 	}
 }
 
