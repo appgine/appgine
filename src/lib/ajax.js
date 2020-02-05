@@ -8,23 +8,37 @@ export const TIMEOUT = 'timeout';
 export const SUCCESS = 'success';
 
 
-let globalRequest;
+let _globalRequest;
 
 
 export function abort() {
-	globalRequest && globalRequest.abort();
+	_globalRequest && _globalRequest.abort();
 }
 
 
 export function create(headers, timeout) {
 	let localRequest;
-	let _globalRequest;
+	let globalRequest;
 	timeout = timeout===undefined ? 10e3 : parseInt(timeout, 10);
 
 	function ajaxRequest(request, endpoint, method, data, fn) {
 		request.open(method, endpoint, true);
 
-		bindRequest(request, timeout, fn);
+		bindRequest(request, timeout, function(...args) {
+			if (localRequest===request) {
+				localRequest = null;
+			}
+
+			if (globalRequest===request) {
+				globalRequest = null;
+			}
+
+			if (_globalRequest===request) {
+				_globalRequest = null;
+			}
+
+			fn(...args);
+		});
 
 		for (let key of Object.keys(headers||{})) {
 			request.setRequestHeader(key, headers[key]);
@@ -42,7 +56,7 @@ export function create(headers, timeout) {
 	return {
 		abort() {
 			localRequest && localRequest.abort();
-			_globalRequest && _globalRequest.abort();
+			globalRequest && globalRequest.abort();
 		},
 		get(endpoint, fn) {
 			localRequest && localRequest.abort();
@@ -55,14 +69,14 @@ export function create(headers, timeout) {
 			ajaxRequest(localRequest, endpoint, 'POST', data, fn);
 		},
 		load(endpoint, fn) {
-			globalRequest && globalRequest.abort();
-			_globalRequest = globalRequest = new XMLHttpRequest();
-			ajaxRequest(globalRequest, endpoint, 'GET', '', fn);
+			_globalRequest && _globalRequest.abort();
+			globalRequest = _globalRequest = new XMLHttpRequest();
+			ajaxRequest(_globalRequest, endpoint, 'GET', '', fn);
 		},
 		submit(endpoint, method, data, fn) {
-			globalRequest && globalRequest.abort();
-			_globalRequest = globalRequest = new XMLHttpRequest();
-			ajaxRequest(globalRequest, endpoint, method, data, fn);
+			_globalRequest && _globalRequest.abort();
+			globalRequest = _globalRequest = new XMLHttpRequest();
+			ajaxRequest(_globalRequest, endpoint, method, data, fn);
 		}
 	}
 }
