@@ -7,6 +7,7 @@ $email.type = 'email';
 
 export default function create($element) {
 	const $form = dom.getAncestor($element, 'form');
+	const dispatch = (type, $element) => this.dispatch('auto-submit', type, $form, $element);
 
 	let value = undefined;
 	let checked = undefined;
@@ -23,10 +24,11 @@ export default function create($element) {
 
 	$emails.map($email => $email.type = 'text');
 
-	function clearSubmitForm($currentForm) {
+	function clearSubmitForm($currentForm, type) {
 		if ($form===$currentForm && $currentForm._appgineSubmitTimeout) {
 			clearTimeout($currentForm._appgineSubmitTimeout);
 			delete $currentForm._appgineSubmitTimeout;
+			type && dispatch(type);
 		}
 	}
 
@@ -62,19 +64,22 @@ export default function create($element) {
 
 		if (isValid) {
 			clearSubmitForm(target.form);
+			dispatch('start', target);
 
 			if ((isTextInput || isTextarea) && delay) {
 				target.form._appgineSubmitTimeout = setTimeout(function() {
+					dispatch('submit', target);
 					clearSubmitForm(target.form);
 					target.form.submit();
 				}, delayTimeout);
 
 			} else {
+				dispatch('submit', target);
 				target.form.submit();
 			}
 
 		} else {
-			clearSubmitForm(target.form);
+			clearSubmitForm(target.form, 'abort');
 		}
 	}
 
@@ -120,6 +125,7 @@ export default function create($element) {
 			clearSubmitForm($form);
 		}
 
+		dispatch('destroy');
 		$element.removeEventListener('change', onChange);
 		$element.removeEventListener('focusin', onFocusIn);
 		$element.removeEventListener('focusout', onFocusOut);
