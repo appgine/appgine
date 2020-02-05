@@ -5,7 +5,7 @@ import createKeepScroll from './swap/createKeepScroll'
 import swapSelectorClasses from './swap/selectorClasses'
 import runtimeScript from './swap/runtimeScript'
 
-import { willUpdate } from '../update'
+import { willSwap } from '../update'
 import closure from '../closure'
 import createFragment from './createFragment'
 import loadHtml from './loadHtml'
@@ -17,7 +17,7 @@ const $textarea = document.createElement('textarea');
 export default function swap(from, into, isRequestNew) {
 	const { $fragment: $into, scrolled, scrollTop } = into;
 
-	willUpdate(function() {
+	willSwap(function() {
 		swapDocument(function() {
 			document.title = ''; // fix: popstate bug
 			document.title = loadTitle($into);

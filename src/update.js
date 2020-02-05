@@ -1,7 +1,8 @@
 
-var _waiting = 0;
-var _pending = 0;
-var _onUpdated = [];
+let _updating = 0;
+let _swapping = 0;
+let _pending = 0;
+let _onUpdated = [];
 
 
 export function onUpdated(fn) {
@@ -19,16 +20,30 @@ export function isUpdating() {
 }
 
 
+export function isSwapping() {
+	return _swapping>0;
+}
+
+
+export function willSwap(fn) {
+	willUpdate();
+	_swapping++;
+	fn();
+	_swapping--;
+	wasUpdated();
+}
+
+
 export function willUpdate(fn) {
 	_pending = Date.now();
-	_waiting++;
+	_updating++;
 	return fn ? (fn(), wasUpdated()) : wasUpdated;
 }
 
 
 export function wasUpdated() {
-	if (--_waiting<=0) {
-		_waiting = 0;
+	if (--_updating<=0 && _swapping<=0) {
+		_updating = 0;
 		_pending = 0;
 		_onUpdated.forEach(fn => fn());
 	}
