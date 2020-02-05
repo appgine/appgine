@@ -26,6 +26,10 @@ export default function(options={}) {
 			bindApi('targets', require('./api/targets').default);
 		}
 
+		if (options.bindApi.progress!==false) {
+			bindApi('progress', require('./api/progress').default);
+		}
+
 		if (options.bindApi.request!==false) {
 			bindApi('request', require('./api/request').default);
 		}
