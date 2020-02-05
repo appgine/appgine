@@ -23,6 +23,13 @@ export default function create($element) {
 
 	$emails.map($email => $email.type = 'text');
 
+	function clearSubmitForm($currentForm) {
+		if ($form===$currentForm && $currentForm._appgineSubmitTimeout) {
+			clearTimeout($currentForm._appgineSubmitTimeout);
+			delete $currentForm._appgineSubmitTimeout;
+		}
+	}
+
 	function autoSubmitForm(target, delay) {
 		const tagName = String(target.tagName||'').toLowerCase();
 		const type = String(target.type||'').toLowerCase();
@@ -53,21 +60,30 @@ export default function create($element) {
 			}
 		}
 
-		target.form && clearTimeout(target.form._appgineSubmitTimeout);
-
 		if (isValid) {
+			clearSubmitForm(target.form);
+
 			if ((isTextInput || isTextarea) && delay) {
-				target.form._appgineSubmitTimeout = setTimeout(() => target.form.submit(), delayTimeout);
+				target.form._appgineSubmitTimeout = setTimeout(function() {
+					clearSubmitForm(target.form);
+					target.form.submit();
+				}, delayTimeout);
 
 			} else {
 				target.form.submit();
 			}
+
+		} else {
+			clearSubmitForm(target.form);
 		}
 	}
 
 	const onSubmit = function(e) {
-		// clearTimeout(e.target._appgineSubmitTimeout)
-		// delete e.target._appgineSubmitTimeout;
+		if ($focus) {
+			value = $focus.value;
+			checked = $focus.checked;
+			clearSubmitForm(e.target);
+		}
 	}
 
 	const onChange = function(e) {
@@ -85,37 +101,29 @@ export default function create($element) {
 
 	const onFocusOut = function(e) {
 		if (value!==e.target.value || checked!==e.target.checked) {
-			value = e.target.value;
-			checked = e.target.checked;
 			autoSubmitForm(e.target, false);
 		}
-	}
 
-	const onKeyUp = function(e) {
-		if (value!==e.target.value || checked!==e.target.checked) {
-			value = e.target.value;
-			checked = e.target.checked;
-			autoSubmitForm(e.target, true);
-		}
+		value = undefined;
+		checked = undefined;
 	}
 
 	$form && $form.addEventListener('submit', onSubmit);
 	$element.addEventListener('change', onChange);
 	$element.addEventListener('focusin', onFocusIn);
 	$element.addEventListener('focusout', onFocusOut);
-	$element.addEventListener('keyup', onKeyUp);
+	$element.addEventListener('keyup', onChange);
 
 	return function() {
 		if ($form) {
 			$form.removeEventListener('submit', onSubmit);
-			clearTimeout($form._appgineSubmitTimeout);
-			delete $form._appgineSubmitTimeout;
+			clearSubmitForm($form);
 		}
 
 		$element.removeEventListener('change', onChange);
 		$element.removeEventListener('focusin', onFocusIn);
 		$element.removeEventListener('focusout', onFocusOut);
-		$element.removeEventListener('keyup', onKeyUp);
+		$element.removeEventListener('keyup', onChange);
 		$emails.map($email => $email.type = 'email');
 	}
 }
