@@ -651,7 +651,7 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 		}
 
 		apiRequest.onComplete(isLast())
-		_options.dispatch('app.request', 'stop', { $element, requestnum });
+		_options.dispatch('app.request', status===ajax.ABORT ? 'abort' : 'end', { $element, requestnum });
 	})
 }
 
