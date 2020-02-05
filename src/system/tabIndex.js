@@ -15,7 +15,8 @@ export default function create() {
 		}
 	}
 
-	this.listen('app.request', 'stop', onRequest);
+	this.listen('app.request', 'response', onRequest);
+	this.listen('ajax.request', 'response', onRequest);
 	onRequest();
 
 	this.onValidShortcut('tab', e => {
