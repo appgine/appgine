@@ -19,6 +19,7 @@ import * as apiRequest from '../api/request'
 import * as apiShortcut from '../api/shortcut'
 import * as tick from '../tick'
 import { willUpdate, wasUpdated } from '../update'
+import createRequestnum from '../requestnum'
 import * as history from './history'
 
 import closure from '../closure'
@@ -172,7 +173,7 @@ export default function run(options, scrollTo=0, bodyClassName) {
 		if (_pending) {
 			_pending = 0;
 			_pushing = false;
-			_requestnum++;
+			_requestnum = createRequestnum();
 			_options.dispatch('app.request', 'abort');
 		}
 
@@ -399,7 +400,7 @@ function loadEndpoint(apiRequest, $element, endpoint, isAjax, toCurrent=null, sc
 
 
 function leave(endpoint) {
-	const requestnum = ++_requestnum;
+	const requestnum = _requestnum = createRequestnum();
 	_loadingStatus.end();
 	_options.dispatch('app.request', 'start', endpoint, { requestnum });
 
@@ -584,7 +585,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
  * @param {mixed}
  */
 function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
-	return _bindRequest(apiRequest, _pushing ? 0 : ++_requestnum, $element, endpoint, false, scrollTo, function(errno) {
+	return _bindRequest(apiRequest, _pushing ? 0 : (_requestnum = createRequestnum()), $element, endpoint, false, scrollTo, function(errno) {
 		const error = _options.locale[locale.error.request.ajax] + '\n' + String(_options.locale[errno]||'');
 		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
 		_options.onError(error);
@@ -600,7 +601,7 @@ function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
  * @param {mixed}
  */
  function bindRequest(apiRequest, $element, endpoint, newPage, scrollTo) {
-	return _bindRequest(apiRequest, ++_requestnum, $element, endpoint, newPage, scrollTo, function(errno) {
+	return _bindRequest(apiRequest, (_requestnum = createRequestnum()), $element, endpoint, newPage, scrollTo, function(errno) {
 		const error = _options.locale[locale.error.request.page] + '\n' + String(_options.locale[errno]||'');
 		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
 		_options.onError(error);
