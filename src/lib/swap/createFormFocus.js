@@ -44,13 +44,16 @@ export default function createFormFocus(isRequestNew) {
 				});
 
 				if ($inputs[0]) {
-					$inputs[0].focus && $inputs[0].focus();
-					selection.setCursorAtEnd($inputs[0]);
-
 					if ($inputs[0].hasAttribute('value') && isRequestNew) {
 						$inputs[0].value = inputValue;
+						$inputs[0].focus && $inputs[0].focus();
+						selection.setCursorAtEnd($inputs[0]);
 						selection.setStart($inputs[0], selectionStart);
 						selection.setEnd($inputs[0], selectionEnd);
+
+					} else {
+						$inputs[0].focus && $inputs[0].focus();
+						selection.setCursorAtEnd($inputs[0]);
 					}
 				}
 			}
