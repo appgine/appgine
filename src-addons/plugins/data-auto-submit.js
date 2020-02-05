@@ -1,6 +1,8 @@
 
 import { dom } from 'appgine/lib/closure'
+import { isSwapping } from '../../lib/update'
 
+let focusValue;
 const $email = document.createElement('input');
 $email.type = 'email';
 
@@ -9,6 +11,7 @@ export default function create($element) {
 	const $form = dom.getAncestor($element, 'form');
 	const dispatch = (type, $element) => this.dispatch('auto-submit', type, $form, $element);
 
+	let $focus = null;
 	let value = undefined;
 	let checked = undefined;
 	let $emails = [];
@@ -100,15 +103,28 @@ export default function create($element) {
 	}
 
 	const onFocusIn = function(e) {
-		value = e.target.value;
-		checked = e.target.checked;
+		if (focusValue && focusValue.now+200>Date.now()) {
+			value = focusValue.value;
+			checked = focusValue.checked;
+			focusValue = null;
+			onChange(e);
+
+		} else {
+			$focus = e.target;
+			value = e.target.value;
+			checked = e.target.checked;
+		}
 	}
 
 	const onFocusOut = function(e) {
-		if (value!==e.target.value || checked!==e.target.checked) {
+		if (isSwapping()) {
+			focusValue = { now: Date.now(), value, checked }
+
+		} else if (value!==e.target.value || checked!==e.target.checked) {
 			autoSubmitForm(e.target, false);
 		}
 
+		$focus = null;
 		value = undefined;
 		checked = undefined;
 	}
