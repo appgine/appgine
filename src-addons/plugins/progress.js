@@ -1,53 +1,17 @@
 
 
 export default function create($root) {
-	const plugin = this;
 	const $container = $root.children[0] && $root.children[0].tagName=='DIV' && $root.children[0] || document.createElement('div');
-
-	let _visible = false;
-	let _requestnum = 0;
-	let _animation = $container.animate ? createJSAnimation($container) : createCSSAnimation($root, $container);
+	const apiAnimation = $container.animate ? createJSProgress($container) : createCSSProgress($root, $container);
 
 	$root.classList.add('progress');
 	$root.appendChild($container);
 
-	this.listen('app.request', 'start', function(endpoint, { $element, requestnum }) {
-		_requestnum = Math.max(_requestnum, requestnum);
-
-		if (_visible===false) {
-			_visible = true;
-			_animation.start();
-		}
-	});
-
-	this.listen('app.request', 'response', function({ requestnum }) {
-		if (_visible && requestnum===_requestnum) {
-			_animation.response();
-		}
-	});
-
-	this.listen('app.request', 'stop', function({ requestnum }) {
-		setTimeout(function() {
-			if (_visible && requestnum===_requestnum) {
-				_visible = false;
-				_animation.end();
-			}
-
-		}, 100);
-	});
-
-	this.listen('app.request', 'leave', function() {});
-
-	this.listen('app.request', 'abort', function() {
-		if (_visible) {
-			_visible = false;
-			_animation.abort();
-		}
-	});
+	this.progress(apiAnimation);
 }
 
 
-function createCSSAnimation($root, $container)
+function createCSSProgress($root, $container)
 {
 	let _pendingHidden;
 
@@ -91,7 +55,7 @@ function createCSSAnimation($root, $container)
 }
 
 
-function createJSAnimation($container)
+function createJSProgress($container)
 {
 	let jsAnimation = null;
 
@@ -134,9 +98,7 @@ function createJSAnimation($container)
 				}
 			}, 0);
 		},
-		response() {
-
-		},
+		response() {},
 		end() {
 			if (!jsAnimation || jsAnimation.playState==='running') {
 				this._end();
