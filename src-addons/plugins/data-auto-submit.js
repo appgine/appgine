@@ -87,10 +87,11 @@ export default function create($element) {
 	}
 
 	const onSubmit = function(e) {
+		// fix double send of form
 		if ($focus) {
 			value = $focus.value;
 			checked = $focus.checked;
-			clearSubmitForm(e.target);
+			clearSubmitForm(e.target); // TODO: Really?
 		}
 	}
 
