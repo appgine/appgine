@@ -519,7 +519,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 		newPage = true;
 	}
 
-	const submitData = formMethod==='POST' ? _options.onFormData(formData) : '';
+	const submitData = formMethod==='POST' ? _options.onFormData(formData) : null;
 
 	const elementScroll = createElementScroll($element, true, _options.hashFixedEdge);
 	const formScroll = createFormScroll($form, formName[0]==='#', _options.hashFixedEdge);

@@ -56,7 +56,9 @@ export function create(headers, timeout) {
 	return {
 		abort() {
 			localRequest && localRequest.abort();
+			localRequest = null;
 			globalRequest && globalRequest.abort();
+			globalRequest = null;
 		},
 		canAbort() {
 			return !!(localRequest || globalRequest);
@@ -64,7 +66,7 @@ export function create(headers, timeout) {
 		get(endpoint, fn) {
 			localRequest && localRequest.abort();
 			localRequest = new XMLHttpRequest();
-			ajaxRequest(localRequest, endpoint, 'GET', '', fn);
+			ajaxRequest(localRequest, endpoint, 'GET', null, fn);
 		},
 		post(endpoint, data, fn) {
 			localRequest && localRequest.abort();
@@ -74,12 +76,12 @@ export function create(headers, timeout) {
 		load(endpoint, fn) {
 			_globalRequest && _globalRequest.abort();
 			globalRequest = _globalRequest = new XMLHttpRequest();
-			ajaxRequest(_globalRequest, endpoint, 'GET', '', fn);
+			ajaxRequest(globalRequest, endpoint, 'GET', null, fn);
 		},
 		submit(endpoint, method, data, fn) {
 			_globalRequest && _globalRequest.abort();
 			globalRequest = _globalRequest = new XMLHttpRequest();
-			ajaxRequest(_globalRequest, endpoint, method, data, fn);
+			ajaxRequest(globalRequest, endpoint, method, data, fn);
 		}
 	}
 }
