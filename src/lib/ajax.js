@@ -111,7 +111,7 @@ function bindRequest(request, timeout, fn)
 			let code = request.status;
 			let headers = parseHeaders(request.getAllResponseHeaders());
 			let html = request.responseText;
-			let json = handleResponseJson(request.responseText);
+			let json = (function() { try { return JSON.parse(request.responseText); } catch(e) {} return undefined; })();
 			let error = requestError(status, code, html, json);
 
 			status = requestStatus(status, error);
@@ -202,20 +202,4 @@ function parseHeaders(headers)
 	}
 
 	return headersObject;
-}
-
-
-
-/**
- * @param {string}
- * @return {mixed}
- */
-function handleResponseJson(text)
-{
-	try {
-		return JSON.parse(text);
-
-	} catch (e) {}
-
-	return undefined;
 }
