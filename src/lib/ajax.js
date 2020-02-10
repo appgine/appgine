@@ -184,6 +184,10 @@ function bindRequest(request, timeout, fn)
  */
 function parseHeaders(headers)
 {
+	if (typeof headers==='object') {
+		return headers || {};
+	}
+
 	const headersObject = {};
 	const headersArray = headers.split('\r\n');
 
