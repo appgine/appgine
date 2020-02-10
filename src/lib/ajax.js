@@ -24,7 +24,7 @@ export function create(headers, timeout) {
 	function ajaxRequest(request, endpoint, method, data, fn) {
 		request.open(method, endpoint, true);
 
-		bindRequest(request, timeout, function(...args) {
+		bindRequest(request, timeout, fn, function() {
 			if (localRequest===request) {
 				localRequest = null;
 			}
@@ -36,8 +36,6 @@ export function create(headers, timeout) {
 			if (_globalRequest===request) {
 				_globalRequest = null;
 			}
-
-			fn(...args);
 		});
 
 		for (let key of Object.keys(headers||{})) {
@@ -99,7 +97,7 @@ function createRequest()
  * @param {int}
  * @param {function}
  */
-function bindRequest(request, timeout, fn)
+function bindRequest(request, timeout, onresponse, ondone)
 {
 	const nativeAbort = request.abort.bind(request);
 
@@ -118,7 +116,9 @@ function bindRequest(request, timeout, fn)
 			html = status===SUCCESS ? html : '';
 			json = status===SUCCESS ? json : undefined;
 
-			fn(status, { code, headers, error, json, html });
+			const response = { code, headers, error, json, html };
+			onresponse && onresponse(status, response);
+			ondone && ondone();
 		}
 	}
 
