@@ -36,9 +36,5 @@ export default function create() {
 		}
 	}
 
-	document.addEventListener('click', onClick, false);
-
-	return function() {
-		document.removeEventListener('click', onClick, false);
-	}
+	this.event(document, 'click', onClick, false);
 }

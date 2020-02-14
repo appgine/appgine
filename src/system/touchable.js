@@ -37,12 +37,12 @@ export default function create() {
 		change(true);
 	}
 
-	document.documentElement.addEventListener("touchstart", onTouchStart);
-	document.documentElement.addEventListener("touchmove", onTouchMove);
-	document.documentElement.addEventListener("touchend", onTouchEnd);
-	document.documentElement.addEventListener("mousemove", onMouseMove);
-	document.documentElement.addEventListener("click", onClick);
-	document.documentElement.addEventListener("click", onClickCapture, true);
+	this.event(document.documentElement, "touchstart", onTouchStart);
+	this.event(document.documentElement, "touchmove", onTouchMove);
+	this.event(document.documentElement, "touchend", onTouchEnd);
+	this.event(document.documentElement, "mousemove", onMouseMove);
+	this.event(document.documentElement, "click", onClick);
+	this.event(document.documentElement, "click", onClickCapture, true);
 
 	function onMouseMove() {
 		if (_touched===false) {
@@ -141,12 +141,5 @@ export default function create() {
 	return function destroy() {
 		unclicking();
 		change(false);
-
-		document.documentElement.removeEventListener("touchstart", onTouchStart);
-		document.documentElement.removeEventListener("touchmove", onTouchMove);
-		document.documentElement.removeEventListener("touchend", onTouchEnd);
-		document.documentElement.removeEventListener("mousemove", onMouseMove);
-		document.documentElement.removeEventListener("click", onClick);
-		document.documentElement.removeEventListener("click", onClickCapture, true);
 	}
 }

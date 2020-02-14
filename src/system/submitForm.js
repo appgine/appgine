@@ -83,14 +83,11 @@ export default function create() {
 		}
 	}
 
-	document.addEventListener('click', onClick);
-	document.addEventListener('keydown', onKeyDown);
-	document.addEventListener('submit', onSubmit);
+	this.event(document, 'click', onClick);
+	this.event(document, 'keydown', onKeyDown);
+	this.event(document, 'submit', onSubmit);
 
 	return function() {
 		HTMLFormElement.prototype.submit = submit;
-		document.removeEventListener('submit', onSubmit);
-		document.removeEventListener('keydown', onKeyDown);
-		document.removeEventListener('click', onClick);
 	}
 }
