@@ -55,15 +55,16 @@ exports.createCanonical = function(location, allowHash) {
 	// Fix: IE bug with relative location
 	$link.href = $link.href;
 
-	if (allowHash!==true) {
-		$link.hash = '';
-	}
-
 	if ($link.search) {
 		$link.search = '?'+createUri($link.href).getQueryData().toString();
 	}
 
-	return $link.href;
+	if (allowHash===true) {
+		return $link.href;
+	}
+
+	$link.hash = '';
+	return $link.href.replace(/\#$/, ''); // Fix IE bug with ending #
 }
 
 exports.create = function(location, params, hash) {
