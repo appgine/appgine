@@ -2,25 +2,6 @@
 import shallowEqual from '../lib/shallowEqual'
 import closure from '../closure'
 
-if (window.history && window.history.scrollRestoration) {
-	if ((/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream)===false) {
-		window.history.scrollRestoration = 'manual';
-	}
-}
-
-let _allowedReplaceUrl = null;
-if (window.history && window.history.replaceState) {
-	const _bindHistoryReplaceState = window.history.replaceState.bind(window.history);
-
-	window.history.replaceState = function(state, title, url) {
-		if (url!==null && url===_allowedReplaceUrl) {
-			_allowedReplaceUrl = null;
-			return _bindHistoryReplaceState(state, title, url);
-		}
-	}
-}
-
-
 const _supported = !!(window.history && window.history.pushState);
 
 const _events = {};
@@ -56,7 +37,13 @@ if (matched) {
 
 _requestTree[_state._position] = _state._id;
 
-export function init() {
+export function init(ajaxEnabled) {
+	if (window.history && window.history.scrollRestoration) {
+		if ((/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream)===false) {
+			window.history.scrollRestoration = ajaxEnabled ? 'manual' : 'auto';
+		}
+	}
+
 	const link = closure.uri.change(window.location.href);
 
 	if (_link!==link) {
@@ -189,10 +176,8 @@ function mergeStateImmediatelly(value, pushState=false, invoke=null)
 
 function commitMergeState(pushState=false, invoke=null) {
 	if (_supported) {
-		_allowedReplaceUrl = closure.uri.createCanonical(getLink(), true);
 		const method = pushState ? 'pushState' : 'replaceState';
-		window.history[method](_state, document.title, _allowedReplaceUrl);
-		_allowedReplaceUrl = null;
+		window.history[method](_state, document.title, closure.uri.createCanonical(getLink(), true));
 	}
 
 	if (invoke) {
