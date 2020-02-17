@@ -7,6 +7,10 @@ export default function create() {
 		const $link = closure.dom.getLink(e);
 
 		if ($link) {
+			if ($link.protocol==='') {
+				$link.href = $link.href; // fix IE bug with React/Preact Element
+			}
+
 			if ($link.protocol==='http:' || $link.protocol==='https:') {
 				const href = String($link.href||'');
 
