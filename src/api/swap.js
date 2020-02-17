@@ -7,20 +7,20 @@ import {
 	loadAtomic, unloadAtomic
 } from '../engine/plugins'
 
+let swapping = null;
+
 
 export default {
 	swap(state, swapId, content) {
-		if (swapping) {
-			swapping.add(swapId, content);
-
-		} else {
+		if (swapping===null) {
 			throw new Error('Swapping is allowed only inside update methods.');
 		}
+
+		swapping.add(swapId, content);
 	},
 }
 
 
-let swapping;
 export function createSwapping(request, isCurrent) {
 	swapping = {
 		pending: {},
@@ -28,37 +28,15 @@ export function createSwapping(request, isCurrent) {
 			this.pending[swapId] = content;
 		},
 		process() {
+			swapping = null;
 			const pending = this.pending;
 			this.pending = {};
 
-			if (request) {
+			swapDocument(function() {
 				Object.keys(pending).forEach(function(swapId) {
-					const $atomicSwap = request.$fragment.querySelector('[data-atomic] [data-swap="'+swapId+'"]');
-					const $swap = request.$fragment.querySelector('[data-swap="'+swapId+'"]');
-
-					if ($atomicSwap) {
-						swapElement($atomicSwap, pending[swapId], loadAtomic, unloadAtomic, request);
-
-					} else if ($swap) {
-						$swap.innerHTML = pending[swapId];
-
-					} else if (swapId==='title' || swapId==='document-title') {
-						const $titleSwap = request.$fragment.querySelector('title');
-
-						if ($titleSwap) {
-							$titleSwap.textContent = pending[swapId];
-						}
-					}
+					swapSelector('[data-swap="'+swapId+'"]', pending[swapId], swapId==='title' || swapId==='document-title', request, isCurrent);
 				});
-			}
-
-			if (isCurrent) {
-				swapDocument(function() {
-					Object.keys(pending).forEach(function(swapId) {
-						swapSelectorInner('[data-swap="'+swapId+'"]', pending[swapId], swapId==='title' || swapId==='document-title', request);
-					});
-				});
-			}
+			});
 		}
 	}
 
@@ -66,40 +44,65 @@ export function createSwapping(request, isCurrent) {
 }
 
 
-export function swapSelector(...args) {
-	swapDocument(function() {
-		swapSelectorInner(...args);
-	});
+export function useSwapApi(fn) {
+	swapDocument(fn);
 }
 
 
-function swapSelectorInner(selector, content, isTitle, request, fn) {
-	const $staticSwap = document.querySelector('[data-static] ' + selector);
-	const $atomicSwap = document.querySelector('[data-atomic] ' + selector);
-	const $documentSwap = document.querySelector(selector);
+export function swapSelector(selector, content, isTitle, request, isCurrent, fn) {
+	if (isCurrent) {
+		const $staticSwap = document.querySelector('[data-static] ' + selector);
 
-	if ($staticSwap) {
-		swapElement($staticSwap, content, loadStatic, unloadStatic);
-		fn && fn($staticSwap);
+		if ($staticSwap) {
+			swapElement($staticSwap, content, loadStatic, unloadStatic);
+			return fn && fn($staticSwap, true);
+		}
 
-	} else if ($atomicSwap) {
+		const $atomicSwap = document.querySelector('[data-atomic] ' + selector);
+
+		if ($atomicSwap) {
+			swapElement($atomicSwap, content, loadAtomic, unloadAtomic, request);
+			return fn && fn($atomicSwap, true);
+		}
+
+		const $documentSwap = document.querySelector(selector);
+
+		if ($documentSwap) {
+			swapElement($documentSwap, content, load, unload);
+			fn && fn($documentSwap, true);
+
+		} else if (isTitle) {
+			document.title = content;
+		}
+	}
+
+	const $atomicSwap = request.$fragment.querySelector('[data-atomic] ' + selector);
+
+	if ($atomicSwap) {
 		swapElement($atomicSwap, content, loadAtomic, unloadAtomic, request);
-		fn && fn($atomicSwap);
+		return fn && fn($atomicSwap, false);
+	}
 
-	} else if ($documentSwap) {
-		swapElement($documentSwap, content, load, unload);
-		fn && fn($documentSwap);
+	const $documentSwap = request.$fragment.querySelector(selector);
+
+	if ($documentSwap) {
+		swapElement($documentSwap, content);
+		fn && fn($documentSwap, false);
 
 	} else if (isTitle) {
-		document.title = content;
+		const $title = request.$fragment.querySelector('title');
+
+		if ($title) {
+			$title.textContent = content;
+		}
 	}
 }
 
 
 function swapElement($swap, content, load, unload, request) {
-	unload($swap, request);
+	unload && unload($swap, request);
 	unloadScripts($swap);
 	$swap.innerHTML = content;
 	loadScripts($swap);
-	load($swap, request);
+	load && load($swap, request);
 }
