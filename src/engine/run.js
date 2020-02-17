@@ -173,8 +173,8 @@ export default function run(options, scrollTo=0, bodyClassName) {
 		if (_pending) {
 			_pending = 0;
 			_pushing = false;
+			_options.dispatch('app.request', 'abort', { _requestnum });
 			_requestnum = createRequestnum();
-			_options.dispatch('app.request', 'abort');
 		}
 
 		const request = _stack.loadRequest();
