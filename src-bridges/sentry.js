@@ -1,5 +1,7 @@
 
 import { listen } from 'appgine/lib/errorhub'
+import loadScript from 'appgine/addons/loadScript'
+import cloneToSerializable from 'appgine/lib/lib/cloneToSerializable'
 
 
 export default function bridgeSentry(src, endpoint, config, filterErrors=false) {
@@ -94,7 +96,7 @@ export function createHandler(src, endpoint, config={}) {
 		loadScript(src, function(first) {
 			if (window.Sentry) {
 				if (first) {
-					window.Sentry.init({ dns: endpoint, ...config});
+					window.Sentry.init({ dsn: endpoint, ...config});
 				}
 
 				if (isError(e)) {

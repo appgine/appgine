@@ -1,7 +1,6 @@
 
 import { listen as listenPlugins } from 'plugin-macro-loader/errorhub'
 import loadScript from './lib/loadScript'
-import cloneToSerializable from './lib/cloneToSerializable'
 
 const onerror = window.onerror;
 window.onerror = function(messageOrEvent, source, lineno, colno, error) {

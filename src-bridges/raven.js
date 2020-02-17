@@ -1,5 +1,7 @@
 
 import { listen } from 'appgine/lib/errorhub'
+import loadScript from 'appgine/addons/loadScript'
+import cloneToSerializable from 'appgine/lib/lib/cloneToSerializable'
 
 
 export default function bridgeRaven(src, endpoint, config) {
