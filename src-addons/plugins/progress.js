@@ -67,11 +67,11 @@ function createJSProgress($container)
 			setTimeout(() => {
 				jsAnimation && jsAnimation.cancel();
 				jsAnimation = $container.animate([
-					{width: '5%', offset: 0.0},
-					{width: '8%', offset: 0.008},
-					{width: '10%', offset: 0.015},
-					{width: '15%', offset: 0.025},
-					{width: '30%', offset: 0.05},
+					{width: '2%', offset: 0.0},
+					{width: '10%', offset: 0.008},
+					{width: '15%', offset: 0.015},
+					{width: '20%', offset: 0.025},
+					{width: '40%', offset: 0.05},
 					{width: '50%', offset: 0.065},
 					{width: '60%', offset: 0.08},
 					{width: '65%', offset: 0.09},
@@ -127,11 +127,12 @@ function createJSProgress($container)
 
 			jsAnimation && jsAnimation.cancel();
 			jsAnimation = $container.animate([
-				{width: String(start)+'%', offset: 0.0},
-				{width: '100%', offset: start<50 ? 0.5 : 0.25},
-				{width: '100%', offset: 1.00},
+				{width: String(start)+'%', opacity: 1.0, offset: 0.0},
+				{width: '100%', opacity: 1.0, offset: start<50 ? 0.5 : 0.33},
+				{width: '100%', opacity: 1.0, offset: 0.66},
+				{width: '100%', opacity: 0.0, offset: 1.0},
 			], {
-				duration: 500,
+				duration: start<50 ? 600 : 450,
 			});
 
 			const animation = jsAnimation;
