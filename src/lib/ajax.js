@@ -96,8 +96,101 @@ export default create();
 
 function createRequest()
 {
-	return new XMLHttpRequest();
+	if (window.AbortController===undefined || window.TextDecoder===undefined) {
+		return new XMLHttpRequest();
+	}
+
+	const controller = new window.AbortController();
+
+	if (!controller.signal || !controller.abort) {
+		return new XMLHttpRequest();
+	}
+
+	const headers = new Headers();
+
+	const options = {
+		endpoint: null,
+		method: 'GET',
+		signal: controller.signal,
+		headers: headers,
+		cache: 'no-cache',
+		body: null,
+	}
+
+	const responseHeaders = {};
+	let responseText = '';
+
+	const request = {
+		setRequestHeader(name, value) {
+			headers.append(name, value);
+		},
+		abort() {
+			controller.abort();
+		},
+		open(method, endpoint, async) {
+			options.endpoint = endpoint;
+			options.method = method;
+		},
+		getAllResponseHeaders() {
+			return responseHeaders;
+		},
+		status: 0,
+		onerror: null,
+		onload: null,
+		responseText: '',
+		send(data) {
+			const endpoint = options.endpoint;
+
+			delete options.endpoint;
+			options.body = data;
+
+			window.fetch(endpoint, options).then(response => {
+				request.status = response.status;
+
+				for (let header of response.headers) {
+					responseHeaders[header[0]] = header[1];
+				}
+
+				const reader = response.body.getReader();
+				let loaded = false;
+
+				function read() {
+					reader.read().then(({ done, value }) => {
+						if (value) {
+							responseText += new TextDecoder('utf-8').decode(value);
+							responseText = responseText.replace(/^\s+/, '');
+						}
+
+						if (done) {
+							request.responseText = responseText;
+							request.onload && request.onload();
+							request.onload = null;
+							request.onerror = null;
+
+						} else {
+							read();
+						}
+
+					}).catch(function() {
+						request.onload = null;
+						request.onerror && request.onerror();
+						request.onerror = null;
+					});
+				}
+
+				read();
+			}).catch(function() {
+				request.onload = null;
+				request.onerror && request.onerror();
+				request.onerror = null;
+			});
+		},
+	}
+
+	return request;
 }
+
+
 /**
  * @param {XMLHttpRequest}
  * @param {int}
