@@ -160,10 +160,10 @@ export function mergeState(value={})
 		} else if (Object.keys(_mergingState).length>1) {
 			commitMergeState();
 
-		} else {
-			if (window.sessionStorage) {
+		} else if (window.sessionStorage) {
+			try {
 				window.sessionStorage.setItem('appgine.history.state', JSON.stringify(_mergingState));
-			}
+			} catch (e) {}
 		}
 	}
 }
