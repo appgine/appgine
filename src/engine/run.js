@@ -707,7 +707,7 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 				if (json && typeof json==='object') {
 					Object.keys(json).
 						filter(key => String(key).indexOf('swap[')===0).
-						forEach(key => swapping.add(key.substr(5, key.length-6), json[key]));
+						forEach(key => swapping.add(key.substr(5, key.length-6), String(json[key]||'')));
 
 					update((isCurrent && document) || (foundRequest && foundRequest.$fragment) || $element.ownerDocument, $element, json);
 				}
