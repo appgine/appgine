@@ -22,7 +22,7 @@ export default function create($input, Component, activeSelector, endpoint, stat
 				this.ajax(uri.create(endpoint, {[$input.name]: token}), (status, response) => {
 					if (response.code>0) {
 						if (response.code===200 || token===state.loading) {
-							handleResults(token, response.code===200 ? response.json : []);
+							handleResults(token, response.code===200 && Array.isArray(response.json) && response.json || []);
 						}
 					}
 				});
