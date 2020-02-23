@@ -14,7 +14,7 @@ import loadTitle from './loadTitle'
 const $textarea = document.createElement('textarea');
 
 
-export default function swap(from, into, isRequestNew) {
+export default function swap(from, into, isRequestNew, isRequestInitial) {
 	const { $fragment: $into, scrolled, scrollTop } = into;
 
 	willSwap(function() {
@@ -46,7 +46,7 @@ export default function swap(from, into, isRequestNew) {
 				const attr = $static.getAttribute('data-static');
 				const $prevStatic = $currentBody.querySelector('[data-static="'+attr+'"]');
 				const $dataStatic = document.createElement('dataStatic');
-				const keepScroll = $prevStatic && createKeepScroll($prevStatic);
+				const keepScroll = $prevStatic && !isRequestInitial && createKeepScroll($prevStatic);
 				const bodyStatic = $prevStatic && $prevStatic.parentNode===$currentBody && $static.parentNode===$nextBody;
 
 				$dataStatic.dataset.staticIndex = $staticList.length;

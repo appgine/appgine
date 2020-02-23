@@ -120,12 +120,12 @@ export default function(options={}) {
 		window.appgine = function(scrollTo, bodyClassName) {
 			window.appgine = true;
 			history.init(options.ajax!==false);
-			run(options, String(window.location.hash).substr(1) || scrollTo, bodyClassName);
+			run(options, String(window.location.hash).substr(1) || scrollTo, bodyClassName, false);
 		}
 
 	} else {
 		window.appgine = true;
 		history.init(options.ajax!==false);
-		ready(() => run(options, String(window.location.hash).substr(1) || scrollTop()));
+		ready(() => run(options, String(window.location.hash).substr(1) || false, null, true));
 	}
 }

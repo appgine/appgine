@@ -136,8 +136,8 @@ export function isRequestCurrent() {
 	return _request===_stack.loadRequest();
 }
 
-export default function run(options, scrollTo=0, bodyClassName) {
-	if (bodyClassName===undefined) {
+export default function run(options, scrollTo=0, bodyClassName, isRequestInitial) {
+	if (bodyClassName===null) {
 		Array.from(document.querySelectorAll('script[data-runtime]')).forEach($script => $script.removeAttribute('data-runtime'));
 
 	} else {
@@ -161,7 +161,7 @@ export default function run(options, scrollTo=0, bodyClassName) {
 
 	willUpdate(loadMain);
 
-	internalSwap(closure.uri.create(), html, scrollTo);
+	internalSwap(closure.uri.create(), html, scrollTo, isRequestInitial);
 
 	history.popstate(function(e, endpoint, initial) {
 		if (initial && _stack.loadRequest()) {
@@ -198,7 +198,7 @@ export default function run(options, scrollTo=0, bodyClassName) {
 					const [_swapUrl, _swapHtml, _swapScrollTo, _swapNewPage] = _swap;
 
 					_swapNewPage && history.changeId();
-					internalSwap(_swapUrl, _swapHtml, _swapScrollTo);
+					internalSwap(_swapUrl, _swapHtml, _swapScrollTo, false);
 					history.canonical(_stack.loadRequest().endpoint, true);
 					_options.dispatch('app.request', 'pageview', closure.uri.create());
 
@@ -210,7 +210,7 @@ export default function run(options, scrollTo=0, bodyClassName) {
 						request.scrolled = -1;
 					}
 
-					internalSwapRequest(request, false);
+					internalSwapRequest(request, false, false);
 					history.canonical(request.endpoint, true);
 					_options.dispatch('app.request', 'pageview', closure.uri.create());
 
@@ -728,7 +728,7 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 				}
 
 				_pushing && history.changeId();
-				internalSwap(endpoint, text, anchor.join('#')||scrollTo);
+				internalSwap(endpoint, text, anchor.join('#')||scrollTo, false);
 
 			} else if (text && foundRequest) {
 				foundRequest.willSwap(endpoint, text, anchor.join('#')||scrollTo, newPage);
@@ -762,7 +762,7 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 }
 
 
-function internalSwap(url, html, scrollTo)
+function internalSwap(url, html, scrollTo, isRequestInitial)
 {
 	const $fragment = createFragment(html);
 	const requestInto = _stack.createRequest(_options.createRequest(url, $fragment, scrollTo));
@@ -776,10 +776,10 @@ function internalSwap(url, html, scrollTo)
 				forEach($script => $script.parentNode.removeChild($script));
 
 			const $script = document.createElement('script');
-			$script.onerror = () => internalSwapRequest(requestInto.initialize(), true);
+			$script.onerror = () => internalSwapRequest(requestInto.initialize(), true, false);
 			$script.onload = () => {
 				if (typeof window.appgine!=='function') {
-					internalSwapRequest(requestInto.initialize(), true);
+					internalSwapRequest(requestInto.initialize(), true, false);
 
 				} else {
 					internalDispose();
@@ -805,9 +805,9 @@ function internalSwap(url, html, scrollTo)
 		}, 0);
 
 	} else {
-		internalSwapRequest(requestInto.initialize(), true);
+		internalSwapRequest(requestInto.initialize(), true, isRequestInitial);
 
-		if (scrollTo===0) {
+		if (scrollTo===0 || scrollTo===false) {
 			const $scrollToElement = document.querySelector('[data-scrollTo],[data-scrollToEdge]');
 
 			if ($scrollToElement) {
@@ -821,9 +821,9 @@ function internalSwap(url, html, scrollTo)
 let _internalScrollHash = '';
 let _internalRemoveScroll = null;
 
-function internalSwapRequest(requestInto, isRequestNew) {
+function internalSwapRequest(requestInto, isRequestNew, isRequestInitial) {
 	_internalRemoveScroll && _internalRemoveScroll();
-	_options.swap(_request, _request=requestInto, isRequestNew);
+	_options.swap(_request, _request=requestInto, isRequestNew, isRequestInitial);
 	internalScrollHash(null, _internalScrollHash, false);
 
 	const $canonical = requestInto.$fragment.querySelector('link[rel="canonical"]');
