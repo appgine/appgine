@@ -402,7 +402,7 @@ function loadEndpoint(apiRequest, $element, endpoint, isAjax, toCurrent=null, sc
 function leave(endpoint) {
 	const requestnum = _requestnum = createRequestnum();
 	_loadingStatus.end();
-	_options.dispatch('app.request', 'start', endpoint, { requestnum });
+	_options.dispatch('app.request', 'start', endpoint, { requestnum, $element: document.body });
 
 	if (_options.onRedirect(endpoint)) {
 		_options.dispatch('app.request', 'leave', { requestnum });
