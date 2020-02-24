@@ -38,11 +38,14 @@ if (matched) {
 _requestTree[_state._position] = _state._id;
 
 export function init(ajaxEnabled) {
-	if (window.history && window.history.scrollRestoration) {
-		if ((/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream)===false) {
-			window.history.scrollRestoration = ajaxEnabled ? 'manual' : 'auto';
+	try {
+		if (window.history && window.history.scrollRestoration) {
+			if ((/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream)===false) {
+				window.history.scrollRestoration = ajaxEnabled ? 'manual' : 'auto';
+			}
 		}
-	}
+
+	} catch (e) {}
 
 	const link = closure.uri.change(window.location.href);
 
