@@ -10,9 +10,12 @@ const TICK = {
 	EACH: 2,
 }
 
+let loaded = false;
 let ticks = [];
 let ticking = false;
 let updated = false;
+
+window.addEventListener('load', () => loaded = true);
 
 const streamEvents = Kefir.stream(function(emitter) {
 	let throttled = 0;
@@ -57,6 +60,7 @@ const stream1 = Kefir.merge([
 		emitter.emit();
 	})),
 ])
+	.filter(() => loaded===true)
 	.filter(() => ticks.length && ticking===false)
 	.onValue(() => ticking = true);
 
