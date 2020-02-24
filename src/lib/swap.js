@@ -49,7 +49,7 @@ export default function swap(from, into, isRequestNew, isRequestInitial) {
 				const keepScroll = $prevStatic && !isRequestInitial && createKeepScroll($prevStatic);
 				const bodyStatic = $prevStatic && $prevStatic.parentNode===$currentBody && $static.parentNode===$nextBody;
 
-				$dataStatic.dataset.staticIndex = $staticList.length;
+				$dataStatic.setAttribute('data-static-index', $staticList.length);
 				$staticList.push({ $static, $dataStatic, $prevStatic, keepScroll, bodyStatic });
 				$static.parentNode.replaceChild($dataStatic, $static);
 			});
@@ -78,7 +78,7 @@ export default function swap(from, into, isRequestNew, isRequestInitial) {
 						$lastBody.appendChild($bodyNodes[bodyIndex]);
 						continue;
 
-					} else if (!$bodyNodes[bodyIndex].dataset.static) {
+					} else if (!$bodyNodes[bodyIndex].getAttribute('data-static')) {
 						$lastBody.appendChild($bodyNodes[bodyIndex]);
 						continue;
 
@@ -92,12 +92,12 @@ export default function swap(from, into, isRequestNew, isRequestInitial) {
 					if (!($nextNodes[0] instanceof Element)) {
 						$currentBody.insertBefore($nextNodes[0], $bodyNodes[bodyIndex] || null);
 
-					} else if (!$nextNodes[0].dataset.staticIndex) {
+					} else if (!$nextNodes[0].getAttribute('data-static-index')) {
 						$currentBody.insertBefore($nextNodes[0], $bodyNodes[bodyIndex] || null);
 
 					} else {
-						if ($staticList[$nextNodes[0].dataset.staticIndex].$prevStatic!==$bodyNodes[bodyIndex]) {
-							$currentBody.insertBefore($staticList[$nextNodes[0].dataset.staticIndex].$prevStatic, $bodyNodes[bodyIndex] || null);
+						if ($staticList[$nextNodes[0].getAttribute('data-static-index')].$prevStatic!==$bodyNodes[bodyIndex]) {
+							$currentBody.insertBefore($staticList[$nextNodes[0].getAttribute('data-static-index')].$prevStatic, $bodyNodes[bodyIndex] || null);
 						}
 
 						$nextBody.removeChild($nextNodes[0]);
@@ -120,6 +120,7 @@ export default function swap(from, into, isRequestNew, isRequestInitial) {
 
 				Array.from($from.querySelectorAll('dataAtomic')).forEach(function($dataAtomic, i) {
 					$dataAtomic.parentNode.replaceChild($fromAtomic[i], $dataAtomic);
+					Array.from($dataAtomic.querySelectorAll('.suspense-animation')).forEach($tmp => $tmp.classList.remove('suspense-animation'));
 				});
 			}
 

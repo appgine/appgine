@@ -19,7 +19,7 @@ export default function bridgeTracy(options={}) {
 			const $siblings = findTracySiblings($tracy);
 
 			const $tracyStatic = $html.ownerDocument.createElement('div');
-			$tracyStatic.dataset.static = tracyStaticId;
+			$tracyStatic.setAttribute('data-static', tracyStaticId);
 			$tracyStatic.appendChild($tracy);
 
 			for (let $sibling of $siblings) {
@@ -42,7 +42,7 @@ export default function bridgeTracy(options={}) {
 
 			if ($body) {
 				const $tracyStatic = ($fragment.ownerDocument||$fragment).createElement('div');
-				$tracyStatic.dataset.static = tracyStaticId;
+				$tracyStatic.setAttribute('data-static', tracyStaticId);
 
 				$body.appendChild($tracyStatic);
 			}

@@ -230,7 +230,7 @@ function createLayersTitle(layersChain) {
 		let $title = null;
 		if (requestLayer.$title) {
 			$title = requestLayer.$title.cloneNode(true);
-			$title.dataset.target = 'title@app.layers:'+String(back)+'$';
+			$title.setAttribute('data-target', 'title@app.layers:'+String(back)+'$');
 			$titles.push($title);
 		}
 	}
