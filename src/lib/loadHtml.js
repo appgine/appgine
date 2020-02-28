@@ -3,7 +3,7 @@ const re = /<(\s*\/\s*script\s*>)/ig;
 
 export default function loadHtml($element) {
 	let html = '';
-	if ($element.querySelectorAll) {
+	if ($element && $element.querySelectorAll) {
 		html = $element.outerHTML;
 		Array.from($element.querySelectorAll('script')).
 			filter($script => re.test(String($script.textContent))).
