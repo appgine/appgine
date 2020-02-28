@@ -19,7 +19,7 @@ export function abort() {
 export function create(headers, timeout) {
 	let localRequest;
 	let globalRequest;
-	timeout = timeout===undefined ? 10e3 : parseInt(timeout, 10);
+	timeout = timeout===undefined ? 30e3 : parseInt(timeout, 10);
 
 	function ajaxRequest(request, endpoint, method, data, fn) {
 		request.open(method, endpoint, true);
