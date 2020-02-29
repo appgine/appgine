@@ -76,20 +76,16 @@ const stream2 = Kefir.stream(emitter => stream1.onValue(() => window.requestAnim
 
 Kefir.stream(function(emitter) {
 	let delayed = null;
-	let delayedInterval = null;
+	let delayedTimeout = null;
 
 	stream2.onValue(screen => {
-		delayed = [screen, Date.now()];
-		delayedInterval = delayedInterval || setInterval(function() {
-			const [time, screen] = delayed;
-
-			if (Date.now()-time>300) {
-				clearInterval(delayedInterval)
-				delayedInterval = null;
-				delayed = null;
-				window.requestAnimationFrame(() => emitter.emit(screen));
-			}
-		}, 10);
+		delayed = screen;
+		clearTimeout(delayedTimeout);
+		delayedTimeout = setTimeout(function() {
+			const screen = delayed;
+			delayed = null;
+			window.requestAnimationFrame(() => emitter.emit(screen));
+		}, 300);
 	});
 })
 	.filter(() => !isUpdating())
