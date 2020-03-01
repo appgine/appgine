@@ -38,6 +38,7 @@ export function create(headers, timeout) {
 			}
 
 			fn && fn(...args);
+			fn = null;
 		});
 
 		for (let key of Object.keys(headers||{})) {
