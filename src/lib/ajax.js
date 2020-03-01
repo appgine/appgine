@@ -194,10 +194,15 @@ function bindRequest(endpoint, request, timeout, onresponse)
 {
 	const nativeAbort = request.abort.bind(request);
 
-	let handled = false;
+	let handling = setTimeout(function() {
+		handleResponse(TIMEOUT);
+		nativeAbort();
+	}, timeout);
+
 	function handleResponse(status, ...args) {
-		if (handled===false) {
-			handled = true;
+		if (handling) {
+			clearTimeout(handling);
+			handling = null;
 
 			let code = request.status;
 			let headers = parseHeaders(request.getAllResponseHeaders());
@@ -256,13 +261,6 @@ function bindRequest(endpoint, request, timeout, onresponse)
 
 		return SUCCESS;
 	}
-
-	setTimeout(function() {
-		if (handled===false) {
-			handleResponse(TIMEOUT);
-			nativeAbort();
-		}
-	}, timeout);
 
 	request.done = function() {
 		request.done = null;
