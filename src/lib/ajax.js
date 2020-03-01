@@ -24,7 +24,7 @@ export function create(headers, timeout) {
 	function ajaxRequest(request, endpoint, method, data, fn) {
 		request.open(method, endpoint, true);
 
-		bindRequest(request, timeout, function(...args) {
+		bindRequest(endpoint, request, timeout, function(...args) {
 			if (localRequest===request) {
 				localRequest = null;
 			}
@@ -96,14 +96,14 @@ export default create();
 
 function createRequest()
 {
-	if (window.AbortController===undefined || window.TextDecoder===undefined) {
-		return new XMLHttpRequest();
-	}
+	const controller = window.TextDecoder && window.AbortController && new window.AbortController();
 
-	const controller = new window.AbortController();
+	if (!controller || !controller.signal || !controller.abort) {
+		const xhrrequest = new XMLHttpRequest();
+		xhrrequest.onerror = e => xhrrequest.error && xhrrequest.error('xhr');
+		xhrrequest.onload = e => xhrrequest.done && xhrrequest.done();
 
-	if (!controller.signal || !controller.abort) {
-		return new XMLHttpRequest();
+		return xhrrequest;
 	}
 
 	const headers = new Headers();
@@ -163,26 +163,20 @@ function createRequest()
 
 						if (done) {
 							request.responseText = responseText;
-							request.onload && request.onload();
-							request.onload = null;
-							request.onerror = null;
+							request.done && request.done();
 
 						} else {
 							read();
 						}
 
-					}).catch(function() {
-						request.onload = null;
-						request.onerror && request.onerror();
-						request.onerror = null;
+					}).catch(function(error) {
+						request.error && request.error('reader', error);
 					});
 				}
 
 				read();
-			}).catch(function() {
-				request.onload = null;
-				request.onerror && request.onerror();
-				request.onerror = null;
+			}).catch(function(error) {
+				request.error && request.error('fetch', error);
 			});
 		},
 	}
@@ -196,12 +190,12 @@ function createRequest()
  * @param {int}
  * @param {function}
  */
-function bindRequest(request, timeout, onresponse)
+function bindRequest(endpoint, request, timeout, onresponse)
 {
 	const nativeAbort = request.abort.bind(request);
 
 	let handled = false;
-	function handleResponse(status) {
+	function handleResponse(status, ...args) {
 		if (handled===false) {
 			handled = true;
 
@@ -233,7 +227,10 @@ function bindRequest(request, timeout, onresponse)
 				return null;
 			}
 
-			if (code>=500) {
+			if (code===503) {
+				return locale.error.request.status503;
+
+			} else if (code>=500) {
 				return locale.error.request.status500;
 			}
 
@@ -267,8 +264,17 @@ function bindRequest(request, timeout, onresponse)
 		}
 	}, timeout);
 
-	request.onload = handleResponse.bind(null, SUCCESS);
-	request.onerror = handleResponse.bind(null, ERROR);
+	request.done = function() {
+		request.done = null;
+		request.error = null;
+		handleResponse(SUCCESS);
+	};
+
+	request.error = function() {
+		request.done = null;
+		request.error = null;
+		handleResponse(ERROR, ...arguments)
+	};
 
 	request.abort = function() {
 		handleResponse(ABORT);
