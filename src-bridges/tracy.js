@@ -59,9 +59,17 @@ export default function bridgeTracy(options={}) {
 		onBeforeSwap && onBeforeSwap(...arguments);
 
 		const $tracy = document.getElementById('tracy-bs-toggle');
+
 		if ($tracy) {
 			if (Tracy && Tracy.Toggle && Tracy.Toggle.toggle) {
 				Tracy.Toggle.toggle($tracy, false);
+			}
+		}
+
+		if (window.Tracy && window.Tracy.Debug) {
+			if (window.Tracy.Debug.scriptElem) {
+				window.Tracy.Debug.scriptElem.parentNode.removeChild(window.Tracy.Debug.scriptElem);
+				window.Tracy.Debug.scriptElem = null;
 			}
 		}
 	}
