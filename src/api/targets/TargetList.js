@@ -84,6 +84,9 @@ export default class TargetList
 					this._pluginApi.pluginObj.internalCall('targets.first:destroy', true, () => destroy(instance));
 				}
 			}
+
+			targetObj.state.destroy();
+			targetObj.state = null;
 		}
 	}
 
