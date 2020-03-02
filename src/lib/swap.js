@@ -127,6 +127,14 @@ export default function swap(from, into, isRequestNew, isRequestInitial) {
 			unloadStatic($lastBody);
 			unload($lastBody);
 
+			const $flattenList = [$lastBody];
+			window.requestAnimationFrame(function() {
+				for (let $flatten; $flatten = $flattenList.pop(); ) {
+					$flatten.parentNode && $flatten.parentNode.removeChild($flatten);
+					Array.from($flatten.children).forEach($child => $flattenList.push($child));
+				}
+			});
+
 			Array.from(document.querySelectorAll('body script[data-runtime]')).forEach(runtimeScript);
 
 			formFocus();
