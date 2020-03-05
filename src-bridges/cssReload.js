@@ -133,7 +133,10 @@ export default function bridgeCssReload(options={}, transform=defaultTransform) 
 		window.appgineCssReload.swaplist = window.appgineCssReload.swaplist.filter(([swap1, swap2]) => !swap1.$link.disabled && !swap2.$link.disabled && enabled.indexOf(swap2)===-1);
 
 		clearTimeout(window.appgineCssReload.pending);
-		window.appgineCssReload.pending = setTimeout(loadCssStylesheet, 10);
+
+		if (window.appgineCssReload.loading.length) {
+			window.appgineCssReload.pending = setTimeout(loadCssStylesheet, 10);
+		}
 	}
 
 	return options;
