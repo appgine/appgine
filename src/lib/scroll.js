@@ -45,7 +45,7 @@ export function scrollNodeToView($origin, $node, animated, onEnd) {
 				return closure.animation.scrollToLazy(internalFindScrollTo.bind(null, scrolled), internalOnEnd);
 
 			} else {
-				window.scrollTo(...internalFindScrollTo(scrolled));
+				closure.scrollTo(...internalFindScrollTo(scrolled));
 				internalOnEnd();
 			}
 		});
@@ -61,7 +61,7 @@ export function scrollFormToView($form, top=false) {
 			const styles = window.getComputedStyle($parent, null);
 			if (String(styles.position||'').toLowerCase()==='fixed') {
 				const screen = closure.rect.fromScreen()
-				return window.scrollTo(
+				return closure.scrollTo(
 					Math.min(screen.left, parseInt(styles.left||0, 10)),
 					Math.min(screen.top, parseInt(styles.top||0, 10))
 				);
@@ -81,7 +81,7 @@ export function scrollFormToView($form, top=false) {
 			let scrollLeft = screen.left + screen.width >= offset[0] ? Math.min(screen.left, offset[0]) : offset[0];
 			let scrollTop = Math.min(offset[1] - fixedEdge, screen.top + screen.height < offset[1] ? offset[3] - screen.height : screen.top);
 
-			return window.scrollTo(scrollLeft, scrollTop);
+			return closure.scrollTo(scrollLeft, scrollTop);
 		}
 	}
 }

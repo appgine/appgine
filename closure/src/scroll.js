@@ -22,6 +22,11 @@ window.addEventListener('scroll', function(e) {
 	scrollWidth = Math.max(doc.body.scrollWidth||0, docEl.scrollWidth||0) - goog.dom.getViewportSize().width;
 });
 
+exports.scrollTo = function() {
+	scrollTop, scrollLeft, scrollHeight, scrollWidth = undefined;
+	window.scrollTo.apply(window, arguments);
+}
+
 exports.scrollTop = function() {
 	if (scrollTop===undefined) {
 		scrollTop = Math.max(window.pageYOffset||0, window.scrollY||0, doc.body.scrollTop||0, docEl.scrollTop||0);

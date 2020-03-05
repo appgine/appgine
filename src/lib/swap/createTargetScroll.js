@@ -1,5 +1,5 @@
 
-import { scrollLeft, scrollTop } from '../../closure';
+import { scrollTo, scrollLeft, scrollTop } from '../../closure';
 
 
 export default function createTargetScroll(toTarget) {
@@ -14,7 +14,7 @@ export default function createTargetScroll(toTarget) {
 			if ($element && $found) {
 				const boundsFound = $found.getBoundingClientRect();
 
-				window.scrollTo(
+				scrollTo(
 					scrollLeft()-boundsElement.left+boundsFound.left,
 					scrollTop()-boundsElement.top+boundsFound.top
 				);

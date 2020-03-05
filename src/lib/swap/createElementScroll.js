@@ -19,13 +19,13 @@ export default function createElementScroll($element, scrollTop=false, hashFixed
 				scrolled = true;
 
 				if (keepScroll) {
-					window.scrollTo(
+					closure.scrollTo(
 						closure.scrollLeft()+scroll.now.left-scroll.prev.left,
 						closure.scrollTop()+scroll.now.top-scroll.prev.top
 					);
 
 				} else {
-					window.scrollTo(
+					closure.scrollTo(
 						closure.scrollLeft() + Math.max(scroll.now.left-scroll.prev.left, Math.min(0, scroll.now.left)),
 						closure.scrollTop() + Math.max(scroll.now.top-scroll.prev.top, Math.min(0, scroll.now.top-fixedEdge))
 					);
@@ -35,7 +35,7 @@ export default function createElementScroll($element, scrollTop=false, hashFixed
 		} catch (e) {}
 
 		if (scrolled===false && scrollTop) {
-			window.scrollTo(0, 0);
+			closure.scrollTo(0, 0);
 		}
 	}
 }

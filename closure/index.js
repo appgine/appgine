@@ -39,6 +39,7 @@ exports.style = goog.require('style');
 exports.dom = goog.require('dom');
 exports.cssom = goog.require('cssom');
 exports.scroll = goog.require('scroll');
+exports.scrollTo = exports.scroll.scrollTo;
 exports.scrollLeft = exports.scroll.scrollLeft;
 exports.scrollTop = exports.scroll.scrollTop;
 exports.scrollHeight = exports.scroll.scrollHeight;

@@ -140,7 +140,7 @@ export default function swap(from, into, isRequestNew, isRequestInitial) {
 			formFocus();
 
 			if (scrolled===-1) {
-				window.scrollTo(0, scrollTop);
+				closure.scrollTo(0, scrollTop);
 			}
 		});
 	});

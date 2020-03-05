@@ -97,7 +97,7 @@ tick.onEachTick(function(screen, updated, done) {
 				window.requestAnimationFrame(() => {
 					if (request.scrolled!==true) {
 						request.scrolled = Math.min(request.scrollTop, screen.top);
-						window.scrollTo(0, request.scrollTop);
+						closure.scrollTo(0, request.scrollTop);
 					}
 
 					window.requestAnimationFrame(wasUpdated);
@@ -119,7 +119,7 @@ tick.onEachTick(function(screen, updated, done) {
 
 	} else if (_poping) {
 		if (_request && _request.scrollTop!==screen.top) {
-			window.scrollTo(0, _request.scrollTop);
+			closure.scrollTo(0, _request.scrollTop);
 
 		} else {
 			_poping = null;
@@ -531,7 +531,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 			const $found = closure.dom.findForm(formName, formId);
 
 			if (formTarget==='#') {
-				window.scrollTo(0, 0);
+				closure.scrollTo(0, 0);
 
 			} else if ($found) {
 				formScroll($found);
@@ -547,7 +547,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 				targetScroll();
 
 			} else if (formTarget==='#') {
-				window.scrollTo(0, 0);
+				closure.scrollTo(0, 0);
 
 			} else if (formTarget[0]==='#') {
 				internalScrollHashToView($element, formTarget.substr(1));
@@ -561,7 +561,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 				elementScroll(true);
 
 			} else {
-				window.scrollTo(0, 0);
+				closure.scrollTo(0, 0);
 			}
 		});
 	}
