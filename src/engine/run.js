@@ -317,7 +317,7 @@ export function onSubmitForm(e, $form, $submitter, toTarget) {
 
 			if (!e.defaultPrevented) {
 				e.preventDefault();
-				submitForm(submitRequest, $form, $submitter, toTarget==='_ajax', toTarget==='_current');
+				submitForm(submitRequest, $form, $submitter, toTarget||'');
 
 			} else {
 				submitRequest.prevented();
@@ -495,18 +495,17 @@ function loadPageWithContext(ajaxContext, apiRequest, $element, endpoint, newPag
 }
 
 
-function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=false) {
+function submitForm(submitRequest, $form, $submitter, formTarget) {
 	const $element = $submitter||$form;
 
 	const formName = String($form.name);
 	const formId = closure.dom.shouldHaveFormId($form) ? closure.dom.createFormId($form) : null;
 	const formEndpoint = closure.uri.createForm($form, $submitter);
-	const formMethod = ($form.method||'GET').toUpperCase();
-	const formTarget = ($form.target||'');
+	const formMethod = (($submitter && $submitter.formmethod) || $form.method || 'GET').toUpperCase();
 	const formData = closure.form.postData($form, $submitter);
 
 	let newPage;
-	if (toCurrent) {
+	if (formTarget==='_current') {
 		newPage = false;
 
 	} else if (closure.uri.isSame(formEndpoint) && formId===null) {
@@ -526,7 +525,7 @@ function submitForm(submitRequest, $form, $submitter, isAjax=false, toCurrent=fa
 	const targetScroll = createTargetScroll(formTarget);
 
 	let bindSubmitRequest;
-	if (isAjax) {
+	if (formTarget==='_ajax') {
 		bindSubmitRequest = bindAjaxRequest(submitRequest, $element, formEndpoint, function() {
 			const $found = closure.dom.findForm(formName, formId);
 

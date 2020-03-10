@@ -1,5 +1,6 @@
 
 import closure from '../closure'
+import { getEventTarget, getElementTarget } from '../lib/target'
 
 
 export default function create() {
@@ -15,19 +16,7 @@ export default function create() {
 				const href = String($link.href||'');
 
 				if (href && !e.defaultPrevented && (e.which!==2 && e.which!==3)) {
-					const toTarget = (function() {
-						if (e && (e.metaKey || e.ctrlKey)) {
-							return '_blank';
-
-						} else if ($link.getAttribute('target')) {
-							return $link.getAttribute('target');
-
-						} else if ($link.getAttribute('data-target')) {
-							return $link.getAttribute('data-target');
-						}
-
-						return '';
-					})();
+					const toTarget = getEventTarget(e) || getElementTarget($link);
 
 					if ($link.getAttribute('href')[0]==='#') {
 						this.dispatch('app.event', 'clickHash', e, $link, $link.getAttribute('href').substr(1), toTarget);

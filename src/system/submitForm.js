@@ -1,5 +1,6 @@
 
 import closure from '../closure'
+import { getEventTarget, getElementTarget } from '../lib/target'
 
 
 export default function create() {
@@ -23,25 +24,7 @@ export default function create() {
 	const onSubmit = function onSubmit(e) {
 		const _$form = e.target;
 		const _$submitter = _submitterEvent && closure.dom.getSubmitter(_$form, _submitterEvent);
-		const _toTarget = (function() {
-			if (_submitterEvent && (_submitterEvent.metaKey || _submitterEvent.ctrlKey)) {
-				return '_blank';
-
-			} else if (_$submitter && _$submitter.getAttribute('formtarget')) {
-				return _$submitter.getAttribute('formtarget');
-
-			} else if (_$submitter && _$submitter.getAttribute('data-target')) {
-				return _$submitter.getAttribute('data-target');
-
-			} else if (e.target && e.target.getAttribute('target')) {
-				return e.target.getAttribute('target');
-
-			} else if (e.target && e.target.getAttribute('data-target')) {
-				return e.target.getAttribute('data-target');
-			}
-
-			return '';
-		})();
+		const _toTarget = getEventTarget(_submitterEvent) || getElementTarget(_$submitter) || getElementTarget(e.target);
 
 		if (!e.defaultPrevented) {
 			dispatch('app.event', 'submit', e, _$form, _$submitter, _toTarget);
