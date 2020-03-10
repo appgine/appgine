@@ -181,20 +181,20 @@ export default function run(options, scrollTo=0, bodyClassName, isRequestInitial
 
 		if (request) {
 			const { canonize: _canonize, redirect: _redirect, swap: _swap } = request;
+			request.canonize = null;
+			request.redirect = null;
+			request.swap = null;
 
 			if (_canonize) {
 				_pushing = true;
-				request.canonize = null;
 				canonize(..._canonize);
 
 			} else if (_redirect) {
 				_pushing = true;
-				request.redirect = null;
 				redirect(..._redirect);
 
 			} else {
 				if (_swap) {
-					request.swap = null;
 					const [_swapUrl, _swapHtml, _swapScrollTo, _swapNewPage] = _swap;
 
 					_swapNewPage && history.changeId();
