@@ -1,6 +1,6 @@
 {
   "name": "appgine",
-  "version": "0.25.0",
+  "version": "0.25.1",
   "license": "SEE LICENSE IN licence.md",
   "maintainers": [
     "Ales Kafka <ales.kafka@gmail.com>"
@@ -12,7 +12,7 @@
   "main": "run.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wavelo/appgine.git"
+    "url": "https://github.com/appgine/appgine.git"
   },
   "files": [
     "lib/",
