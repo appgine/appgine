@@ -90,7 +90,7 @@ export default function bridgeSentry(src, endpoint, config, filterErrors=false) 
 	}
 }
 
-
+let lastError = 0;
 export function createHandler(src, endpoint, config={}) {
 	return function(errno, error, e, ...payload) {
 		loadScript(src, function(first) {
@@ -99,20 +99,14 @@ export function createHandler(src, endpoint, config={}) {
 					window.Sentry.init({ dsn: endpoint, ...config});
 				}
 
-				if (isError(e)) {
-					window.Sentry.withScope(scope => {
-						scope.setExtra('errno', errno);
-						scope.setExtra('error', error);
-						scope.setExtra('payload', cloneToSerializable(payload));
-						window.Sentry.captureException(e);
-					});
+				if (Date.now()-lastError > 10e3) {
+					lastError = Date.now();
 
-				} else {
 					window.Sentry.withScope(scope => {
 						scope.setExtra('errno', errno);
 						scope.setExtra('error', error);
 						scope.setExtra('payload', cloneToSerializable(payload));
-						window.Sentry.captureMessage(error);
+						isError(e) ? window.Sentry.captureException(e) : window.Sentry.captureMessage(error);
 					});
 				}
 			}
