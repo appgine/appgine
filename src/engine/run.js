@@ -471,6 +471,10 @@ function createAjax($element, allowSwap=true) {
 		headers['X-Appgine-Referer'] = foundRequest.endpoint;
 	}
 
+	if ($element && $element.getAttribute('data-tracker')) {
+		headers['X-Request-Tracker'] = $element.getAttribute('data-tracker');
+	}
+
 	return ajax.create(headers, _options.timeout);
 }
 
