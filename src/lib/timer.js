@@ -63,7 +63,7 @@ export function clearInterval(uid) {
 	if (getWorker()) {
 		if (timers[uid]!==undefined) {
 			delete timers[uid];
-			if (--counter===0) getWorker().postMessage({action: "stop", type: "interval", uid});
+			getWorker().postMessage({action: "stop", type: "interval", uid});
 		}
 
 	} else {
@@ -89,7 +89,7 @@ export function clearTimeout(uid) {
 	if (getWorker()) {
 		if (timers[uid]!==undefined) {
 			delete timers[uid];
-			if (--counter===0) getWorker().postMessage({action: "stop", type: "timeout", uid});
+			getWorker().postMessage({action: "stop", type: "timeout", uid});
 		}
 
 	} else {
