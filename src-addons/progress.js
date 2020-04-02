@@ -20,7 +20,7 @@ export default function createProgress($element, onValue, events={})
 
 			const { left, width } = e.currentTarget.getBoundingClientRect();
 			function onEventValue(event) {
-				const x = event.targetTouches && (event.targetTouches[0] || event.changedTouches[0]).clientX || event.clientX || 0;
+				const x = event.targetTouches && (event.targetTouches[0] || event.changedTouches[0] || {}).clientX || event.clientX || 0;
 				const value1 = Math.max(0, Math.min(width, x-left))/width;
 				const value2 = onValue && onValue(value1)
 				return value2===undefined ? value1 : value2;
