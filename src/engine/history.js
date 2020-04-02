@@ -163,9 +163,11 @@ export function mergeState(value={})
 		} else if (Object.keys(_mergingState).length>1) {
 			commitMergeState();
 
-		} else if (window.sessionStorage) {
+		} else {
 			try {
-				window.sessionStorage.setItem('appgine.history.state', JSON.stringify(_mergingState));
+				if (window.sessionStorage) {
+					window.sessionStorage.setItem('appgine.history.state', JSON.stringify(_mergingState));
+				}
 			} catch (e) {}
 		}
 	}
@@ -190,9 +192,11 @@ function commitMergeState(pushState=false, invoke=null) {
 
 	_mergingState = null
 
-	if (window.sessionStorage) {
-		window.sessionStorage.removeItem('appgine.history.state');
-	}
+	try {
+		if (window.sessionStorage) {
+			window.sessionStorage.removeItem('appgine.history.state');
+		}
+	} catch (e) {}
 }
 
 export function cancelState() {
