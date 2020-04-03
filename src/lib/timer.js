@@ -3,7 +3,7 @@ var uid = 0;
 var timers = {};
 
 
-const workerHandler = `function (e) {
+const workerHandler = `self.addEventListener('message', function (e) {
 	if (e.data) {
 		var action = e.data.action;
 		var type = e.data.type;
@@ -23,25 +23,28 @@ const workerHandler = `function (e) {
 			}
 		}
 	}
-}`;
+});`;
 
 let worker;
 function getWorker() {
-	if (worker) {
-		return worker;
-
-	} else if (window.Worker && (window.URL || window.webkitURL)) {
-		worker = new Worker((window.URL || window.webkitURL).createObjectURL(new Blob(["self.addEventListener('message', " + workerHandler + ");"])));
-		worker.addEventListener('message', function(e) {
-			if (timers[e.data]) {
-				timers[e.data]();
-			}
-		});
-
+	if (worker!==undefined) {
 		return worker;
 	}
 
-	return null;
+	worker = null;
+
+	try {
+		if (window.Worker && (window.URL || window.webkitURL)) {
+			worker = new window.Worker((window.URL || window.webkitURL).createObjectURL(new Blob([workerHandler])));
+			worker.addEventListener('message', function(e) {
+				if (timers[e.data]) {
+					timers[e.data]();
+				}
+			});
+		}
+	} catch(e) {}
+
+	return worker;
 }
 
 
