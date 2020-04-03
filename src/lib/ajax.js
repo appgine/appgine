@@ -95,11 +95,29 @@ export function create(headers, timeout) {
 export default create();
 
 
-function createRequest()
-{
+function createRequestController() {
+	if (typeof Response === 'undefined') {
+		return null;
+
+	} else if (Response.prototype.hasOwnProperty("body")===false) {
+		return null;
+	}
+
 	const controller = window.TextDecoder && window.AbortController && new window.AbortController();
 
-	if (!controller || !controller.signal || !controller.abort) {
+	if (controller && controller.signal && controller.abort) {
+		return controller;
+	}
+
+	return null;
+}
+
+
+function createRequest()
+{
+	const controller = createRequestController();
+
+	if (controller===null) {
 		const xhrrequest = new XMLHttpRequest();
 		xhrrequest.onerror = e => xhrrequest.error && xhrrequest.error('xhr');
 		xhrrequest.onload = e => xhrrequest.done && xhrrequest.done();
