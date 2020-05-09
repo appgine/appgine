@@ -485,7 +485,7 @@ function loadAjax(apiRequest, $element, endpoint, scrollTo) {
 
 
 function loadAjaxWithContext(ajaxContext, apiRequest, $element, endpoint, scrollTo) {
-	ajaxContext.load(endpoint, bindAjaxRequest(apiRequest, $element, endpoint, scrollTo));
+	ajaxContext.get(endpoint, bindAjaxRequest(apiRequest, $element, endpoint, scrollTo));
 }
 
 
