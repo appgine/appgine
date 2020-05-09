@@ -1,5 +1,6 @@
 
 import { locale } from '../locale'
+import * as errorhub from '../errorhub'
 
 
 export const ABORT = 'abort';
@@ -154,8 +155,6 @@ function createRequest()
 			return responseHeaders;
 		},
 		status: 0,
-		onerror: null,
-		onload: null,
 		responseText: '',
 		send(data) {
 			const endpoint = options.endpoint;
@@ -228,6 +227,10 @@ function bindRequest(endpoint, request, timeout, onresponse)
 			let html = request.responseText;
 			let json = (function() { try { return JSON.parse(request.responseText); } catch(e) {} return undefined; })();
 			let error = requestError(status, code, html, json);
+
+			if (error && status!==ABORT) {
+				errorhub.dispatch(errorhub.ERROR.AJAX, error, new Error(error), endpoint, code, headers, json, html, args);
+			}
 
 			status = requestStatus(status, error);
 			html = status===SUCCESS ? html : '';

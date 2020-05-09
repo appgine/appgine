@@ -4,7 +4,7 @@ import loadScript from './lib/loadScript'
 
 const onerror = window.onerror;
 window.onerror = function(messageOrEvent, source, lineno, colno, error) {
-	dispatch(ERROR.GLOBAL, 'window.onerror: ' + String(messageOrEvent||''), error, messageOrEvent, source, lineno, colno);
+	dispatch(ERROR.CONSOLE, 'window.onerror: ' + String(messageOrEvent||''), error, messageOrEvent, source, lineno, colno);
 	try { onerror && onerror.apply(window, arguments); } catch(e) {}
 }
 
@@ -26,6 +26,7 @@ export const ERROR = {
 	CONSOLE: 2,
 	REQUEST: 3,
 	OPTIONS: 4,
+	AJAX: 5,
 }
 
 

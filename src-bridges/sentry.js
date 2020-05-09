@@ -93,7 +93,7 @@ export default function bridgeSentry(src, endpoint, config, filterErrors=false) 
 let lastError = 0;
 export function createHandler(src, endpoint, config={}) {
 	return function(errno, error, e, ...payload) {
-		if (errno===ERROR.GLOBAL) {
+		if (errno===ERROR.CONSOLE) {
 			return false;
 		}
 
