@@ -21,7 +21,6 @@
     "run.js",
     "shim.js",
     "plugins.js",
-    "helpers.js",
     "errorhub.js"
   ],
   "dependencies": {
