@@ -638,7 +638,7 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 			}
 
 		} else if (response.html || response.json) {
-			onResponse(response.html, response.json, response.headers);
+			const nowRequest = onResponse(response.html, response.json, response.headers);
 
 		} else if (response.error || response.json===undefined) {
 			onError(response.error);
@@ -760,6 +760,7 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 			}
 
 			clearTimeout(_loaderReporting);
+			return nowRequest;
 		}
 	}
 }
