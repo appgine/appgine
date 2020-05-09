@@ -22,8 +22,7 @@
     "shim.js",
     "plugins.js",
     "helpers.js",
-    "errorhub.js",
-    "plugin-helpers.js"
+    "errorhub.js"
   ],
   "dependencies": {
     "babel-regenerator-runtime": "^6.5.0",
