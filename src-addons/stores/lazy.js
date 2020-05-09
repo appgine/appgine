@@ -1,6 +1,6 @@
 
+import createConnector from '../createConnector'
 import { style } from '../../lib/closure'
-import { createConnector } from '../../lib/helpers/createConnector'
 import { onTick } from '../../lib/tick'
 
 

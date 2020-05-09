@@ -1,5 +1,5 @@
 
-import { createConnector } from '../../lib/helpers/createConnector'
+import createConnector from '../createConnector'
 import loadImage from '../loadImage'
 
 
