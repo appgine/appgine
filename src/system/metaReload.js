@@ -1,15 +1,15 @@
 
-import * as tick from '../tick'
-import { requestStack, onReload, location } from '../engine/run'
-import closure from '../closure'
+import { requestStack } from '../engine/run'
+
+import { useEachTick } from 'appgine/hooks/tick'
+import { useDispatch } from 'appgine/hooks/channel'
 
 
 export default function create() {
-	const dispatch = this.dispatch.bind(this);
-
 	let refreshLast;
 	let refreshCached;
-	return tick.onEachTick(function() {
+
+	useEachTick(function() {
 		const request = requestStack.loadRequest();
 
 		if (!refreshCached || refreshCached[0]!==request) {
@@ -28,8 +28,7 @@ export default function create() {
 
 			if (refreshLast[4]===false && refreshLast[3]+refreshLast[1]<Date.now()) {
 				refreshLast[4] = true;
-
-				dispatch('meta-reload', 'reload', refreshLast[2]);
+				useDispatch('meta-reload', 'reload', refreshLast[2]);
 			}
 		}
 	});

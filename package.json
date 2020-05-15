@@ -18,8 +18,10 @@
     "lib/",
     "addons/",
     "bridges/",
+    "hooks/",
     "run.js",
     "shim.js",
+    "hooks.js",
     "plugins.js",
     "errorhub.js"
   ],
@@ -29,7 +31,6 @@
     "core-js": "^2.6.11",
     "es5-shim": "^4.1.10",
     "kefir": "^3.1.0",
-    "plugin-macro-loader": "^1.13.2",
     "prop-types": ">=15.0.0",
     "react": "^16.13.0",
     "react-dom": "^16.13.0"

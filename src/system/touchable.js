@@ -1,5 +1,7 @@
 
-import closure from '../closure'
+import { cssom } from '../closure'
+
+import { useEvent } from 'appgine/hooks/event'
 
 
 function debouncer(fn, delay) {
@@ -32,17 +34,16 @@ export default function create() {
 	const clicking = debouncer(() => { cx(enable); }, 150);
 	const unclicking = debouncer(() => { cx(disable); $clicked=[]; }, 300);
 
-
 	if ('ontouchstart' in window) {
 		change(true);
 	}
 
-	this.event(document.documentElement, "touchstart", onTouchStart);
-	this.event(document.documentElement, "touchmove", onTouchMove);
-	this.event(document.documentElement, "touchend", onTouchEnd);
-	this.event(document.documentElement, "mousemove", onMouseMove);
-	this.event(document.documentElement, "click", onClick);
-	this.event(document.documentElement, "click", onClickCapture, true);
+	useEvent(document.documentElement, "touchstart", onTouchStart);
+	useEvent(document.documentElement, "touchmove", onTouchMove);
+	useEvent(document.documentElement, "touchend", onTouchEnd);
+	useEvent(document.documentElement, "mousemove", onMouseMove);
+	useEvent(document.documentElement, "click", onClick);
+	useEvent(document.documentElement, "click", onClickCapture, true);
 
 	function onMouseMove() {
 		if (_touched===false) {
@@ -114,8 +115,8 @@ export default function create() {
 	}
 
 	function fixHover(regexp, replacement) {
-		closure.cssom.getAllCssStyleSheets().forEach(function(styleSheet) {
-			const rules = [].slice.call(closure.cssom.getCssRulesFromStyleSheet(styleSheet)||[]);
+		cssom.getAllCssStyleSheets().forEach(function(styleSheet) {
+			const rules = [].slice.call(cssom.getCssRulesFromStyleSheet(styleSheet)||[]);
 
 			rules.forEach(function(rule, i) {
 				const selectorText = String(rule&&rule.selectorText);

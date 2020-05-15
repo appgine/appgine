@@ -1,37 +1,40 @@
 
-import closure from '../closure'
+import { dom } from '../closure'
 import { getEventTarget, getElementTarget } from '../lib/target'
+
+import { useEvent } from 'appgine/hooks/event'
+import { useDispatch } from 'appgine/hooks/channel'
 
 
 export default function create() {
 	let _submitterEvent, _releaseClick, _releaseKey;
-	const dispatch = this.dispatch.bind(this);
 
-	const onClick = function onClick(e) {
+	useEvent(document, 'click', function(e) {
 		clearTimeout(_releaseClick);
 		_releaseClick = setTimeout(function() { _submitterEvent = null }, 250);
 		_submitterEvent = e;
-	}
+	});
 
-	const onKeyDown = function onKeyDown(e) {
+	useEvent(document, 'keydown', function(e) {
 		if (e.keyCode === 13) {
 			clearTimeout(_releaseKey);
 			_releaseKey = setTimeout(function() { _submitterEvent = null; }, 300);
 			_submitterEvent = e;
 		}
-	}
+	});
 
-	const onSubmit = function onSubmit(e) {
+	useEvent(document, 'submit', function(e) {
 		const _$form = e.target;
-		const _$submitter = _submitterEvent && closure.dom.getSubmitter(_$form, _submitterEvent);
+		const _$submitter = _submitterEvent && dom.getSubmitter(_$form, _submitterEvent);
 		const _toTarget = getEventTarget(_submitterEvent) || getElementTarget(_$submitter) || getElementTarget(e.target);
 
 		if (!e.defaultPrevented) {
-			dispatch('app.event', 'submit', e, _$form, _$submitter, _toTarget);
+			useDispatch('app.event', 'submit', e, _$form, _$submitter, _toTarget);
 		}
-	}
+	});
 
 	const submit = HTMLFormElement.prototype.submit;
+
 	HTMLFormElement.prototype.submit = function() {
 		let event = null;
 		try {
@@ -65,10 +68,6 @@ export default function create() {
 			$form.parentNode.removeChild($form);
 		}
 	}
-
-	this.event(document, 'click', onClick);
-	this.event(document, 'keydown', onKeyDown);
-	this.event(document, 'submit', onSubmit);
 
 	return function() {
 		HTMLFormElement.prototype.submit = submit;

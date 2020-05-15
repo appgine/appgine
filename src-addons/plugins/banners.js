@@ -1,43 +1,43 @@
 
 import React from 'react'
-import ReactDOM from 'react-dom'
+
+import { useListen } from 'appgine/hooks/channel'
+import { useTargets, useComplete } from 'appgine/hooks/target'
+import { bindReact } from 'appgine/hooks/react'
+import { bindTimeout } from 'appgine/hooks/timer'
 
 
-export default function create(ButtonsComponent, $element, { autoInterval }, state) {
-	state.initial({active: 0});
+export default function create(ButtonsComponent, $element, { autoInterval }) {
+	const [ rotateTimeout, rotateDestroy ] = bindTimeout();
+
+	const state = { active: 0 };
 	let autorotate = null;
 
-	this.listen('modal', 'open', function() {
+	useListen('modal', 'open', function() {
 		$element.classList.add('paused');
-		clearAutoRotate();
+		rotateDestroy();
 	});
 
-	this.listen('modal', 'close', function() {
+	useListen('modal', 'close', function() {
 		$element.classList.remove('paused');
 		startAutoRotate();
 	});
 
-	const targets = this.createTargets(function(targets) {
-		targets.every('buttons', function($element) {
-			return () => ReactDOM.unmountComponentAtNode($element);
-		});
+	const $banners = useTargets('banner', $banner => $banner);
+	const buttons = useTargets('buttons', $buttons => bindReact($buttons));
 
-		targets.complete(function() {
-			render();
-			startAutoRotate();
-			return clearAutoRotate;
-		});
+	useComplete(function() {
+		render();
+		startAutoRotate();
+		return rotateDestroy;
 	});
 
-	function clearAutoRotate() {
-		clearTimeout(autorotate);
-	}
 
 	function startAutoRotate() {
-		clearAutoRotate();
+		rotateDestroy();
 		if (autoInterval!==false) {
-			autorotate = setTimeout(function() {
-				changeIndex((state.active+1)%targets.findAll('banner').length);
+			autorotate = rotateTimeout(function() {
+				changeIndex((state.active+1)%$banners.length);
 			}, autoInterval||5000);
 		}
 	}
@@ -45,8 +45,6 @@ export default function create(ButtonsComponent, $element, { autoInterval }, sta
 	function changeIndex(index) {
 		startAutoRotate();
 		state.active = index;
-
-		const $banners = targets.findAllElement('banner');
 
 		if ($banners[index]) {
 			$banners[index].classList.add('visible');
@@ -62,10 +60,11 @@ export default function create(ButtonsComponent, $element, { autoInterval }, sta
 				});
 
 
+			const $banner = $banners[index];
 			setTimeout(function() {
 				if (state.active===index) {
-					$banners[index].classList.add('active');
-					$banners[index].classList.add('fadein');
+					$banner.classList.add('active');
+					$banner.classList.add('fadein');
 				}
 			}, 200);
 		}
@@ -74,10 +73,6 @@ export default function create(ButtonsComponent, $element, { autoInterval }, sta
 	}
 
 	function render() {
-		const count = targets.findAllElement('banner').length;
-
-		targets.findAll('buttons', function({ $element }) {
-			ReactDOM.render(<ButtonsComponent count={count} active={state.active} onClick={changeIndex}/>, $element);
-		});
+		buttons.forEach(useReact => useReact(<ButtonsComponent count={$banners.length} active={state.active} onClick={changeIndex}/>));
 	}
 }

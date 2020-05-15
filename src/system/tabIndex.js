@@ -1,5 +1,6 @@
 
-import { dom } from '../closure'
+import { useListen } from 'appgine/hooks/channel'
+import { useValidShortcut, useShortcut } from 'appgine/hooks/shortcut'
 
 
 export default function create() {
@@ -15,11 +16,11 @@ export default function create() {
 		}
 	}
 
-	this.listen('app.request', 'response', onRequest);
-	this.listen('ajax.request', 'response', onRequest);
+	useListen('app.request', 'response', onRequest);
+	useListen('ajax.request', 'response', onRequest);
 	onRequest();
 
-	this.onValidShortcut('tab', e => {
+	useValidShortcut('tab', e => {
 		if (shouldHandleTabEvent && document.activeElement===$active) {
 			const $elements = Array.from(document.querySelectorAll('[tabIndex]')).
 				filter($element => $element.getAttribute('tabIndex')).
@@ -35,7 +36,7 @@ export default function create() {
 		}
 	})
 
-	this.onShortcut('shift+tab', 'tab', function() {
+	useShortcut('shift+tab', 'tab', function() {
 		shouldHandleTabEvent = false;
 	});
 }

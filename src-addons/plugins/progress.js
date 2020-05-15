@@ -1,29 +1,36 @@
 
+import { useProgress } from 'appgine/hooks/progress'
+import { bindTimeout, useTimeout } from 'appgine/hooks/timer'
+
 
 export default function create($root) {
 	const $container = $root.children[0] && $root.children[0].tagName=='DIV' && $root.children[0] || document.createElement('div');
-	const apiAnimation = $container.animate ? createJSProgress($container) : createCSSProgress($root, $container);
 
 	$root.classList.add('progress');
 	$root.appendChild($container);
 
-	this.progress(apiAnimation);
+	if ($container.animate) {
+		useProgress(createJSProgress($container));
+
+	} else {
+		useProgress(createCSSProgress($root, $container));
+	}
 }
 
 
 function createCSSProgress($root, $container)
 {
-	let _pendingHidden;
+	const [ usePendingTimeout, destroyPendingTimeout ] = bindTimeout();
 
 	return {
 		start() {
-			clearTimeout(_pendingHidden);
+			destroyPendingTimeout();
 
 			$root.classList.remove('progress-loading');
 			$root.classList.remove('progress-loaded');
 			$root.classList.remove('progress-hidden');
 
-			setTimeout(() => {
+			useTimeout(() => {
 				$root.classList.add('progress-loading');
 				$container.style.width = '';
 				$container.style.animationDuration = '';
@@ -39,7 +46,7 @@ function createCSSProgress($root, $container)
 			$container.style.animationDuration = '';
 			$root.classList.add('progress-loaded');
 
-			_pendingHidden = setTimeout(() => $root.classList.add('progress-hidden'), 1000);
+			usePendingTimeout(() => $root.classList.add('progress-hidden'), 1000);
 		},
 		abort() {
 			$root.classList.remove('progress-loading');
@@ -64,7 +71,7 @@ function createJSProgress($container)
 			$container.style.width = '0%';
 			$container.style.visibility = '';
 
-			setTimeout(() => {
+			useTimeout(() => {
 				jsAnimation && jsAnimation.cancel();
 				jsAnimation = $container.animate([
 					{width: '2%', offset: 0.0},

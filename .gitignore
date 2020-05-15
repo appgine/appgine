@@ -2,6 +2,7 @@ node_modules
 npm-debug.log
 lib
 !src/lib
+!src/plugins/lib
 dist
 *.sublime-*
 addons

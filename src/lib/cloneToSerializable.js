@@ -1,5 +1,5 @@
 
-import { isPlainObject } from 'plugin-macro-loader/lib/lib/lodash'
+import { isPlainObject } from '../plugins/lib/lodash'
 
 
 export default function cloneToSerializable(obj) {

@@ -22,8 +22,6 @@ goog.dom.getDocumentScroll_ = function(doc) {
 	);
 }
 
-exports.dispose = goog.require('dispose').dispose;
-
 exports.browser = {};
 exports.browser.isChrome = goog.labs.userAgent.browser.isChrome;
 exports.browser.isFirefox = goog.labs.userAgent.browser.isFirefox;
@@ -47,8 +45,7 @@ exports.scrollWidth = exports.scroll.scrollWidth;
 exports.getDocumentScrollElement = exports.scroll.getDocumentScrollElement;
 exports.animation = goog.require('animation');
 exports.form = goog.require('form');
-exports.shortcuthandler = goog.require('handler').shortcut;
-exports.blur = goog.require('blur');
+exports.shortcuthandler = goog.require('shortcuthandler');
 exports.uri = goog.require('uri');
 exports.rect = goog.require('rect');
 exports.selection = goog.require('selection');

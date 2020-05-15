@@ -1,25 +1,30 @@
 
 import React from 'react'
-import ReactDOM from 'react-dom'
 import { uri, selection, string } from 'appgine/lib/closure'
 
+import { bindReact } from 'appgine/hooks/react'
+import { useEvent } from 'appgine/hooks/event'
+import { bindDispatch } from 'appgine/hooks/channel'
+import { useTimeout, bindTimeout } from 'appgine/hooks/timer'
+import { usePluginShortcut } from 'appgine/hooks/shortcut'
+import { bindPluginAjax } from 'appgine/hooks/ajax'
+import { useTargets } from 'appgine/hooks/target'
 
-export default function create($input, Component, activeSelector, endpoint, state) {
-	let tokenTimeout;
 
-	state.initial({token: null, results: [], visible: false, loading: null});
+export default function create($input, Component, activeSelector, endpoint) {
+	const [ajaxTimeout, destroyAjaxTimeout] = bindTimeout();
+	const [ajax, ajaxAbort] = bindPluginAjax();
+	const dispatch = bindDispatch('autocomplete');
 
-	const dispatch = this.dispatch.bind(this, 'autocomplete');
-	const targets = this.createTargets();
+	const state = {token: null, results: [], visible: false, loading: null};
 
 	const request = token => {
-		this.ajaxAbort();
-		clearTimeout(tokenTimeout);
+		ajaxAbort();
 		state.loading = token;
 
 		if (token) {
-			tokenTimeout = setTimeout(() => {
-				this.ajax(uri.create(endpoint, {[$input.name]: token}), (status, response) => {
+			ajaxTimeout(() => {
+				ajax(uri.create(endpoint, {[$input.name]: token}), (status, response) => {
 					if (response.code>0) {
 						if (response.code===200 || token===state.loading) {
 							handleResults(token, response.code===200 && Array.isArray(response.json) && response.json || []);
@@ -29,13 +34,14 @@ export default function create($input, Component, activeSelector, endpoint, stat
 			}, 100);
 
 		} else if (token!==null) {
+			destroyAjaxTimeout();
 			handleResults(token, []);
 		}
 	}
 
 	function handleResults(token, results) {
 		if (state.loading===token) {
-			clearTimeout(tokenTimeout);
+			destroyAjaxTimeout();
 			state.token = token;
 			state.loading = null;
 		}
@@ -63,7 +69,7 @@ export default function create($input, Component, activeSelector, endpoint, stat
 		return string.collapseWhitespace(text).toLowerCase();
 	}
 
-	this.event($input, 'focus', () => {
+	useEvent($input, 'focus', () => {
 		if (state.loading===null) {
 			state.visible = state.results.length>0;
 			state.results.forEach(result => (result.active = false));
@@ -71,7 +77,7 @@ export default function create($input, Component, activeSelector, endpoint, stat
 		}
 	});
 
-	this.event($input, 'keyup', () => {
+	useEvent($input, 'keyup', () => {
 		const token = string.collapseWhitespace($input.value);
 
 		if (state.token===token) {
@@ -85,7 +91,7 @@ export default function create($input, Component, activeSelector, endpoint, stat
 		}
 	});
 
-	this.event(document, 'click', function(e) {
+	useEvent(document, 'click', function(e) {
 		if ($input===e.target) {
 			return true;
 
@@ -93,13 +99,13 @@ export default function create($input, Component, activeSelector, endpoint, stat
 			return true;
 		}
 
-		for (let target of targets.findAll('content')) {
-			if (target.$element===e.target) {
+		for (let { $target } of targets) {
+			if ($target===e.target) {
 				$input.focus();
 				e.preventDefault();
 				return true;
 
-			} else if (target.$element.contains(e.target)) {
+			} else if ($target.contains(e.target)) {
 				$input.focus();
 				return true;
 			}
@@ -108,12 +114,12 @@ export default function create($input, Component, activeSelector, endpoint, stat
 		unmount();
 	});
 
-	this.onPluginShortcut('up', function(e) {
+	usePluginShortcut('up', function(e) {
 		renderIndexStep(-1);
 		state.visible && e.preventDefault();
 	});
 
-	this.onPluginShortcut('down', function(e) {
+	usePluginShortcut('down', function(e) {
 		if ($input.value.length!==selection.getStart($input)) {
 			return true;
 
@@ -125,28 +131,26 @@ export default function create($input, Component, activeSelector, endpoint, stat
 		renderIndexStep(1);
 	});
 
-	this.onPluginShortcut('esc', function(e) {
+	usePluginShortcut('esc', function(e) {
 		unmount();
 		e.preventDefault();
 	});
 
-	this.onPluginShortcut('enter', function(e) {
-		setTimeout(unmount, 100);
-
-		for (let target of targets.findAll('content')) {
-			const $a = target.$element.querySelector(activeSelector);
-
-			$a && $a.click();
-			$a && e.preventDefault();
-		}
+	usePluginShortcut('enter', function(e) {
+		useTimeout(unmount, 100);
+		targets.forEach(({ $target }) => {
+			const $a = $target.querySelector(activeSelector);
+			if ($a) {
+				e.preventDefault();
+				$a.click();
+			}
+		});
 	});
 
-	targets.every('content', function($container, target) {
-		state.visible && ReactDOM.render(<Component results={state.results} />, $container);
-
-		return function() {
-			ReactDOM.unmountComponentAtNode($container);
-		}
+	const targets = useTargets('content', function($target, target) {
+		const [useReact, destroyReact] = bindReact($target);
+		state.visible && useReact(<Component results={state.results} />);
+		return { $target, useReact, destroyReact };
 	});
 
 	function renderIndexStep(step) {
@@ -173,21 +177,15 @@ export default function create($input, Component, activeSelector, endpoint, stat
 	function render() {
 		if (state.visible===false) {
 			unmount();
-		}
 
-		if (state.visible) {
-			for (let target of targets.findAll('content')) {
-				ReactDOM.render(<Component results={state.results} />, target.$element);
-			}
+		} else {
+			targets.forEach(({ useReact }) => useReact(<Component results={state.results} />));
 		}
 	}
 
 	function unmount() {
 		state.visible = false;
 		state.results.forEach(result => (result.active = false));
-
-		for (let target of targets.findAll('content')) {
-			ReactDOM.unmountComponentAtNode(target.$element);
-		}
+		targets.forEach(({ destroyReact }) => destroyReact());
 	}
 }

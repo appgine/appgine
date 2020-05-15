@@ -2,6 +2,10 @@
 import { dom } from 'appgine/lib/closure'
 import { isSwapping } from '../../lib/update'
 
+import { useEvent } from 'appgine/hooks/event'
+import { bindDispatch } from 'appgine/hooks/channel'
+
+
 let focusValue;
 const $email = document.createElement('input');
 $email.type = 'email';
@@ -9,7 +13,8 @@ $email.type = 'email';
 
 export default function create($element) {
 	const $form = dom.getAncestor($element, 'form');
-	const dispatch = (type, $element) => this.dispatch('auto-submit', type, $form, $element);
+	const internalDispatch = bindDispatch('auto-submit');
+	const dispatch = (type, $element) => internalDispatch(type, $form, $element);
 
 	let $focus = null;
 	let value = undefined;
@@ -130,23 +135,15 @@ export default function create($element) {
 		checked = undefined;
 	}
 
-	$form && $form.addEventListener('submit', onSubmit);
-	$element.addEventListener('change', onChange);
-	$element.addEventListener('focusin', onFocusIn);
-	$element.addEventListener('focusout', onFocusOut);
-	$element.addEventListener('keyup', onChange);
+	$form && useEvent($form, 'submit', onSubmit);
+	useEvent($element, 'change', onChange);
+	useEvent($element, 'focusin', onFocusIn);
+	useEvent($element, 'focusout', onFocusOut);
+	useEvent($element, 'keyup', onChange);
 
 	return function() {
-		if ($form) {
-			$form.removeEventListener('submit', onSubmit);
-			clearSubmitForm($form);
-		}
-
+		$form && clearSubmitForm($form);
 		dispatch('destroy');
-		$element.removeEventListener('change', onChange);
-		$element.removeEventListener('focusin', onFocusIn);
-		$element.removeEventListener('focusout', onFocusOut);
-		$element.removeEventListener('keyup', onChange);
 		$emails.map($email => $email.type = 'email');
 	}
 }

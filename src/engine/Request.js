@@ -1,7 +1,7 @@
 
 import {
 	loadScripts, unloadScripts,
-	loadGlobal, reloadStatic, loadAtomic, unloadAtomic
+	reloadStatic, loadAtomic, unloadAtomic
 } from './plugins'
 
 
@@ -39,7 +39,6 @@ export default class Request {
 
 	initialize() {
 		loadScripts(this.$fragment);
-		loadGlobal(this.$fragment);
 		reloadStatic(this.$fragment);
 		loadAtomic(this.$fragment, this);
 		return this;

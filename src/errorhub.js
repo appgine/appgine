@@ -1,5 +1,5 @@
 
-import { listen as listenPlugins } from 'plugin-macro-loader/errorhub'
+import { listen as listenPlugins } from './plugins/errorhub'
 import loadScript from './lib/loadScript'
 
 const onerror = window.onerror;
@@ -15,7 +15,7 @@ console.error = function() {
 }
 
 listenPlugins(function(errno, error, e, ...payload) {
-	dispatch(ERROR.PLUGINS, 'plugin-macro-loader', e, errno, error, payload);
+	dispatch(ERROR.PLUGINS, 'plugins', e, errno, error, payload);
 });
 
 const listeners = [];

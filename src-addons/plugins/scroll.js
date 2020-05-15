@@ -1,41 +1,47 @@
 
 import { animation, browser } from 'appgine/lib/closure'
 
+import { useEvent } from 'appgine/hooks/event'
+import { useTargets, useComplete } from 'appgine/hooks/target'
 
-export default function create($element, { step=1, infinite=false, duration=300, delay=0 }, state) {
-	state.initial({move: false, moving: 0, duration: 0, infinite: false});
+
+export default function create($element, { step=1, infinite=false, duration=300, delay=0 }) {
+	const state = { move: false, moving: 0, duration: 0, infinite: false };
 
 	$element.classList.toggle('scroll-webkit', browser.isChrome());
 
-	const targets = this.createTargets(function(targets) {
-		targets.every('next', registerMoveEvent('mousedown', 'next'));
-		targets.every('next', registerMoveEvent('mouseup', false));
-		targets.every('next', registerMoveEvent('mouse', false));
-		targets.every('prev', registerMoveEvent('mousedown', 'prev'));
-		targets.every('prev', registerMoveEvent('mouseup', false));
-		targets.every('prev', registerMoveEvent('mouse', false));
+	const $items = useTargets('item', $item => $item);
+	const $parents = useTargets('parent', $parent => $parent);
 
-		targets.complete(function() {
-			const $items = targets.findAllElement('item');
-			const $parent = targets.findElement('parent') || ($items[0] && getScrollParent($items[0])) || null;
-			const itemWidth = $items[0] && $items[0].getBoundingClientRect().width;
-			const parentWidth = $parent && $parent.getBoundingClientRect().width;
-
-			if (parentWidth && itemWidth && step) {
-				state.duration = duration/step/itemWidth;
-				state.infinite = infinite && itemWidth*($items.length-step) > parentWidth;
-			}
-
-			changeMove();
-
-			if ($parent) {
-				$parent.addEventListener('scroll', onScroll);
-				return () => $parent.removeEventListener('scroll', onScroll);
-			}
-		});
+	const $nextList = useTargets('next', function($next) {
+		useEvent($next, 'mousedown', () => changeMove('next'));
+		useEvent($next, 'mouseup', () => changeMove(false));
+		useEvent($next, 'mouse', () => changeMove(false));
+		return $next;
 	});
 
-	this.event(window, 'resize', changeMove);
+	const $prevList = useTargets('prev', function($prev) {
+		useEvent($prev, 'mousedown', () => changeMove('prev'));
+		useEvent($prev, 'mouseup', () => changeMove(false));
+		useEvent($prev, 'mouse', () => changeMove(false));
+		return $prev;
+	});
+
+	useComplete(function() {
+		const $parent = $parents[0] || ($items[0] && getScrollParent($items[0])) || null;
+		const itemWidth = $items[0] && $items[0].getBoundingClientRect().width;
+		const parentWidth = $parent && $parent.getBoundingClientRect().width;
+
+		if (parentWidth && itemWidth && step) {
+			state.duration = duration/step/itemWidth;
+			state.infinite = infinite && itemWidth*($items.length-step) > parentWidth;
+		}
+
+		changeMove();
+		$parent && useEvent($parent, 'scroll', onScroll);
+	});
+
+	useEvent(window, 'resize', changeMove);
 
 	let scrollTimeout;
 	function onScroll(e) {
@@ -50,13 +56,13 @@ export default function create($element, { step=1, infinite=false, duration=300,
 		}
 	}
 
-	function changeMove() {
-		const $items = targets.findAllElement('item');
-		const $parent = targets.findElement('parent') || ($items[0] && getScrollParent($items[0])) || null;
+	function changeMove(move=state.move) {
+		state.move = move;
+		const $parent = $parents[0] || ($items[0] && getScrollParent($items[0])) || null;
 
 		if ($items.length===0 || $parent===null) {
-			targets.findAllElement('prev', $prev => $prev.disabled = true);
-			targets.findAllElement('next', $next => $next.disabled = true);
+			$prevList.forEach($prev => $prev.disabled = true);
+			$nextList.forEach($next => $next.disabled = true);
 			return false;
 		}
 
@@ -108,8 +114,8 @@ export default function create($element, { step=1, infinite=false, duration=300,
 		const scrollToNext = resolveScrollTo($parent, $currentItems, step, true);
 		const scrollTo = (state.move==='prev' ? scrollToPrev : (state.move==='next' ? scrollToNext : 0));
 
-		targets.findAllElement('prev', $prev => $prev.disabled = scrollToPrev===0);
-		targets.findAllElement('next', $next => $next.disabled = scrollToNext===0);
+		$prevList.forEach($prev => $prev.disabled = scrollToPrev===0);
+		$nextList.forEach($next => $next.disabled = scrollToNext===0);
 
 		if (scrollTo===0) {
 			state.move = false;
@@ -133,18 +139,6 @@ export default function create($element, { step=1, infinite=false, duration=300,
 				$parent.scrollLeft + scrollTo, $parent.scrollTop,
 				onAnimationEnd, Math.ceil(Math.abs(state.duration*scrollTo)) || duration
 			);
-		}
-	}
-
-	function registerMoveEvent(eventName, move) {
-		return function($element) {
-			function onEvent() {
-				state.move = move;
-				changeMove();
-			}
-
-			$element.addEventListener(eventName, onEvent);
-			return () => $element.removeEventListener(eventName, onEvent);
 		}
 	}
 }

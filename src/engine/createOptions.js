@@ -2,8 +2,8 @@
 import * as errorhub from '../errorhub'
 import swap from '../lib/swap'
 import Request from './Request'
-import { dispatch } from '../api/channel'
 import * as locale from '../locale'
+import { dispatch } from 'appgine/hooks/channel'
 
 
 export default function createOptions(options={}) {
