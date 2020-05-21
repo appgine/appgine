@@ -1,7 +1,4 @@
 
-import { listen as listenPlugins } from './plugins/errorhub'
-import loadScript from './lib/loadScript'
-
 const onerror = window.onerror;
 window.onerror = function(messageOrEvent, source, lineno, colno, error) {
 	dispatch(ERROR.CONSOLE, 'window.onerror: ' + String(messageOrEvent||''), error, messageOrEvent, source, lineno, colno);
@@ -14,10 +11,6 @@ console.error = function() {
 	console_error.apply(console, arguments);
 }
 
-listenPlugins(function(errno, error, e, ...payload) {
-	dispatch(ERROR.PLUGINS, 'plugins', e, errno, error, payload);
-});
-
 const listeners = [];
 
 export const ERROR = {
@@ -27,6 +20,9 @@ export const ERROR = {
 	REQUEST: 3,
 	OPTIONS: 4,
 	AJAX: 5,
+	LOADDATA: 6,
+	CONTEXT: 7,
+	DESTROY: 8,
 }
 
 

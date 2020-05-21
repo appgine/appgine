@@ -1,5 +1,5 @@
 
-import * as errorhub from '../errorhub'
+import * as errorhub from '../../errorhub'
 import querySelectorAll from '../lib/querySelectorAll'
 
 

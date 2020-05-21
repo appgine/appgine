@@ -1,4 +1,5 @@
 
+import * as errorhub from '../errorhub'
 
 const contextStack = [];
 const contextList = [];
@@ -6,18 +7,15 @@ const contextList = [];
 
 export default function withContext(...contextArgs) {
 	const fn = contextArgs.pop();
-	const context = { contextArgs, destroy: [] };
+	const redbox = (process.env.NODE_ENV !== 'production') ? require('./lib/redbox').createRedBox() : null;
+	const context = { contextArgs, destroy: [], redbox };
+
 	contextList.push(context);
-	context.destroy.push(internalWithContext(context, fn, []));
+	context.destroy.push({current: internalWithContext(context, fn, [])});
 
 	return function() {
-		context.destroy.splice(0, context.destroy.length).reverse().filter(fn => typeof fn==='function').forEach(fn => {
-			try {
-				fn();
-			} catch (e) {
-				console.log('failed to destroy', e, fn);
-			}
-		});
+		context.redbox && context.redbox.destroy();
+		context.destroy.splice(0, context.destroy.length).reverse().forEach(processDestroy);
 
 		if (contextList.indexOf(context)!==-1) {
 			contextList.splice(contextList.indexOf(context), 1);
@@ -48,25 +46,24 @@ export function bindContext(fn) {
 
 
 function internalBindContext(fn, withDestroy) {
-	if (contextStack.length===0) {
-		throw new Error('Missing context in call');
+	const context = contextStack[contextStack.length-1];
+
+	if (!context) {
+		renderError(errorhub.ERROR.CONTEXT, new Error('missing content in fn call'), 'failed context function', fn.toString())
 	}
 
-	const context = contextStack[contextStack.length-1];
-	let destroy = null;
-
+	const destroy = {current: null};
 	function internalUse(...args) {
-		destroy && withDestroy && destroy();
-		destroy = internalWithContext(context, fn, args);
-		return destroy;
+		destroy.current && withDestroy && internalDestroy();
+		destroy.current = context && internalWithContext(context, fn, args);
+		return internalDestroy;
 	}
 
 	function internalDestroy() {
-		(typeof destroy==='function') && destroy();
-		destroy = null;
+		processDestroy(destroy);
 	}
 
-	context.destroy.push(internalDestroy);
+	context && context.destroy.push(destroy);
 
 	internalUse[0] = internalUse;
 	internalUse[1] = internalDestroy;
@@ -81,17 +78,33 @@ function internalBindContext(fn, withDestroy) {
 
 export function useContext(fn) {
 	if (contextStack.length===0) {
-		throw new Error('Missing context in call');
+		renderError(errorhub.ERROR.CONTEXT, new Error('missing content in useContext call'), 'failed context function', fn.toString());
+		return function() {};
 	}
 
-	let destroy = fn(...contextStack[contextStack.length-1].contextArgs);
+	const destroy = {current: fn(...contextStack[contextStack.length-1].contextArgs)};
 	function internalDestroy() {
-		(typeof destroy==='function') && destroy();
-		destroy = null;
+		processDestroy(destroy);
 	}
 
-	contextStack[contextStack.length-1].destroy.push(internalDestroy);
+	contextStack[contextStack.length-1].destroy.push(destroy);
 	return internalDestroy;
+}
+
+
+export function withErrorCatch(errormsg, tryFn, args=[])
+{
+	try {
+		return tryFn(...args);
+
+	} catch (e) {
+		contextStack.length && contextStack[contextStack.length-1].redbox && contextStack[contextStack.length-1].redbox.render(e);
+		errorhub.dispatch(errorhub.ERROR.PLUGINS, errormsg, e, tryFn.toString());
+
+		if (process.env.NODE_ENV !== 'production') {
+			console.log(tryFn, ...args);
+		}
+	}
 }
 
 
@@ -103,7 +116,32 @@ function internalWithContext(context, fn, args) {
 		return destroy;
 
 	} catch (e) {
-		console.log('fail to create', e);
 		contextStack.pop();
 	}
+}
+
+
+function processDestroy(destroy) {
+	try {
+		(typeof destroy.current==='function') && destroy.current();
+	} catch (e) {
+		renderError(errorhub.ERROR.DESTROY, e, 'failed destroy function', destroy.current.toString());
+
+	} finally {
+		destroy.current = null;
+	}
+}
+
+
+function renderError(errorcode, e, ...debug) {
+	if (process.env.NODE_ENV !== 'production') {
+		try {
+			const redbox = require('./lib/redbox').createRedBox();
+			redbox.render(e);
+			setTimeout(() => redbox.destroy(), 5000);
+
+		} catch (e) {}
+	}
+
+	errorhub.dispatch(errorcode, e, ...debug);
 }

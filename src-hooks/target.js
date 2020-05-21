@@ -4,7 +4,7 @@ import resolveDataAttribute from '../lib/plugins/lib/resolveDataAttribute'
 
 import { dom } from '../lib/closure'
 import withContext from 'appgine/hooks'
-import { useContext } from 'appgine/hooks'
+import { useContext, withErrorCatch } from 'appgine/hooks'
 
 let completed = false;
 let completedTimeout = null;
@@ -212,7 +212,7 @@ function completePlugin(plugin) {
 	}
 
 	if (plugin.completeContext===null) {
-		plugin.completeContext = withContext({}, () => plugin.fn());
+		plugin.completeContext = withContext({}, () => withErrorCatch('useComplete', plugin.fn));
 	}
 }
 
@@ -236,8 +236,9 @@ function completePluginTargets(plugin) {
 			continue;
 		}
 
+		const contextArgs = [target.$element, {...target, data: target.createData()}];
 		const context = withContext(target, function() {
-			const result = plugin.fn(target.$element, {...target, data: target.createData()});
+			const result = withErrorCatch('useTargets', plugin.fn, contextArgs);
 
 			if (result!==undefined) {
 				plugin.results.push(result);

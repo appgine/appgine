@@ -1,6 +1,6 @@
 
-import redboxWrapper from './redboxWrapper'
 import withContext from '../context'
+import { withErrorCatch } from '../context'
 
 
 export default function createInstance(pluginObj, plugin) {
@@ -13,16 +13,18 @@ export default function createInstance(pluginObj, plugin) {
 	pluginObj.loadWithPlugin = function(newPlugin=null) {
 		pluginObj.destroy();
 
-		pluginObj.plugin = newPlugin;
+		pluginObj.plugin = null;
 		pluginObj.instance = null;
-		pluginObj.plugin && redboxWrapper('createPlugin', pluginObj, function() {
+
+		if (newPlugin) {
+			pluginObj.plugin = newPlugin;
 			pluginObj.instance = withContext(pluginObj.context, function() {
-				return pluginObj.plugin(...pluginObj.pluginArguments());
+				return withErrorCatch('create plugin', pluginObj.plugin, pluginObj.pluginArguments());
 			});
-		});
+		}
 	}
 
 	pluginObj.destroy = function() {
-		pluginObj.instance && redboxWrapper('destroyPlugin', pluginObj, () => pluginObj.instance());
+		pluginObj.instance && pluginObj.instance();
 	}
 }
