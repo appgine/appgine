@@ -21,7 +21,6 @@ exports.contains = function(parent, descendant) {
 
 exports.compareNodeOrder = goog.dom.compareNodeOrder;
 exports.append = goog.dom.append;
-exports.getAncestorByClass = goog.dom.getAncestorByClass;
 exports.getPreviousElementSibling = goog.dom.getPreviousElementSibling;
 exports.getNextElementSibling = goog.dom.getNextElementSibling;
 exports.getLink = function(target) {
@@ -29,27 +28,32 @@ exports.getLink = function(target) {
 }
 
 exports.getAncestor = function(target, matcher) {
-	var $target = target.target||target;
-
-	if (goog.isFunction(matcher)) {
-		return goog.dom.getAncestor($target, matcher, true);
+	if (goog.isFunction(matcher)===false) {
+		var args = goog.array.map([].slice.call(arguments, 1), function(tagName) { return tagName.toUpperCase(); });
+		matcher = function(node) { return args.indexOf(node.nodeName)!==-1; };
 	}
 
-	var args;
-	args = [].slice.call(arguments, 1);
-	args = goog.array.map(args, function(tagName) {
-		return tagName.toUpperCase();
-	});
+	var $target = target.target||target;
+	while ($target) {
+		if (matcher($target)) {
+			return $target;
+		}
 
-	return goog.dom.getAncestor($target, function(node) {
-		return args.indexOf(node.nodeName)!==-1;
-	}, true);
+		if ($target.nodeType===11) { // shadow-root
+			$target = $target.parentNode || $target.host;
+
+		} else {
+			$target = $target.parentNode;
+		}
+	}
+
+	return null;
 }
 
 exports.getSubmitter = function($form, target) {
-	var $submitter = goog.dom.getAncestor(target.target || target, function($node) {
+	var $submitter = exports.getAncestor(target, function($node) {
 		return String($node.type||'').toLowerCase()==='submit';
-	}, true);
+	});
 
 	if (!$form) {
 		return $submitter;
