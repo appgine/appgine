@@ -20,6 +20,7 @@
     "bridges/",
     "hooks/",
     "run.js",
+    "closure.js",
     "shim.js",
     "hooks.js",
     "plugins.js",

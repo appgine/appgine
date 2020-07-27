@@ -11,6 +11,7 @@ var babel = require("@babel/core");
 
 gulp.task('build', function(done) {
 	child_process.execSync('rm -rf ./lib && cp -a ./src ./lib');
+	child_process.execSync('rm -rf ./closure.js');
 
 	process.env.NODE_ENV = 'production';
 
@@ -23,7 +24,7 @@ gulp.task('build', function(done) {
 		closureFile = closureFile.replace(/[;\s]*$/, '');
 		closureFile = closureFile.replace(/,(([a-z])\(\2\.[a-z]\=1\))/, function(_, match) { return '; return ' + match; })
 
-		file = fs.readFileSync('./src/closure.js');
+		file = file = fs.readFileSync('./src/closure.js');
 		file = babel.transform(file, {presets: [["@babel/preset-env"]]});
 		file = file.code;
 		file = file.replace("'use strict';", '');
@@ -35,7 +36,7 @@ gulp.task('build', function(done) {
 			file = file.substr(0, index) + closureFile + file.substr(index+replace.length);
 		}
 
-		fs.writeFileSync('./lib/closure.js', file);
+		fs.writeFileSync('./closure.js', file);
 		done();
 	});
 });
