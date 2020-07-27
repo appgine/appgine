@@ -16,7 +16,32 @@ const internalComplete = [];
 let internalTargets = [];
 
 export function useTargets(target, fn) {
-	const plugin = { containers: [], results: [], targets: [], target, fn };
+	const plugin = { target, fn };
+	return internalPluginTargets(plugin);
+}
+
+
+const useSelectorPointer = {};
+export function useSelector(selector, fn) {
+	useSelectorPointer[selector] = useSelectorPointer[selector] || 0;
+
+	if (++useSelectorPointer[selector]===1) {
+		addSelector(selector);
+	}
+
+	const plugin = { selector, fn };
+	return internalPluginTargets(plugin, function() {
+		if (--useSelectorPointer[selector]===0) {
+			removeSelector(selector);
+		}
+	});
+}
+
+
+function internalPluginTargets(plugin, whenDispose) {
+	plugin.containers = [];
+	plugin.results = [];
+	plugin.targets = [];
 
 	useContext(context => {
 		if (context.$element) {
@@ -56,6 +81,8 @@ export function useTargets(target, fn) {
 
 				plugin.results.splice(0, plugin.results.length);
 				plugin.targets.splice(0, plugin.targets.length).forEach(({ context }) => context());
+
+				whenDispose && whenDispose();
 			}
 		}
 	});
@@ -132,25 +159,11 @@ export function addContainer(container, $node) {
 		}
 	}
 
-	querySelectorAll($node, '[data-target]').forEach(function($element) {
-		let found = false;
-		for (let target of internalTargets) {
-			if (target.$element===$element) {
-				found = true;
-				if (target.containers.indexOf(container)===-1) {
-					target.containers.push(container);
-				}
-			}
-		}
+	addSelectorWithContainer('[data-target]', 'data-target', container, $node);
 
-		if (found===false) {
-			resolveDataAttribute($element, 'data-target', function(target) {
-				target.$element = $element;
-				target.containers = [container];
-				internalTargets.push(target);
-			});
-		}
-	});
+	for (let selector of Object.keys(useSelectorPointer)) {
+		addSelectorWithContainer(selector, null, container, $node);
+	}
 }
 
 
@@ -206,6 +219,48 @@ export function removeContainer(container, $node) {
 }
 
 
+function addSelector(selector) {
+	for (let pointer=0; pointer<containerPointer.length; pointer++) {
+		if (containerPointer[pointer]!==undefined) {
+			for (const $containerNode of containerNodes[pointer]) {
+				addSelectorWithContainer(selector, null, containerPointer[pointer], $containerNode);
+			}
+		}
+	}
+}
+
+
+function addSelectorWithContainer(selector, attr, container, $node) {
+	querySelectorAll($node, selector).forEach(function($element) {
+		let found = false;
+		for (let target of internalTargets) {
+			if (target.$element===$element && target.selector===selector) {
+				found = true;
+				if (target.containers.indexOf(container)===-1) {
+					target.containers.push(container);
+				}
+			}
+		}
+
+		if (found===false) {
+			const targets = attr ? resolveDataAttribute($element, attr) : [{}];
+
+			for (let target of targets) {
+				target.selector = selector;
+				target.$element = $element;
+				target.containers = [container];
+				internalTargets.push(target);
+			}
+		}
+	});
+}
+
+
+function removeSelector(selector) {
+	internalTargets = internalTargets.filter(target => target.selector!==selector);
+}
+
+
 function completePlugin(plugin) {
 	if (plugin.$element.ownerDocument!==document) {
 		return;
@@ -228,6 +283,12 @@ function completePluginTargets(plugin) {
 
 		} else if (plugin.targets.some(targetObj => targetObj.target===target)) {
 			continue;
+		}
+
+		if (plugin.selector) {
+			if (target.selector!==plugin.selector) {
+				continue;
+			}
 
 		} else if (matchTargetPlugin(plugin.context, target)===false) {
 			continue;
@@ -236,7 +297,7 @@ function completePluginTargets(plugin) {
 			continue;
 		}
 
-		const contextArgs = [target.$element, {...target, data: target.createData()}];
+		const contextArgs = [target.$element, {...target, data: target.createData ? target.createData() : null}];
 		const context = withContext(target, function() {
 			const result = withErrorCatch('useTargets', plugin.fn, contextArgs);
 
