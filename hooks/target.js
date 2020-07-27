@@ -15,21 +15,38 @@ const internalPlugins = [];
 const internalComplete = [];
 let internalTargets = [];
 
-export function useTargets(target, fn) {
-	const plugin = { target, fn };
+
+export function useTarget(target, fn) {
+	const plugin = { first: true, target, fn };
 	return internalPluginTargets(plugin);
 }
 
 
-const useSelectorPointer = {};
+export function useTargets(target, fn) {
+	const plugin = { first: false, target, fn };
+	return internalPluginTargets(plugin);
+}
+
+
+export function useFirstSelector(selector, fn) {
+	return internalUseSelector(true, selector, fn);
+}
+
+
 export function useSelector(selector, fn) {
+	return internalUseSelector(false, selector, fn);
+}
+
+
+const useSelectorPointer = {};
+function internalUseSelector(first, selector, fn) {
 	useSelectorPointer[selector] = useSelectorPointer[selector] || 0;
 
 	if (++useSelectorPointer[selector]===1) {
 		addSelector(selector);
 	}
 
-	const plugin = { selector, fn };
+	const plugin = { first, selector, fn };
 	return internalPluginTargets(plugin, function() {
 		if (--useSelectorPointer[selector]===0) {
 			removeSelector(selector);
@@ -294,6 +311,10 @@ function completePluginTargets(plugin) {
 			continue;
 
 		} else if (matchTarget(plugin.target, target.target)===false) {
+			continue;
+		}
+
+		if (plugin.first && plugin.targets.length>0) {
 			continue;
 		}
 
