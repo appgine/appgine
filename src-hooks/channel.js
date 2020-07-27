@@ -15,7 +15,7 @@ export function dispatch(...args) {
 
 
 export function useDispatch(...args) {
-	return useContext(() => processDispatch(this, ...args));
+	return useContext(processDispatch.bind(this, this, ...args));
 }
 
 
