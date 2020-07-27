@@ -1,7 +1,7 @@
 
 import createConnector from '../createConnector'
-import { style } from '../../lib/closure'
-import { onTick } from '../../lib/tick'
+import { style } from 'appgine/closure'
+import { onTick } from '../../src/tick'
 
 
 const connectors = {};

@@ -10,7 +10,6 @@ var webpackBuild = require('./webpack/build')
 var babel = require("@babel/core");
 
 gulp.task('build', function(done) {
-	child_process.execSync('rm -rf ./lib && cp -a ./src ./lib');
 	child_process.execSync('rm -rf ./closure.js');
 
 	process.env.NODE_ENV = 'production';

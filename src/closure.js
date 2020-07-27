@@ -1,4 +1,4 @@
 
-import * as closure from '../closure'
+import * as closure from 'appgine/closure'
 export default closure;
-export * from '../closure'
+export * from 'appgine/closure'

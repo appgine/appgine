@@ -1,7 +1,7 @@
 
-import { dom } from '../lib/closure'
-import * as ajax from '../lib/lib/ajax'
-import createListeners from '../lib/lib/createListeners'
+import { dom } from 'appgine/closure'
+import * as ajax from '../src/lib/ajax'
+import createListeners from '../src/lib/createListeners'
 
 import { useContext } from 'appgine/hooks'
 

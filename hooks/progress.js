@@ -1,6 +1,6 @@
 
-import { dom } from '../lib/closure'
-import { isSwapping } from '../lib/update'
+import { dom } from 'appgine/closure'
+import { isSwapping } from '../src/update'
 
 import { withModuleContext, useContext } from 'appgine/hooks'
 import { useListen } from 'appgine/hooks/channel'

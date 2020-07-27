@@ -1,5 +1,5 @@
 
-import { dom } from '../lib/closure'
+import { dom } from 'appgine/closure'
 import { useContext, bindContext } from 'appgine/hooks'
 
 

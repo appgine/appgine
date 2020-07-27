@@ -1,6 +1,6 @@
 
-import { dom } from 'appgine/lib/closure'
-import { isSwapping } from '../../lib/update'
+import { dom } from 'appgine/closure'
+import { isSwapping } from '../../src/update'
 
 import { useEvent } from 'appgine/hooks/event'
 import { bindDispatch } from 'appgine/hooks/channel'

@@ -1,5 +1,5 @@
 
-import { cssom } from '../closure'
+import { cssom } from 'appgine/closure'
 
 import { useEvent } from 'appgine/hooks/event'
 

@@ -18,7 +18,7 @@ import resolveDataAttribute from '../plugins/lib/resolveDataAttribute'
 
 import { addContainer, removeContainer } from 'appgine/hooks/target'
 import { callUpdate } from 'appgine/hooks/update'
-import { dom } from '../closure'
+import { dom } from 'appgine/closure'
 
 
 export function loadMain()

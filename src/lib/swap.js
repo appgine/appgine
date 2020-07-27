@@ -6,7 +6,7 @@ import swapSelectorClasses from './swap/selectorClasses'
 import runtimeScript from './swap/runtimeScript'
 
 import { willSwap } from '../update'
-import closure from '../closure'
+import closure from 'appgine/closure'
 import createFragment from './createFragment'
 import loadHtml from './loadHtml'
 import loadTitle from './loadTitle'

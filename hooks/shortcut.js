@@ -1,6 +1,6 @@
 
-import { dom, shortcuthandler } from '../lib/closure'
-import createListeners from '../lib/lib/createListeners'
+import { dom, shortcuthandler } from 'appgine/closure'
+import createListeners from '../src/lib/createListeners'
 
 import { withModuleContext } from 'appgine/hooks'
 import { useContext, bindContext } from 'appgine/hooks'

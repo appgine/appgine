@@ -1,6 +1,6 @@
 
 import shallowEqual from '../lib/shallowEqual'
-import closure from '../closure'
+import closure from 'appgine/closure'
 
 const _supported = !!(window.history && window.history.pushState);
 

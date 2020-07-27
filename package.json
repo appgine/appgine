@@ -15,7 +15,7 @@
     "url": "https://github.com/appgine/appgine.git"
   },
   "files": [
-    "lib/",
+    "src/",
     "addons/",
     "bridges/",
     "hooks/",

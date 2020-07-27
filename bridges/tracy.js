@@ -1,6 +1,6 @@
 
-import closure from 'appgine/lib/closure'
-import * as ajax from 'appgine/lib/lib/ajax'
+import closure from 'appgine/closure'
+import * as ajax from 'appgine/src/lib/ajax'
 
 
 export default function bridgeTracy(options={}) {

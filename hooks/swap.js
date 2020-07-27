@@ -5,7 +5,7 @@ import {
 	loadScripts, unloadScripts,
 	loadStatic, unloadStatic,
 	loadAtomic, unloadAtomic
-} from '../lib/engine/plugins'
+} from '../src/engine/plugins'
 
 let swapping = null;
 

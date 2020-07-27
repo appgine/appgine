@@ -1,5 +1,5 @@
 
-import closure from '../closure'
+import closure from 'appgine/closure'
 
 
 export default function scrollIntoViewIfNeeded($element, animated, onEnd) {

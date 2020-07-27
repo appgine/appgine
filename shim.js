@@ -1,1 +1,1 @@
-require('./lib/shim');
+require('./src/shim');

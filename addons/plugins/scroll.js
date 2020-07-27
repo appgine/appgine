@@ -1,5 +1,5 @@
 
-import { animation, browser } from 'appgine/lib/closure'
+import { animation, browser } from 'appgine/closure'
 
 import { useEvent } from 'appgine/hooks/event'
 import { useTargets, useComplete } from 'appgine/hooks/target'

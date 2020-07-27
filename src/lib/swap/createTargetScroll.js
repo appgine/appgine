@@ -1,5 +1,5 @@
 
-import { scrollTo, scrollLeft, scrollTop } from '../../closure';
+import { scrollTo, scrollLeft, scrollTop } from 'appgine/closure';
 
 
 export default function createTargetScroll(toTarget) {

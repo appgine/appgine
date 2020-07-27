@@ -1,5 +1,5 @@
 
-import { dom } from '../closure'
+import { dom } from 'appgine/closure'
 
 
 export default function createListeners(onArgs) {

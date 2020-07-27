@@ -22,7 +22,7 @@ import { willUpdate, wasUpdated } from '../update'
 import createRequestnum from '../requestnum'
 import * as history from './history'
 
-import closure from '../closure'
+import closure from 'appgine/closure'
 import * as ajax from '../lib/ajax'
 
 var _options = createOptions({});

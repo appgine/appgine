@@ -1,5 +1,5 @@
 
-import { onReload, onRedirect, scroll } from '../lib/engine/run'
+import { onReload, onRedirect, scroll } from '../src/engine/run'
 
 
 export function useRedirect(endpoint) {

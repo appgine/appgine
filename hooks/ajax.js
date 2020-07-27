@@ -1,6 +1,6 @@
 
-import { create, ABORT } from '../lib/lib/ajax'
-import createRequestnum from '../lib/requestnum'
+import { create, ABORT } from '../src/lib/ajax'
+import createRequestnum from '../src/requestnum'
 
 import { useContext, bindContext } from 'appgine/hooks'
 import { dispatch } from 'appgine/hooks/channel'

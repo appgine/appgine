@@ -1,6 +1,6 @@
 
 import React from 'react'
-import { uri, selection, string } from 'appgine/lib/closure'
+import { uri, selection, string } from 'appgine/closure'
 
 import { bindReact } from 'appgine/hooks/react'
 import { useEvent } from 'appgine/hooks/event'

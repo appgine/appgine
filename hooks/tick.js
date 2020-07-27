@@ -1,5 +1,5 @@
 
-import * as tick from '../lib/tick'
+import * as tick from '../src/tick'
 import { useContext, bindContext } from 'appgine/hooks'
 
 

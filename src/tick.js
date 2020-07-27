@@ -2,7 +2,7 @@
 import Kefir from './kefir'
 import { onUpdated, isUpdating } from './update'
 import { isRequestCurrent } from './engine/run'
-import closure from './closure'
+import closure from 'appgine/closure'
 
 const TICK = {
 	DELAYED: 0,

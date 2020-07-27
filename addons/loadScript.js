@@ -1,3 +1,3 @@
 
 
-export default from '../lib/lib/loadScript'
+export default from '../src/lib/loadScript'

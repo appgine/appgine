@@ -1,2 +1,2 @@
 
-module.exports = require('./lib/plugins/loader').default;
+module.exports = require('./src/plugins/loader').default;

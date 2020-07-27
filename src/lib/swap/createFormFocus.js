@@ -1,5 +1,5 @@
 
-import { dom, selection } from '../../closure'
+import { dom, selection } from 'appgine/closure'
 
 
 export default function createFormFocus(isRequestNew) {

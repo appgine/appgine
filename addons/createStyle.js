@@ -1,5 +1,5 @@
 
-import { cssom } from '../lib/closure'
+import { cssom } from 'appgine/closure'
 
 
 export default function createStyle(cssText='') {

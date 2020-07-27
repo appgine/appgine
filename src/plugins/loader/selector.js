@@ -4,7 +4,7 @@ import { loadData } from './scripts'
 import clone from '../lib/clone'
 
 import resolveDataAttribute from '../lib/resolveDataAttribute'
-import { dom } from '../../../lib/closure'
+import { dom } from 'appgine/closure'
 
 const internalBinders = [];
 const loadedPlugins = [];

@@ -1,7 +1,7 @@
 
-import closure from 'appgine/lib/closure'
-import * as history from 'appgine/lib/engine/history'
-import { requestStack } from 'appgine/lib/engine/run'
+import closure from 'appgine/closure'
+import * as history from 'appgine/src/engine/history'
+import { requestStack } from 'appgine/src/engine/run'
 
 
 export default function bridgeLayers(options={}, render) {

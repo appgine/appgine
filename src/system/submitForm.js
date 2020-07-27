@@ -1,5 +1,5 @@
 
-import { dom } from '../closure'
+import { dom } from 'appgine/closure'
 import { getEventTarget, getElementTarget } from '../lib/target'
 
 import { useEvent } from 'appgine/hooks/event'

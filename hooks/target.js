@@ -1,8 +1,8 @@
 
-import querySelectorAll from '../lib/plugins/lib/querySelectorAll'
-import resolveDataAttribute from '../lib/plugins/lib/resolveDataAttribute'
+import querySelectorAll from '../src/plugins/lib/querySelectorAll'
+import resolveDataAttribute from '../src/plugins/lib/resolveDataAttribute'
 
-import { dom } from '../lib/closure'
+import { dom } from 'appgine/closure'
 import withContext from 'appgine/hooks'
 import { useContext, withErrorCatch } from 'appgine/hooks'
 
