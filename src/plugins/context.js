@@ -76,6 +76,11 @@ function internalBindContext(fn, withDestroy) {
 }
 
 
+export function getContext() {
+	return contextStack.length ? contextStack[contextStack.length-1].contextArgs : null;
+}
+
+
 export function useContext(fn) {
 	if (contextStack.length===0) {
 		renderError(errorhub.ERROR.CONTEXT, new Error('missing content in useContext call'), 'failed context function', fn.toString());
