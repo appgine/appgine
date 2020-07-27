@@ -4,7 +4,8 @@ import { loadData } from '../loader/scripts'
 
 
 export default function resolveDataAttribute($element, attrName, fn) {
-	for (let plugin of parser($element.getAttribute(attrName)||'')) {
+	return parser($element.getAttribute(attrName)||'').map(plugin => {
+		plugin = {...plugin};
 		plugin.createData = function() {
 			if (String($element.tagName||'').toLowerCase()==='script' && plugin.pluginVar==='') {
 				try { return JSON.parse($element.textContent); } catch (e) {}
@@ -14,6 +15,7 @@ export default function resolveDataAttribute($element, attrName, fn) {
 			return loadData(plugin.pluginVar);
 		}
 
-		fn({...plugin});
-	}
+		fn && fn(plugin);
+		return plugin;
+	});
 }
