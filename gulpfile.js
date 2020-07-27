@@ -11,7 +11,6 @@ var babel = require("@babel/core");
 
 gulp.task('build', function(done) {
 	child_process.execSync('rm -rf ./lib && cp -a ./src ./lib');
-	child_process.execSync('rm -rf ./addons && cp -a ./src-addons ./addons');
 	child_process.execSync('rm -rf ./bridges && cp -a ./src-bridges ./bridges');
 
 	process.env.NODE_ENV = 'production';
