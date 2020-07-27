@@ -18,6 +18,11 @@ export function useDispatch(type, action, ...args) {
 }
 
 
+export function bindDispatch(...args) {
+	return bindContext((...args2) => useDispatch(...args, ...args2));
+}
+
+
 export function useBus(...args) {
 	const fn = typeof args[args.length-1]==='function' ? bindContext(args.pop()) : null;
 	return useContext(context => {
