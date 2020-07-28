@@ -6,7 +6,7 @@ import swapSelectorClasses from './swap/selectorClasses'
 import runtimeScript from './swap/runtimeScript'
 
 import { willSwap } from '../update'
-import closure from 'appgine/closure'
+import { scrollTo } from 'appgine/hooks/window'
 import createFragment from './createFragment'
 import loadHtml from './loadHtml'
 import loadTitle from './loadTitle'
@@ -140,7 +140,7 @@ export default function swap(from, into, isRequestNew, isRequestInitial) {
 			formFocus();
 
 			if (scrolled===-1) {
-				closure.scrollTo(0, scrollTop);
+				scrollTo(0, scrollTop);
 			}
 		});
 	});

@@ -4,6 +4,8 @@ import { onUpdated, isUpdating } from './update'
 import { isRequestCurrent } from './engine/run'
 import closure from 'appgine/closure'
 
+import { currentScreen } from 'appgine/hooks/window'
+
 const TICK = {
 	DELAYED: 0,
 	IMMEDIATE: 1,
@@ -66,7 +68,7 @@ const stream1 = Kefir.merge([
 
 const stream2 = Kefir.stream(emitter => stream1.onValue(() => window.requestAnimationFrame(() => emitter.emit())))
 	.filter(() => ticking = ticks.length>0)
-	.map(() => closure.rect.fromScreen())
+	.map(() => currentScreen())
 	.onValue(screen => invokeTicks(TICK.EACH, screen))
 	.filter(() => ticking = isRequestCurrent())
 	.onValue(screen => invokeTicks(TICK.IMMEDIATE, screen))
@@ -89,7 +91,7 @@ Kefir.stream(function(emitter) {
 	});
 })
 	.filter(() => !isUpdating())
-	.map(screen => closure.rect.intersection(screen, closure.rect.fromScreen()))
+	.map(screen => closure.rect.intersection(screen, currentScreen()))
 	.filter(screen => screen && screen.height && screen.width)
 	.onValue(screen => invokeTicks(TICK.DELAYED, screen));
 

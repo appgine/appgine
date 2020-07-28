@@ -1,5 +1,5 @@
 
-import { scrollTo, scrollLeft, scrollTop } from 'appgine/closure';
+import { scrollOffset } from 'appgine/hooks/window'
 
 
 export default function createTargetScroll(toTarget) {
@@ -13,11 +13,7 @@ export default function createTargetScroll(toTarget) {
 
 			if ($element && $found) {
 				const boundsFound = $found.getBoundingClientRect();
-
-				scrollTo(
-					scrollLeft()-boundsElement.left+boundsFound.left,
-					scrollTop()-boundsElement.top+boundsFound.top
-				);
+				scrollOffset(boundsFound.left-boundsElement.left, boundsFound.top-boundsElement.top);
 			}
 		}
 

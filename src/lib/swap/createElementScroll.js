@@ -1,5 +1,6 @@
 
-import closure from 'appgine/closure'
+import { dom } from 'appgine/closure'
+import { scrollZero, scrollOffset } from 'appgine/hooks/window'
 import { setHashFixedEdge, findFixedEdge } from '../scroll'
 
 
@@ -19,23 +20,19 @@ export default function createElementScroll($element, scrollTop=false, hashFixed
 				scrolled = true;
 
 				if (keepScroll) {
-					closure.scrollTo(
-						closure.scrollLeft()+scroll.now.left-scroll.prev.left,
-						closure.scrollTop()+scroll.now.top-scroll.prev.top
-					);
+					scrollOffset(scroll.now.left-scroll.prev.left, scroll.now.top-scroll.prev.top);
 
 				} else {
-					closure.scrollTo(
-						closure.scrollLeft() + Math.max(scroll.now.left-scroll.prev.left, Math.min(0, scroll.now.left)),
-						closure.scrollTop() + Math.max(scroll.now.top-scroll.prev.top, Math.min(0, scroll.now.top-fixedEdge))
-					);
+					const scrollLeft = Math.max(scroll.now.left-scroll.prev.left, Math.min(0, scroll.now.left));
+					const scrollTop = Math.max(scroll.now.top-scroll.prev.top, Math.min(0, scroll.now.top-fixedEdge));
+					scrollOffset(scrollLeft, scrollTop);
 				}
 			}
 
 		} catch (e) {}
 
 		if (scrolled===false && scrollTop) {
-			closure.scrollTo(0, 0);
+			scrollZero();
 		}
 	}
 }
@@ -83,7 +80,7 @@ function createSelectorsScroll($element, oldBounds, selectors) {
 	let $tree;
 	let treeBounds;
 
-	if (closure.dom.contains(document, $element)) {
+	if (dom.contains(document, $element)) {
 		$tree = $element;
 		treeBounds = oldBounds;
 

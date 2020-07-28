@@ -2,6 +2,9 @@
 import closure from 'appgine/closure'
 import scrollIntoViewIfNeeded from './scrollIntoViewIfNeeded'
 
+import { scrollTo, scrollTop, currentScreen } from 'appgine/hooks/window'
+
+
 let optionsHashFixedEdge = null;
 let optionsScrollPosition = null;
 
@@ -45,7 +48,7 @@ export function scrollNodeToView($origin, $node, animated, onEnd) {
 				return closure.animation.scrollToLazy(internalFindScrollTo.bind(null, scrolled), internalOnEnd);
 
 			} else {
-				closure.scrollTo(...internalFindScrollTo(scrolled));
+				scrollTo(...internalFindScrollTo(scrolled));
 				internalOnEnd();
 			}
 		});
@@ -60,8 +63,8 @@ export function scrollFormToView($form, top=false) {
 		do {
 			const styles = window.getComputedStyle($parent, null);
 			if (String(styles.position||'').toLowerCase()==='fixed') {
-				const screen = closure.rect.fromScreen()
-				return closure.scrollTo(
+				const screen = currentScreen();
+				return scrollTo(
 					Math.min(screen.left, parseInt(styles.left||0, 10)),
 					Math.min(screen.top, parseInt(styles.top||0, 10))
 				);
@@ -76,20 +79,18 @@ export function scrollFormToView($form, top=false) {
 			const fixedEdge = findFixedEdge();
 			const offset = findNodeOffset($form);
 			const bounds = $form.getBoundingClientRect();
-			const screen = closure.rect.fromScreen();
+			const screen = currentScreen();
 
 			let scrollLeft = screen.left + screen.width >= offset[0] ? Math.min(screen.left, offset[0]) : offset[0];
 			let scrollTop = Math.min(offset[1] - fixedEdge, screen.top + screen.height < offset[1] ? offset[3] - screen.height : screen.top);
 
-			return closure.scrollTo(scrollLeft, scrollTop);
+			return scrollTo(scrollLeft, scrollTop);
 		}
 	}
 }
 
 
 export function findFixedEdge() {
-	const scrollTop = closure.scrollTop();
-
  	let fixedEdge = 0;
 
  	let hashFixedEdge = optionsHashFixedEdge;
@@ -122,7 +123,7 @@ export function findFixedEdge() {
  					filter($node => $node instanceof Element).
  					map(closure.style.getBounds).
  					forEach(({ top, height }) => {
- 						fixedEdge = Math.max(fixedEdge, top + height - scrollTop)
+ 						fixedEdge = Math.max(fixedEdge, top + height - scrollTop())
  					});
  			}
  		});
@@ -156,7 +157,7 @@ function findScrollTo($node) {
 function findScrollToWithOrigin($node, $origin) {
 	const [nodeScrollLeft, nodeScrollTop] = findScrollTo($node);
 	const [originScrollLeft, originScrollTop] = findScrollTo($origin);
-	const { left, top, width, height } = closure.rect.fromScreen();
+	const { left, top, width, height } = currentScreen();
 
 	const originScreen = {
 		left: Math.min(left, originScrollLeft),

@@ -17,6 +17,7 @@ import { createSwapping } from 'appgine/hooks/swap'
 import { scrollNodeToView, scrollFormToView, setHashFixedEdge, setScrollPosition } from '../lib/scroll'
 import * as apiRequest from 'appgine/hooks/request'
 import * as apiShortcut from 'appgine/hooks/shortcut'
+import { scrollTo as windowScrollTo } from 'appgine/hooks/window'
 import * as tick from '../tick'
 import { willUpdate, wasUpdated } from '../update'
 import createRequestnum from '../requestnum'
@@ -97,7 +98,7 @@ tick.onEachTick(function(screen, updated, done) {
 				window.requestAnimationFrame(() => {
 					if (request.scrolled!==true) {
 						request.scrolled = Math.min(request.scrollTop, screen.top);
-						closure.scrollTo(0, request.scrollTop);
+						windowScrollTo(0, request.scrollTop);
 					}
 
 					window.requestAnimationFrame(wasUpdated);
@@ -119,7 +120,7 @@ tick.onEachTick(function(screen, updated, done) {
 
 	} else if (_poping) {
 		if (_request && _request.scrollTop!==screen.top) {
-			closure.scrollTo(0, _request.scrollTop);
+			windowScrollTo(0, _request.scrollTop);
 
 		} else {
 			_poping = null;
@@ -534,7 +535,7 @@ function submitForm(submitRequest, $form, $submitter, formTarget) {
 			const $found = closure.dom.findForm(formName, formId);
 
 			if (formTarget==='#') {
-				closure.scrollTo(0, 0);
+				windowScrollTo(0, 0);
 
 			} else if ($found) {
 				formScroll($found);
@@ -550,7 +551,7 @@ function submitForm(submitRequest, $form, $submitter, formTarget) {
 				targetScroll();
 
 			} else if (formTarget==='#') {
-				closure.scrollTo(0, 0);
+				windowScrollTo(0, 0);
 
 			} else if (formTarget[0]==='#') {
 				internalScrollHashToView($element, formTarget.substr(1));
@@ -564,7 +565,7 @@ function submitForm(submitRequest, $form, $submitter, formTarget) {
 				elementScroll(true);
 
 			} else {
-				closure.scrollTo(0, 0);
+				windowScrollTo(0, 0);
 			}
 		});
 	}
