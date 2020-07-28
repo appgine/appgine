@@ -19,8 +19,11 @@ export function getElementTarget($element) {
 	} else if ($element.getAttribute('formtarget')) {
 		return $element.getAttribute('formtarget');
 
-	} else if ($element.getAttribute('data-target')) {
+	} else if ($element.getAttribute('data-target') && $element.getAttribute('data-target').substr(0, 1)==='#') {
 		return $element.getAttribute('data-target');
+
+	} else if ($element.getAttribute('data-target-scroll')) {
+		return $element.getAttribute('data-target-scroll');
 
 	} else if ($element.hasAttribute('data-ajax') || $element.hasAttribute('data-target-ajax')) {
 		return '_ajax';
