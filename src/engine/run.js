@@ -331,7 +331,7 @@ export function onSubmitForm(e, $form, $submitter, toTarget) {
 export function onReload() {
 	const endpoint = closure.uri.create(history.getLink(), {});
 	const httpRequest = apiRequest.createHttpRequest(document.body, endpoint);
-	loadPageWithContext(createAjax(document.body, false), httpRequest, document.body, endpoint, false, _stack.loadRequest() && _stack.loadRequest().scrollTop);
+	loadPageWithContext(createAjax(document.body, false), httpRequest, document.body, endpoint, false, false);
 }
 
 
