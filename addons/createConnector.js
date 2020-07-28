@@ -54,9 +54,9 @@ function createHandler(handlers, onDisconnect) {
 	handler.then = fn => handler.promises.push(fn);
 	handler.resolved = 0;
 	handler.makeDirty = () => handler.dirty = true;
-	handler.resolve = function(state) {
+	handler.resolve = function(...args) {
 		handler.resolved++;
-		handler.promises.forEach(fn => fn(state))
+		handler.promises.forEach(fn => fn(...args))
 	}
 
 	handlers.push(handler);
