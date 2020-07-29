@@ -7,6 +7,11 @@ export function useEvent($node, name, fn, ...args) {
 }
 
 
+export function useTriggeredEvent($node, name, fn, ...args) {
+	return fn(), useEvent($node, name, fn, ...args);
+}
+
+
 export function useEventOnce($node, name, fn, ...args) {
 	return useContext(function() {
 		fn = bindContext(fn);
