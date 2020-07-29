@@ -51,7 +51,7 @@ export function scrollZero() {
 }
 
 export function scrollOffset(offsetLeft, offsetTop) {
-	scrollTo(currentScrollLeft+offsetTop, currentScrollTop+offsetTop);
+	scrollTo(currentScrollLeft+offsetLeft, currentScrollTop+offsetTop);
 }
 
 export function scrollTo(newScrollLeft, newScrollTop) {
