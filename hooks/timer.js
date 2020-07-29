@@ -23,6 +23,15 @@ export function useInterval(fn, timeout) {
 }
 
 
+export function useTriggeredInterval(fn, timeout) {
+	return useContext(function() {
+		fn();
+		let pointer = setInterval(fn, timeout)
+		return () => clearInterval(pointer);
+	});
+}
+
+
 export function bindInterval(...args) {
 	let pointer = null;
 	return (args.length<=1 ? bindContextWithDestroy : bindContext)(function(...argsInternal) {
