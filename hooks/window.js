@@ -6,7 +6,6 @@ import { useEvent } from 'appgine/hooks/event'
 import createConnector from 'appgine/addons/createConnector'
 
 const connector = createConnector();
-let connected = false;
 
 let currentTop;
 let currentLeft;
@@ -17,32 +16,18 @@ let currentScrollLeft;
 let currentScrollHeight;
 let currentScrollWidth;
 
+withModuleContext(module, function() {
+	useEvent(window, 'scroll', onWindowScroll);
+	useEvent(window, 'resize', onWindowResize);
+});
+
 export function useChange(fn, immediatelly=true) {
 	return useContext(context => {
-		if (connector.length===0) {
-			connected = true;
-			window.addEventListener('scroll', onWindowScroll);
-			window.addEventListener('resize', onWindowResize);
-			windowUpdate();
-		}
-
 		const handler = connector.connect();
 		handler.then(fn);
+		immediatelly && handler.resolve(currentScreen(), true);
 
-		if (immediatelly) {
-			tryWindowUpdate();
-			handler.resolve(currentScreen(), true);
-		}
-
-		return function() {
-			handler();
-
-			if (connected===true && connector.length===0) {
-				connected = false;
-				window.removeEventListener('scroll', onWindowScroll);
-				window.removeEventListener('resize', onWindowResize);
-			}
-		}
+		return handler;
 	});
 }
 
@@ -56,7 +41,7 @@ export function scrollOffset(offsetLeft, offsetTop) {
 }
 
 export function scrollTo(newScrollLeft, newScrollTop) {
-	currentScrollTop = currentScrollLeft = currentScrollHeight = currentScrollWidth = undefined;
+	windowReset();
 	window.scrollTo(newScrollLeft, newScrollTop);
 }
 
@@ -80,12 +65,12 @@ export function currentScreen() {
 }
 
 function onWindowScroll(e) {
-	windowUpdate();
+	windowReset();
 	connector.forEach(handler => handler.resolve(currentScreen(), false));
 }
 
 function onWindowResize(e) {
-	windowUpdate();
+	windowReset();
 	connector.forEach(handler => handler.resolve(currentScreen(), true));
 }
 
@@ -96,6 +81,10 @@ function tryWindowUpdate() {
 const doc = document;
 const docEl = doc.documentElement||{};
 const docClient = doc.compatMode == 'CSS1Compat' ? doc.documentElement : doc.body;
+
+function windowReset() {
+	currentScrollTop = currentScrollLeft = currentScrollHeight = currentScrollWidth = undefined;
+}
 
 function windowUpdate() {
 	currentTop = Math.max(window.pageYOffset||0, window.scrollY||0, doc.body.scrollTop||0, docEl.scrollTop||0)
