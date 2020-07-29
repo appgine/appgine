@@ -44,32 +44,34 @@ export default function create(ButtonsComponent, $element, { autoInterval }) {
 
 	function changeIndex(index) {
 		startAutoRotate();
-		state.active = index;
+		if (state.active!==index) {
+			state.active = index;
 
-		if ($banners[index]) {
-			$banners[index].classList.add('visible');
+			if ($banners[index]) {
+				$banners[index].classList.add('visible');
 
-			$banners.forEach($banner => $banner.classList.remove('fadeout'));
+				$banners.forEach($banner => $banner.classList.remove('fadeout'));
 
-			$banners.
-				filter($banner => $banner.classList.contains('active')).
-				forEach($banner => {
-					$banner.classList.add('fadeout');
-					$banner.classList.remove('active');
-					$banner.classList.remove('fadein');
-				});
+				$banners.
+					filter($banner => $banner.classList.contains('active')).
+					forEach($banner => {
+						$banner.classList.add('fadeout');
+						$banner.classList.remove('active');
+						$banner.classList.remove('fadein');
+					});
 
 
-			const $banner = $banners[index];
-			setTimeout(function() {
-				if (state.active===index) {
-					$banner.classList.add('active');
-					$banner.classList.add('fadein');
-				}
-			}, 200);
+				const $banner = $banners[index];
+				setTimeout(function() {
+					if (state.active===index) {
+						$banner.classList.add('active');
+						$banner.classList.add('fadein');
+					}
+				}, 200);
+			}
+
+			render();
 		}
-
-		render();
 	}
 
 	function render() {
