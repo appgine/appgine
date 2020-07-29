@@ -51,6 +51,7 @@ export function scrollZero() {
 }
 
 export function scrollOffset(offsetLeft, offsetTop) {
+	tryWindowUpdate();
 	scrollTo(currentScrollLeft+offsetLeft, currentScrollTop+offsetTop);
 }
 
