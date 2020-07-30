@@ -23,3 +23,41 @@ export function bindTextContent($element) {
 		$element.textContent = newText;
 	});
 }
+
+
+export function bindClassList($element, ...args) {
+	const classList = {};
+	useDestroy(function() {
+		Object.keys(classList).map(className => $element.classList.toggle(className, classList[className]));
+	});
+
+	function toggleClass(className, toggled=true) {
+		if (classList[className]===undefined) {
+			classList[className] = $element.classList.contains(className);
+		}
+
+		$element.classList.toggle(className, !!toggled);
+	}
+
+	function toggleClassList(className, toggled) {
+		if (typeof className==='string') {
+			toggleClass(className, toggled);
+
+		} else if (Array.isArray(className)) {
+			className.forEach(className => toggleClass(className, toggled));
+
+		} else if (className && typeof className === 'object') {
+			for (let _className of Object.keys(className)) {
+				toggleClass(_className, className[_className]);
+			}
+		}
+	}
+
+	toggleClassList(...args);
+	const context = bindContext(toggleClassList);
+	context.contains = className => $element.classList.contains(className);
+	context.add = className => toggleClass(className, true);
+	context.remove = className => toggleClass(className, false);
+	context.toggle = className => toggleClass(className, !context.contains(className));
+	return context;
+}
