@@ -12,3 +12,14 @@ export function bindHtmlContent($element) {
 		$element.innerHTML = newHtml;
 	});
 }
+
+
+export function bindTextContent($element) {
+	let text = null;
+	useDestroy(() => text!==null && ($element.textContent = text));
+
+	return bindContext(function(newText) {
+		text = text===null ? $element.textContent : text;
+		$element.textContent = newText;
+	});
+}
