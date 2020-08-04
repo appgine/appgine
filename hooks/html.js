@@ -58,6 +58,6 @@ export function bindClassList($element, ...args) {
 	context.contains = className => $element.classList.contains(className);
 	context.add = className => toggleClass(className, true);
 	context.remove = className => toggleClass(className, false);
-	context.toggle = className => toggleClass(className, !context.contains(className));
+	context.toggle = (className, toggled) => toggleClass(className, toggled===undefined ? !context.contains(className) : toggled);
 	return context;
 }
