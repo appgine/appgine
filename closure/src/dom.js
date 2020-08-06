@@ -4,8 +4,6 @@ goog.module('dom');
 goog.require('uri');
 goog.require('goog.dom');
 goog.require('goog.array');
-goog.require('goog.crypt');
-goog.require('goog.crypt.Md5');
 
 
 
@@ -111,7 +109,6 @@ exports.shouldHaveFormId = function($form) {
 	return false;
 }
 
-var md5;
 exports.createFormId = function($form) {
 	var names = [
 		uri.createFormAction($form),
@@ -129,11 +126,7 @@ exports.createFormId = function($form) {
 	}
 
 	names.sort();
-
-	md5 = md5 || new goog.crypt.Md5();
-	md5.reset();
-	md5.update(names.join('\n'));
-	return goog.crypt.byteArrayToHex(md5.digest());
+	return crc32(names.join('\n'));
 }
 
 

@@ -31,11 +31,10 @@ exports.browser.isIE = goog.labs.userAgent.browser.isIE;
 exports.browser.isAndroidBrowser = goog.labs.userAgent.browser.isAndroidBrowser;
 
 exports.string = goog.require('string');
-exports.base64 = goog.require('base64');
-exports.md5 = goog.require('md5');
 exports.style = goog.require('style');
 exports.dom = goog.require('dom');
 exports.cssom = goog.require('cssom');
+exports.crc32 = goog.require('crc32');
 exports.getDocumentScrollElement = goog.require('scroll').getDocumentScrollElement;
 exports.animation = goog.require('animation');
 exports.form = goog.require('form');
