@@ -1,5 +1,5 @@
 
-import { md5, browser } from 'appgine/closure'
+import { browser } from 'appgine/closure'
 
 
 function defaultTransform(href) {
@@ -37,8 +37,8 @@ export default function bridgeCssReload(options={}, transform=defaultTransform) 
 			window.appgineCssReload.loaded = [];
 
 			Array.from(document.head.querySelectorAll('link[rel*=stylesheet]')).forEach(function($link) {
-				const cssid = buildLinkMD5($link, transform($link.getAttribute('href')))
-				const swapid = buildLinkMD5($link, transformWithSearch($link.getAttribute('href'), false))
+				const cssid = buildLinkHash($link, transform($link.getAttribute('href')))
+				const swapid = buildLinkHash($link, transformWithSearch($link.getAttribute('href'), false))
 				$link.setAttribute('data-appgine', '');
 				window.appgineCssReload.loaded.push({ $link, cssid, swapid });
 			});
@@ -77,8 +77,8 @@ export default function bridgeCssReload(options={}, transform=defaultTransform) 
 		let swapped = [];
 		Array.from($fragment.querySelectorAll('link[rel*=stylesheet]')).forEach(function($link) {
 			if ($link.hasAttribute('data-appgine')===false && transform($link.getAttribute('href'))) {
-				const cssid = buildLinkMD5($link, transform($link.getAttribute('href')));
-				const swapid = buildLinkMD5($link, transformWithSearch($link.getAttribute('href'), false));
+				const cssid = buildLinkHash($link, transform($link.getAttribute('href')));
+				const swapid = buildLinkHash($link, transformWithSearch($link.getAttribute('href'), false));
 
 				let exists = null;
 				let swap = null;
@@ -143,14 +143,14 @@ export default function bridgeCssReload(options={}, transform=defaultTransform) 
 }
 
 
-function buildLinkMD5($link, href) {
+function buildLinkHash($link, href) {
 	let html = $link.outerHTML;
 
 	html = html.replace($link.getAttribute('href'), href);
 	html = html.replace(/disabled=[^>\s]*/, '');
 	html = html.replace(/\s/g, '');
 
-	return md5(html);
+	return crc32(html);
 }
 
 
@@ -218,7 +218,7 @@ function loadCssStylesheet() {
 				$link.sheet.cssRules; // see: https://www.phpied.com/when-is-a-stylesheet-really-loaded/
 				window.appgineCssReload.loading.splice(window.appgineCssReload.loading.indexOf(item), 1);
 				window.appgineCssReload.loaded.push(item);
-			    $link.onload && $link.onload(true);
+				$link.onload && $link.onload(true);
 
 			} catch (e) {}
 
@@ -258,4 +258,31 @@ function insertStyleLink($link) {
 	} else {
 		document.head.appendChild($link);
 	}
+}
+
+
+let crcTable = null;
+function createCRCTable() {
+	let c;
+	let crcTable = [];
+	for(let n =0; n < 256; n++){
+		c = n;
+		for(let k =0; k < 8; k++){
+			c = ((c&1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+		}
+		crcTable[n] = c;
+	}
+
+	return crcTable;
+}
+
+function crc32(str) {
+	crcTable = crcTable || createCRCTable();
+
+	let crc = 0 ^ (-1);
+	for (let i = 0; i < str.length; i++ ) {
+		crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
+	}
+
+	return (crc ^ (-1)) >>> 0;
 }
