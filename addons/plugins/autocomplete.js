@@ -1,5 +1,4 @@
 
-import React from 'react'
 import { uri, selection, string } from 'appgine/closure'
 
 import { bindReact } from 'appgine/hooks/react'
@@ -149,7 +148,7 @@ export default function create($input, Component, activeSelector, endpoint) {
 
 	const targets = useTargets('content', function($target, target) {
 		const [useReact, destroyReact] = bindReact($target);
-		state.visible && useReact(<Component results={state.results} />);
+		state.visible && useReact(Component, { $input, endpoint, unmount, results: state.results });
 		return { $target, useReact, destroyReact };
 	});
 
@@ -179,7 +178,7 @@ export default function create($input, Component, activeSelector, endpoint) {
 			unmount();
 
 		} else {
-			targets.forEach(({ useReact }) => useReact(<Component results={state.results} />));
+			targets.forEach(({ useReact }) => useReact(Component, { $input, endpoint, unmount, results: state.results }));
 		}
 	}
 
