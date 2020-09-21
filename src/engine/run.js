@@ -593,6 +593,7 @@ function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
 		const error = _options.locale[locale.error.request.ajax] + '\n' + String(_options.locale[errno]||'');
 		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
 		_options.onError(error);
+		_options.dispatch('app.request', 'error', { $element, requestnum: _requestnum, errno, error });
 	});
 }
 
@@ -609,6 +610,7 @@ function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
 		const error = _options.locale[locale.error.request.page] + '\n' + String(_options.locale[errno]||'');
 		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
 		_options.onError(error);
+		_options.dispatch('app.request', 'error', { $element, requestnum: _requestnum, errno, error });
 	});
 }
 
