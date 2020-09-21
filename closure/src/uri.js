@@ -64,7 +64,7 @@ exports.createCanonical = function(location, allowHash) {
 	}
 
 	$link.hash = '';
-	return $link.href.replace(/\#$/, ''); // Fix IE bug with ending #
+	return $link.href.replace(/[\#\?\&]+$/, ''); // Fix IE, Safari bug with ending #, ?
 }
 
 exports.create = function(location, params, hash) {
