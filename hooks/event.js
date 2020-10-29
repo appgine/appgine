@@ -8,7 +8,7 @@ export function useEvent($node, name, fn, ...args) {
 }
 
 
-export function useTriggeredEvent($node, name, fn, ...args) {
+export function useEventTriggered($node, name, fn, ...args) {
 	return fn(), useEvent($node, name, fn, ...args);
 }
 
