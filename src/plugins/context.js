@@ -114,13 +114,15 @@ export function withErrorCatch(errormsg, tryFn, args=[])
 
 
 function internalWithContext(context, fn, args) {
+	contextStack.push(context);
+
 	try {
-		contextStack.push(context);
-		const destroy = fn(...args);
-		contextStack.pop();
-		return destroy;
+		return fn(...args);
 
 	} catch (e) {
+		renderError(errorhub.ERROR.PLUGINS, e, 'internal function error', fn.toString());
+
+	} finally {
 		contextStack.pop();
 	}
 }
@@ -129,6 +131,7 @@ function internalWithContext(context, fn, args) {
 function processDestroy(destroy) {
 	try {
 		(typeof destroy.current==='function') && destroy.current();
+
 	} catch (e) {
 		renderError(errorhub.ERROR.DESTROY, e, 'failed destroy function', destroy.current.toString());
 
