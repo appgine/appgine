@@ -50,7 +50,7 @@ export default function create($input, Component, activeSelector, endpoint, inpu
 		state.visible = results.length>0;
 		state.results = results.map((result, i) => {
 			return Object.assign({}, result, {
-				active: i===0 && (hilitate || canonizeText(result.title)===canonizeText(token)),
+				active: i===0 && (hilitate || canonizeText(result.title||result.label||'')===canonizeText(token)),
 				onClick() { dispatch('redirect', result.url||result.redirect) },
 				onMouseMove() { renderIndex(i) },
 			});
@@ -61,6 +61,10 @@ export default function create($input, Component, activeSelector, endpoint, inpu
 	}
 
 	function canonizeText(text) {
+		if (typeof text !== 'string') {
+			return '';
+		}
+
 		if (text.normalize) {
 			text = text.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 		}
