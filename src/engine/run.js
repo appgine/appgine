@@ -464,7 +464,7 @@ function pushEndpoint(endpoint, state={}, replacing=null) {
 }
 
 
-function createAjax($element, allowSwap=true) {
+function createAjax($element, allowSwap=true, name=null) {
 	const headers = {};
 	const foundRequest = _stack.findRequest($element);
 
@@ -476,7 +476,7 @@ function createAjax($element, allowSwap=true) {
 		headers['X-Request-Tracker'] = $element.getAttribute('data-tracker');
 	}
 
-	return ajax.create(headers, _options.timeout);
+	return ajax.create(headers, _options.timeout, name);
 }
 
 
@@ -570,7 +570,8 @@ function submitForm(submitRequest, $form, $submitter, formTarget) {
 		});
 	}
 
-	createAjax($element).submit(formEndpoint, formMethod, submitData, function(...response) {
+	const requestnum = _requestnum;
+	createAjax($element, true, $form.getAttribute('data-ajax')||null).submit(formEndpoint, formMethod, submitData, function(...response) {
 		if ($form.hasAttribute('data-immutable')===false) {
 			if (formMethod!=='GET' || _pushing) {
 				_stack.clearHistory();
@@ -578,6 +579,8 @@ function submitForm(submitRequest, $form, $submitter, formTarget) {
 		}
 
 		bindSubmitRequest(...response);
+	}, function(loaded, total) {
+		_options.dispatch('app.request', 'upload', { $element, requestnum, loaded, total });
 	});
 }
 
