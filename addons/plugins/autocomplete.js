@@ -15,7 +15,7 @@ export default function create($input, Component, activeSelector, endpoint, inpu
 	const [ajax, ajaxAbort] = bindPluginAjax();
 	const dispatch = bindDispatch('autocomplete');
 
-	const state = {token: null, results: [], visible: false, loading: null};
+	const state = {token: null, results: [], visible: false, loading: null, container: []};
 
 	const request = token => {
 		ajaxAbort();
@@ -80,6 +80,20 @@ export default function create($input, Component, activeSelector, endpoint, inpu
 		}
 	});
 
+	useEvent($input, 'blur', () => {
+		useTimeout(function() {
+			const $active = document.activeElement;
+
+			for (let { $target } of targets.concat(state.container)) {
+				if ($target.contains($active)) {
+					return;
+				}
+			}
+
+			unmount();
+		}, 0);
+	}, true);
+
 	useEvent($input, 'keyup', () => {
 		const token = string.collapseWhitespace($input.value);
 
@@ -102,7 +116,7 @@ export default function create($input, Component, activeSelector, endpoint, inpu
 			return true;
 		}
 
-		for (let { $target } of targets) {
+		for (let { $target } of targets.concat(state.container)) {
 			if ($target===e.target) {
 				$input.focus();
 				e.preventDefault();
@@ -141,7 +155,7 @@ export default function create($input, Component, activeSelector, endpoint, inpu
 
 	usePluginShortcut('enter', function(e) {
 		useTimeout(unmount, 100);
-		targets.forEach(({ $target }) => {
+		targets.concat(state.container).forEach(({ $target }) => {
 			const $a = $target.querySelector(activeSelector);
 			if ($a) {
 				e.preventDefault();
@@ -181,14 +195,35 @@ export default function create($input, Component, activeSelector, endpoint, inpu
 		if (state.visible===false) {
 			unmount();
 
-		} else {
-			targets.forEach(({ useReact }) => useReact(Component, { $input, endpoint, unmount, results: state.results }));
+		} else if (targets.length===0 && state.container.length===0) {
+			const $target = document.createElement('div');
+			$input.parentNode.appendChild($target);
+
+			const [useReact, destroyReact] = bindReact($target);
+			useReact(Component, { $input, endpoint, unmount, results: state.results });
+			state.container.push({ $target, useReact, destroyReact });
+
+		} else if (targets.length) {
+			unmountContainer();
 		}
+
+		targets.concat(state.container).forEach(({ useReact }) => useReact(Component, { $input, endpoint, unmount, results: state.results }));
 	}
 
 	function unmount() {
 		state.visible = false;
 		state.results.forEach(result => (result.active = false));
 		targets.forEach(({ destroyReact }) => destroyReact());
+		unmountContainer();
+	}
+
+	function unmountContainer() {
+		for (let { $target, destroyReact } of state.container.splice(0, state.container.length)) {
+			destroyReact();
+
+			if ($target.parentNode) {
+				$target.parentNode.removeChild($target);
+			}
+		}
 	}
 }
