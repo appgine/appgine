@@ -31,7 +31,7 @@ exports.getAncestor = function(target, matcher) {
 		matcher = function(node) { return args.indexOf(node.nodeName)!==-1; };
 	}
 
-	var $target = target.target||target;
+	var $target = target.target instanceof HTMLElement ? target.target : target;
 	while ($target) {
 		if (matcher($target)) {
 			return $target;
