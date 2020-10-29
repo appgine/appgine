@@ -1,4 +1,5 @@
 
+import withContext from 'appgine/hooks'
 import { useContext, bindContext } from 'appgine/hooks'
 
 
@@ -22,6 +23,29 @@ export function useEventOnce($node, name, fn, ...args) {
 
 		return destroy;
 	});
+}
+
+
+export function useEventBoundery($node, eventstart, eventend, fn, ...args) {
+	const startEvent = Array.isArray(eventstart) ? eventstart.unshift() : eventstart;
+	const endEvent = Array.isArray(eventend) ? eventend.unshift() : eventend;
+	const startArgs = Array.isArray(eventstart) ? eventstart : args;
+	const endArgs = Array.isArray(eventend) ? eventend : args;
+
+	let handler;
+	return useEvent($node, startEvent, function(e) {
+		if (handler===undefined) {
+			handler = withContext({ $node }, function() {
+				const result = fn(e);
+
+				useEventOnce($node, endEvent, function(e) {
+					result && result(e);
+					handler();
+					handler = undefined;
+				}, ...endArgs);
+			});
+		}
+	}, ...startArgs);
 }
 
 
