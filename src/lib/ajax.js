@@ -9,38 +9,39 @@ export const TIMEOUT = 'timeout';
 export const SUCCESS = 'success';
 
 
-let _globalRequest;
+const _globalRequest = {};
 
 
 export function abort() {
-	_globalRequest && _globalRequest.abort();
+	_globalRequest[null] && _globalRequest[null].current && _globalRequest[null].current.abort();
 }
 
 
-export function create(headers, timeout) {
-	let localRequest;
-	let globalRequest;
+export function create(headers, timeout, name=null) {
+	let localRequest, globalRequest;
+
+	globalRequest = _globalRequest[name] = _globalRequest[name] || {current: null};
 	timeout = timeout===undefined ? 30e3 : parseInt(timeout, 10);
 
-	function ajaxRequest(request, endpoint, method, data, fn) {
+	function ajaxRequest(request, endpoint, method, data, fn, fnprogress) {
 		request.open(method, endpoint, true);
 
-		bindRequest(endpoint, request, timeout, function(...args) {
+		function fndone(...args) {
 			if (localRequest===request) {
 				localRequest = null;
 			}
 
-			if (globalRequest===request) {
-				globalRequest = null;
+			if (globalRequest.current===request) {
+				globalRequest.current = null;
 			}
 
-			if (_globalRequest===request) {
-				_globalRequest = null;
+			if (_globalRequest[null].current===request) {
+				_globalRequest[null].current = null;
 			}
 
 			fn && fn(...args);
 			fn = null;
-		});
+		}
 
 		for (let key of Object.keys(headers||{})) {
 			request.setRequestHeader(key, headers[key]);
@@ -55,6 +56,8 @@ export function create(headers, timeout) {
 		request.setRequestHeader('Expires', '0');
 
 		request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+		bindRequest(endpoint, request, timeout, fndone, fnprogress);
 		request.send(data);
 	}
 
@@ -63,31 +66,31 @@ export function create(headers, timeout) {
 		abort() {
 			localRequest && localRequest.abort();
 			localRequest = null;
-			globalRequest && globalRequest.abort();
-			globalRequest = null;
+			globalRequest.current && globalRequest.current.abort();
+			globalRequest.current = null;
 		},
 		canAbort() {
-			return !!(localRequest || globalRequest);
+			return !!(localRequest || globalRequest.current);
 		},
 		get(endpoint, fn) {
 			localRequest && localRequest.abort();
-			localRequest = createRequest();
+			localRequest = createRequest(false);
 			ajaxRequest(localRequest, endpoint, 'GET', null, fn);
 		},
-		post(endpoint, data, fn) {
+		post(endpoint, data, fn, fnprogress) {
 			localRequest && localRequest.abort();
-			localRequest = createRequest();
-			ajaxRequest(localRequest, endpoint, 'POST', data, fn);
+			localRequest = createRequest(!!fnprogress);
+			ajaxRequest(localRequest, endpoint, 'POST', data, fn, fnprogress);
 		},
 		load(endpoint, fn) {
-			_globalRequest && _globalRequest.abort();
-			globalRequest = _globalRequest = createRequest();
-			ajaxRequest(globalRequest, endpoint, 'GET', null, fn);
+			globalRequest.current && globalRequest.current.abort();
+			globalRequest.current = createRequest(false);
+			ajaxRequest(globalRequest.current, endpoint, 'GET', null, fn);
 		},
-		submit(endpoint, method, data, fn) {
-			_globalRequest && _globalRequest.abort();
-			globalRequest = _globalRequest = createRequest();
-			ajaxRequest(globalRequest, endpoint, method, data, fn);
+		submit(endpoint, method, data, fn, fnprogress) {
+			globalRequest.current && globalRequest.current.abort();
+			globalRequest.current = createRequest(!!fnprogress);
+			ajaxRequest(globalRequest.current, endpoint, method, data, fn, fnprogress);
 		}
 	}
 }
@@ -114,14 +117,18 @@ function createRequestController() {
 }
 
 
-function createRequest()
+function createRequest(needsProgress)
 {
 	const controller = createRequestController();
 
-	if (controller===null) {
+	if (needsProgress || controller===null) {
 		const xhrrequest = new XMLHttpRequest();
 		xhrrequest.onerror = e => xhrrequest.error && xhrrequest.error('xhr');
 		xhrrequest.onload = e => xhrrequest.done && xhrrequest.done();
+
+		if (xhrrequest.upload) {
+			xhrrequest.upload.onprogress = e => xhrrequest.progress && xhrrequest.progress(e.loaded, e.total);
+		}
 
 		return xhrrequest;
 	}
@@ -204,11 +211,13 @@ function createRequest()
 
 
 /**
+ * @param {string}
  * @param {XMLHttpRequest}
  * @param {int}
  * @param {function}
+ * @param {function}
  */
-function bindRequest(endpoint, request, timeout, onresponse)
+function bindRequest(endpoint, request, timeout, onresponse, onprogress)
 {
 	const nativeAbort = request.abort.bind(request);
 
@@ -294,6 +303,18 @@ function bindRequest(endpoint, request, timeout, onresponse)
 		request.done = null;
 		request.error = null;
 		handleResponse(ERROR, ...arguments)
+	};
+
+	request.progress = function(loaded, total) {
+		if (handling) {
+			clearTimeout(handling);
+			handling = setTimeout(function() {
+				handleResponse(TIMEOUT);
+				nativeAbort();
+			}, timeout);
+		}
+
+		onprogress && onprogress(loaded, total);
 	};
 
 	request.abort = function() {
