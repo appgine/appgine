@@ -10,7 +10,7 @@ import { bindPluginAjax } from 'appgine/hooks/ajax'
 import { useTargets } from 'appgine/hooks/target'
 
 
-export default function create($input, Component, activeSelector, endpoint) {
+export default function create($input, Component, activeSelector, endpoint, inputName=null) {
 	const [ajaxTimeout, destroyAjaxTimeout] = bindTimeout();
 	const [ajax, ajaxAbort] = bindPluginAjax();
 	const dispatch = bindDispatch('autocomplete');
@@ -23,7 +23,7 @@ export default function create($input, Component, activeSelector, endpoint) {
 
 		if (token) {
 			ajaxTimeout(() => {
-				ajax(uri.create(endpoint, {[$input.name]: token}), (status, response) => {
+				ajax(uri.create(endpoint, {[inputName||$input.name]: token}), (status, response) => {
 					if (response.code>0) {
 						if (response.code===200 || token===state.loading) {
 							handleResults(token, response.code===200 && Array.isArray(response.json) && response.json || []);
