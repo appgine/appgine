@@ -40,5 +40,4 @@ exports.animation = goog.require('animation');
 exports.form = goog.require('form');
 exports.shortcuthandler = goog.require('shortcuthandler');
 exports.uri = goog.require('uri');
-exports.rect = goog.require('rect');
 exports.selection = goog.require('selection');

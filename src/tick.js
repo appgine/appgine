@@ -3,6 +3,7 @@ import Kefir from './kefir'
 import { onUpdated, isUpdating } from './update'
 import { isRequestCurrent } from './engine/run'
 import closure from 'appgine/closure'
+import { intersection } from './lib/utils'
 
 import { currentScreen } from 'appgine/hooks/window'
 
@@ -91,7 +92,7 @@ Kefir.stream(function(emitter) {
 	});
 })
 	.filter(() => !isUpdating())
-	.map(screen => closure.rect.intersection(screen, currentScreen()))
+	.map(screen => intersection(screen, currentScreen()))
 	.filter(screen => screen && screen.height && screen.width)
 	.onValue(screen => invokeTicks(TICK.DELAYED, screen));
 
