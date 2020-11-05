@@ -32,26 +32,6 @@ var _request = null;
 var _poping = null;
 var _pushing = false;
 
-var _loaderReporting = null;
-function loaderReporting(type, value) {
-	clearTimeout(_loaderReporting);
-	_loaderReporting = setTimeout(function() {
-		if (window.dataLayer) {
-			window.dataLayer.push({
-				event: 'app.event',
-				eventCategory: 'appgine',
-				eventAction: type,
-				eventLabel: closure.uri.create(),
-				eventValue: value,
-			});
-
-		} else if (typeof ga !== 'undefined') {
-			ga('send', 'event', 'appgine', type, label, value);
-		}
-	}, 6000);
-}
-
-
 export const requestStack = _stack;
 
 tick.onEachTick(function(screen, updated, done) {
@@ -243,7 +223,6 @@ export function onClickHash(e, $link, hash, toTarget) {
 		}
 
 		if (_stack.loadRequest() && _stack.loadRequest().shouldReloadForHash(hash)) {
-			loaderReporting('clickHash');
 			e.preventDefault();
 			loadPage($link, endpoint, false, 0);
 
@@ -275,7 +254,6 @@ export function onClick(e, $link, toTarget) {
 					internalScrollHashToView($link, hash);
 
 				} else {
-					loaderReporting('click');
 					e.preventDefault();
 					loadEndpoint($link, endpoint, toTarget==='_ajax', toTarget==='_current'||null, hash||createTargetScroll(toTarget));
 				}
@@ -296,7 +274,6 @@ export function onSubmitForm(e, $form, $submitter, toTarget) {
 
 	if ((toTarget==='' || toTarget==='_ajax' || toTarget==='_current' || toTarget.indexOf('_this')===0 || toTarget[0]==='#') && 'FormData' in window) {
 		if (closure.uri.sameOrigin(endpoint)) {
-			loaderReporting('submit', String($submitter && $submitter.name || ''));
 			e.preventDefault();
 			submitForm($form, $submitter, toTarget||'');
 		}
@@ -719,7 +696,6 @@ function ajaxResponse($element, endpoint, newPage, scrollTo) {
 				}
 			}
 
-			clearTimeout(_loaderReporting);
 			return nowRequest;
 		}
 	}
