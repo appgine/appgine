@@ -16,7 +16,7 @@ export default class RequestStack {
 
 
 	createRequest(request) {
-		var id = history.getCurrentId();
+		const id = history.getCurrentId();
 
 		if (this._active[id]) {
 			this._active[id].dispose();

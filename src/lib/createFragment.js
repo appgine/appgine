@@ -32,8 +32,8 @@ function _createFragmentElement() {
 
 
 function _createFragment($fragment, htmlString) {
-	var tempDiv = document.createElement('html');
-	  tempDiv.innerHTML = htmlString;
+	const tempDiv = document.createElement('html');
+	tempDiv.innerHTML = htmlString;
 
 	while (tempDiv.firstChild) {
 		$fragment.appendChild(tempDiv.firstChild);

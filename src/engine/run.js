@@ -24,13 +24,13 @@ import * as history from './history'
 import closure from 'appgine/closure'
 import * as ajax from '../lib/ajax'
 
-var _options = createOptions({});
-var _pending = 0;
-var _requestnum = 0;
-var _stack = new RequestStack();
-var _request = null;
-var _poping = null;
-var _pushing = false;
+const _stack = new RequestStack();
+let _options = createOptions({});
+let _pending = 0;
+let _requestnum = 0;
+let _request = null;
+let _poping = null;
+let _pushing = false;
 
 export const requestStack = _stack;
 
