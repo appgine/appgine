@@ -15,7 +15,6 @@ import createFormScroll from '../lib/swap/createFormScroll'
 import createLoadingStatus from '../lib/swap/createLoadingStatus'
 import { createSwapping } from 'appgine/hooks/swap'
 import { scrollNodeToView, scrollFormToView, setHashFixedEdge, setScrollPosition } from '../lib/scroll'
-import * as apiRequest from 'appgine/hooks/request'
 import * as apiShortcut from 'appgine/hooks/shortcut'
 import { scrollTo as windowScrollTo } from 'appgine/hooks/window'
 import * as tick from '../tick'
@@ -61,8 +60,7 @@ tick.onEachTick(function(screen, updated, done) {
 
 	if (_poping && _poping!==true) {
 		const endpoint = closure.uri.create(_poping, {});
-		const httpRequest = apiRequest.createHttpRequest(document.body, endpoint);
-		loadPage(httpRequest, document.body, endpoint, true, history.state('scrollTop', 0));
+		loadPage(document.body, endpoint, true, history.state('scrollTop', 0));
 		_poping = true;
 	}
 
@@ -250,11 +248,10 @@ export function onClickHash(e, $link, hash, toTarget) {
 
 		if (_stack.loadRequest() && _stack.loadRequest().shouldReloadForHash(hash)) {
 			loaderReporting('clickHash');
-			const clickRequest = apiRequest.createClickRequest(e, $link, endpoint);
 
 			if (!e.defaultPrevented) {
 				e.preventDefault();
-				loadPage(clickRequest, $link, endpoint, false, 0);
+				loadPage($link, endpoint, false, 0);
 			}
 
 		} else {
@@ -286,14 +283,10 @@ export function onClick(e, $link, toTarget) {
 
 				} else {
 					loaderReporting('click');
-					const clickRequest = apiRequest.createClickRequest(e, $link, endpoint);
 
 					if (!e.defaultPrevented) {
 						e.preventDefault();
-						loadEndpoint(clickRequest, $link, endpoint, toTarget==='_ajax', toTarget==='_current'||null, hash||createTargetScroll(toTarget));
-
-					} else {
-						clickRequest.prevented();
+						loadEndpoint($link, endpoint, toTarget==='_ajax', toTarget==='_current'||null, hash||createTargetScroll(toTarget));
 					}
 				}
 
@@ -314,14 +307,9 @@ export function onSubmitForm(e, $form, $submitter, toTarget) {
 	if ((toTarget==='' || toTarget==='_ajax' || toTarget==='_current' || toTarget.indexOf('_this')===0 || toTarget[0]==='#') && 'FormData' in window) {
 		if (closure.uri.sameOrigin(endpoint)) {
 			loaderReporting('submit', String($submitter && $submitter.name || ''));
-			const submitRequest = apiRequest.createSubmitRequest(e, $form, $submitter, endpoint);
-
 			if (!e.defaultPrevented) {
 				e.preventDefault();
-				submitForm(submitRequest, $form, $submitter, toTarget||'');
-
-			} else {
-				submitRequest.prevented();
+				submitForm($form, $submitter, toTarget||'');
 			}
 		}
 	}
@@ -330,8 +318,7 @@ export function onSubmitForm(e, $form, $submitter, toTarget) {
 
 export function onReload() {
 	const endpoint = closure.uri.create(history.getLink(), {});
-	const httpRequest = apiRequest.createHttpRequest(document.body, endpoint);
-	loadPageWithContext(createAjax(document.body, false), httpRequest, document.body, endpoint, false, false);
+	loadPageWithContext(createAjax(document.body, false), document.body, endpoint, false, false);
 }
 
 
@@ -355,8 +342,7 @@ export function location($element, endpoint, isAjax=false) {
 	endpoint = closure.uri.create(endpoint, {});
 
 	if (closure.uri.sameOrigin(endpoint)) {
-		const httpRequest = apiRequest.createHttpRequest($element, endpoint);
-		loadEndpoint(httpRequest, $element, endpoint, isAjax);
+		loadEndpoint($element, endpoint, isAjax);
 
 	} else {
 		leave(endpoint);
@@ -374,28 +360,26 @@ export function ajaxGet($element, params) {
 	const foundRequest = _stack.findRequest($element);
 	const endpoint = foundRequest ? closure.uri.create(foundRequest.endpoint, params) : closure.uri.create(params);
 
-	const httpRequest = apiRequest.createHttpRequest($element, endpoint);
-	createAjax($element).get(endpoint, bindAjaxRequest(httpRequest, $element, endpoint, 0));
+	createAjax($element).get(endpoint, bindAjaxRequest($element, endpoint, 0));
 }
 
 
 export function ajaxPost($element, endpoint, data) {
 	endpoint = closure.uri.create(endpoint);
 
-	const httpRequest = apiRequest.createHttpRequest($element, endpoint, data);
-	createAjax($element).post(endpoint, data, bindAjaxRequest(httpRequest, $element, endpoint, 0));
+	createAjax($element).post(endpoint, data, bindAjaxRequest($element, endpoint, 0));
 }
 
 
-function loadEndpoint(apiRequest, $element, endpoint, isAjax, toCurrent=null, scrollTo=0) {
+function loadEndpoint($element, endpoint, isAjax, toCurrent=null, scrollTo=0) {
 	endpoint = history.getCanonizedLink(endpoint);
 
 	if (isAjax) {
-		return loadAjax(apiRequest, $element, endpoint, false);
+		return loadAjax($element, endpoint, false);
 
 	} else {
 		const newPage = pushEndpoint(endpoint, {}, toCurrent) || toCurrent || false;
-		return loadPage(apiRequest, $element, endpoint, newPage, scrollTo);
+		return loadPage($element, endpoint, newPage, scrollTo);
 	}
 }
 
@@ -427,8 +411,7 @@ function canonize($element, endpoint, newPage=false, scrollTo=0) {
 	if (closure.uri.sameOrigin(endpoint)) {
 		const _newPage = !closure.uri.isSame(endpoint) || newPage;
 		history.redirectState({}, endpoint);
-		const httpRequest = apiRequest.createHttpRequest($element||document.body, endpoint);
-		return loadPage(httpRequest, $element||document.body, endpoint, _newPage, scrollTo);
+		return loadPage($element||document.body, endpoint, _newPage, scrollTo);
 	}
 
 	leave(endpoint);
@@ -439,8 +422,7 @@ function redirect($element, endpoint, newPage=false, scrollTo=0) {
 	if (closure.uri.sameOrigin(endpoint)) {
 		const _newPage = !closure.uri.isSame(endpoint) || newPage;
 		pushEndpoint(endpoint);
-		const httpRequest = apiRequest.createHttpRequest($element||document.body, endpoint);
-		return loadPageWithContext(createAjax($element, false), httpRequest, $element||document.body, endpoint, _newPage, (_newPage>newPage && scrollTo===false) ? 0 : scrollTo);
+		return loadPageWithContext(createAjax($element, false), $element||document.body, endpoint, _newPage, (_newPage>newPage && scrollTo===false) ? 0 : scrollTo);
 	}
 
 	leave(endpoint);
@@ -480,27 +462,27 @@ function createAjax($element, allowSwap=true, name=null) {
 }
 
 
-function loadAjax(apiRequest, $element, endpoint, scrollTo) {
-	loadAjaxWithContext(createAjax($element), apiRequest, $element, endpoint, scrollTo)
+function loadAjax($element, endpoint, scrollTo) {
+	loadAjaxWithContext(createAjax($element), $element, endpoint, scrollTo)
 }
 
 
-function loadAjaxWithContext(ajaxContext, apiRequest, $element, endpoint, scrollTo) {
-	ajaxContext.get(endpoint, bindAjaxRequest(apiRequest, $element, endpoint, scrollTo));
+function loadAjaxWithContext(ajaxContext, $element, endpoint, scrollTo) {
+	ajaxContext.get(endpoint, bindAjaxRequest($element, endpoint, scrollTo));
 }
 
 
-function loadPage(apiRequest, $element, endpoint, newPage, scrollTo) {
-	loadPageWithContext(createAjax($element), apiRequest, $element, endpoint, newPage, scrollTo)
+function loadPage($element, endpoint, newPage, scrollTo) {
+	loadPageWithContext(createAjax($element), $element, endpoint, newPage, scrollTo)
 }
 
 
-function loadPageWithContext(ajaxContext, apiRequest, $element, endpoint, newPage, scrollTo) {
-	ajaxContext.load(endpoint, bindRequest(apiRequest, $element, endpoint, newPage, scrollTo));
+function loadPageWithContext(ajaxContext, $element, endpoint, newPage, scrollTo) {
+	ajaxContext.load(endpoint, bindRequest($element, endpoint, newPage, scrollTo));
 }
 
 
-function submitForm(submitRequest, $form, $submitter, formTarget) {
+function submitForm($form, $submitter, formTarget) {
 	const $element = $submitter||$form;
 
 	const formName = String($form.name);
@@ -531,7 +513,7 @@ function submitForm(submitRequest, $form, $submitter, formTarget) {
 
 	let bindSubmitRequest;
 	if (formTarget==='_ajax') {
-		bindSubmitRequest = bindAjaxRequest(submitRequest, $element, formEndpoint, function() {
+		bindSubmitRequest = bindAjaxRequest($element, formEndpoint, function() {
 			const $found = closure.dom.findForm(formName, formId);
 
 			if (formTarget==='#') {
@@ -544,7 +526,7 @@ function submitForm(submitRequest, $form, $submitter, formTarget) {
 
 	} else {
 		pushEndpoint(formEndpoint, { formId }, !newPage);
-		bindSubmitRequest = bindRequest(submitRequest, $element, formEndpoint, newPage, function() {
+		bindSubmitRequest = bindRequest($element, formEndpoint, newPage, function() {
 			const $found = closure.dom.findForm(formName, formId);
 
 			if (targetScroll) {
@@ -594,8 +576,8 @@ function submitForm(submitRequest, $form, $submitter, formTarget) {
  * @param {string}
  * @param {mixed}
  */
-function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
-	return _bindRequest(apiRequest, _pushing ? 0 : (_requestnum = createRequestnum()), $element, endpoint, false, scrollTo, function(errno) {
+function bindAjaxRequest($element, endpoint, scrollTo) {
+	return _bindRequest(_pushing ? 0 : (_requestnum = createRequestnum()), $element, endpoint, false, scrollTo, function(errno) {
 		const error = _options.locale[locale.error.request.ajax] + '\n' + String(_options.locale[errno]||'');
 		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
 		_options.onError(error);
@@ -611,8 +593,8 @@ function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
  * @param {bool}
  * @param {mixed}
  */
- function bindRequest(apiRequest, $element, endpoint, newPage, scrollTo) {
-	return _bindRequest(apiRequest, (_requestnum = createRequestnum()), $element, endpoint, newPage, scrollTo, function(errno) {
+ function bindRequest($element, endpoint, newPage, scrollTo) {
+	return _bindRequest((_requestnum = createRequestnum()), $element, endpoint, newPage, scrollTo, function(errno) {
 		const error = _options.locale[locale.error.request.page] + '\n' + String(_options.locale[errno]||'');
 		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
 		_options.onError(error);
@@ -630,15 +612,14 @@ function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
  * @param {mixed}
  * @param {function}
  */
-function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrollTo, onError) {
-	const onResponse = ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo);
+function _bindRequest(requestnum, $element, endpoint, newPage, scrollTo, onError) {
+	const onResponse = ajaxResponse($element, endpoint, newPage, scrollTo);
 
 	_pending = 1;
 	_options.dispatch('app.request', 'start', endpoint, { $element, requestnum });
 
 	return _options.onResponse(function(status, response) {
 		const isLast = () => requestnum===_requestnum;
-		apiRequest.onResponse(status, response, isLast());
 		status===ajax.SUCCESS && _options.dispatch('app.request', 'response', { requestnum, response, isLast: isLast() });
 		_options.dispatch('app.request', status===ajax.ABORT ? 'abort' : 'end', { requestnum });
 
@@ -662,12 +643,10 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 			_pending = 0;
 			_pushing = false;
 		}
-
-		apiRequest.onComplete(isLast())
 	})
 }
 
-function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
+function ajaxResponse($element, endpoint, newPage, scrollTo) {
 	const [, ...anchor] = endpoint.split('#');
 	const foundRequest = _stack.findRequest($element);
 	const elementScroll = createElementScroll($element, false, _options.hashFixedEdge);
@@ -678,9 +657,7 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 		const isCurrent = foundRequest===_stack.loadRequest();
 
 		if (json && json.reload) {
-			if (apiRequest.onResponseLeave(closure.uri.create())!==true) {
-				leave(closure.uri.create());
-			}
+			leave(closure.uri.create());
 
 		} else if (json && json.refresh) {
 			if (isCurrent) {
@@ -692,9 +669,7 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 
 		} else if (json && json.canonize) {
 			if (isCurrent) {
-				if (apiRequest.onResponseCanonize(json.canonize)!==true) {
-					canonize($element, json.canonize, newPage, scrollTo);
-				}
+				canonize($element, json.canonize, newPage, scrollTo);
 
 			} else if (foundRequest) {
 				foundRequest.willCanonize($element, json.canonize, newPage, scrollTo);
@@ -702,9 +677,7 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 
 		} else if (json && json.redirect) {
 			if (isCurrent) {
-				if (apiRequest.onResponseRedirect(json.redirect)!==true) {
-					redirect($element, json.redirect, newPage, scrollTo);
-				}
+				redirect($element, json.redirect, newPage, scrollTo);
 
 			} else if (foundRequest) {
 				foundRequest.willRedirect($element, json.redirect, newPage, scrollTo);
@@ -712,7 +685,6 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 
 		} else {
 			if (json!==undefined) {
-				apiRequest.onResponseUpdate();
 				willUpdate();
 				const swapping = createSwapping(foundRequest, isCurrent);
 
@@ -735,10 +707,6 @@ function ajaxResponse(apiRequest, $element, endpoint, newPage, scrollTo) {
 				}
 
 			} else if (text && isCurrent) {
-				if (foundRequest) {
-					apiRequest.onResponseSwap(foundRequest);
-				}
-
 				_pushing && history.changeId();
 				internalSwap(endpoint, text, anchor.join('#')||scrollTo, false);
 
