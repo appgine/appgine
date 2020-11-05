@@ -12,7 +12,6 @@ import createFragment from '../lib/createFragment'
 import createTargetScroll from '../lib/swap/createTargetScroll'
 import createElementScroll from '../lib/swap/createElementScroll'
 import createFormScroll from '../lib/swap/createFormScroll'
-import createLoadingStatus from '../lib/swap/createLoadingStatus'
 import { createSwapping } from 'appgine/hooks/swap'
 import { scrollNodeToView, scrollFormToView, setHashFixedEdge, setScrollPosition } from '../lib/scroll'
 import * as apiShortcut from 'appgine/hooks/shortcut'
@@ -32,7 +31,6 @@ var _stack = new RequestStack();
 var _request = null;
 var _poping = null;
 var _pushing = false;
-let _loadingStatus = createLoadingStatus();
 
 var _loaderReporting = null;
 function loaderReporting(type, value) {
@@ -166,8 +164,6 @@ export default function run(options, scrollTo=0, bodyClassName, isRequestInitial
 		if (initial && _stack.loadRequest()) {
 			return history.canonical(_stack.loadRequest().endpoint, false);
 		}
-
-		_loadingStatus.end();
 
 		if (_pending) {
 			_pending = 0;
@@ -386,7 +382,6 @@ function loadEndpoint($element, endpoint, isAjax, toCurrent=null, scrollTo=0) {
 
 function leave(endpoint) {
 	const requestnum = _requestnum = createRequestnum();
-	_loadingStatus.end();
 	_options.dispatch('app.request', 'start', endpoint, { requestnum, $element: document.body });
 
 	if (_options.onRedirect(endpoint)) {
@@ -651,8 +646,6 @@ function ajaxResponse($element, endpoint, newPage, scrollTo) {
 	const foundRequest = _stack.findRequest($element);
 	const elementScroll = createElementScroll($element, false, _options.hashFixedEdge);
 
-	_loadingStatus.start($element, endpoint);
-
 	return function(text, json, headers) {
 		const isCurrent = foundRequest===_stack.loadRequest();
 
@@ -725,8 +718,6 @@ function ajaxResponse($element, endpoint, newPage, scrollTo) {
 			}
 
 			if (isCurrent) {
-				_loadingStatus.loaded();
-
 				if (nowRequest) {
 					history.canonical(nowRequest.endpoint, false);
 				}
