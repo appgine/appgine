@@ -119,7 +119,7 @@ withModuleContext(module, function() {
 				const isAjax = formTarget==='_ajax';
 				const isGlobal = false;
 				const endpoint = uri.createForm($form, $element);
-				const request = { isAjax, isGlobal, endpoint, $element, formName, labels: {}, level: 0 };
+				const request = { isAjax, isGlobal, endpoint, $element, formName, labels: {}, level: 0, actions: [] };
 
 				listener.autoSubmitRequest = listener.createApi(null, true, {...request})
 			}
@@ -136,16 +136,19 @@ withModuleContext(module, function() {
 	useListen('auto-submit', 'destroy', abortAutoSubmit);
 
 	useListen('app.request', 'start', (endpoint, { $element, requestnum }) => onRequestStart(false, true, endpoint, $element, requestnum));
-	useListen('app.request', 'response', ({ requestnum }) => onRequestActionInternal(requestnum, 'response'));
-	useListen('app.request', 'upload', ({ requestnum, loaded, total }) => onRequestActionInternal(requestnum, 'progress', loaded, total));
+	useListen('app.request', 'submit', ({ requestnum, endpoint, method, data }) => onRequestSubmit(requestnum, { endpoint, method, data }));
+	useListen('app.request', 'response', ({ requestnum, response }) => onRequestResponse(requestnum, response));
+	useListen('app.request', 'upload', ({ requestnum, loaded, total }) => onRequestActionInternal(requestnum, 'progress', false, loaded, total));
 	useListen('app.request', 'error', ({ requestnum, errno, error }) => onRequestActionEnd(requestnum, 'error', errno, error));
 	useListen('app.request', 'abort', ({ requestnum }) => onRequestActionEnd(requestnum, 'abort'));
-	useListen('app.request', 'end', ({ requestnum }) => setTimeout(() => onRequestActionEnd(requestnum, 'end'), 100));
+	useListen('app.request', 'end', ({ requestnum }) => onRequestActionEnd(requestnum, 'end'));
 
 	useListen('ajax.request', 'start', (endpoint, { $element, requestnum, isGlobal }) => onRequestStart(true, isGlobal, endpoint, $element, requestnum));
-	useListen('ajax.request', 'response', ({ requestnum }) => onRequestActionInternal(requestnum, 'response'));
+	useListen('ajax.request', 'submit', ({ requestnum, endpoint, method, data }) => onRequestSubmit(requestnum, { endpoint, method, data }));
+	useListen('ajax.request', 'response', ({ requestnum, response }) => onRequestResponse(requestnum, response));
+	useListen('ajax.request', 'upload', ({ requestnum, loaded, total }) => onRequestActionInternal(requestnum, 'progress', false, loaded, total));
 	useListen('ajax.request', 'abort', ({ requestnum }) => onRequestActionEnd(requestnum, 'abort'));
-	useListen('ajax.request', 'end', ({ requestnum }) => setTimeout(() => onRequestActionEnd(requestnum, 'end'), 100));
+	useListen('ajax.request', 'end', ({ requestnum }) => onRequestActionEnd(requestnum, 'end'));
 });
 
 
@@ -196,14 +199,16 @@ export function createListener(acceptObj, createApi)
 	}
 
 	if (acceptObj.$element) {
-		listener.$element = acceptObj.$element;
-
 		if (acceptObj.form) {
 			const $form = dom.getAncestor(acceptObj.$element, 'form');
 			const formName = $form && ($form.getAttribute('data-ajax') || $form.getAttribute('name')) || null;
 			listener.formName = formName;
 			listener.form = true;
 			listener.$form = $form;
+		}
+
+		if (listener.formName===null) {
+			listener.$element = acceptObj.$element;
 		}
 
 	} else if (acceptObj.form) {
@@ -241,6 +246,11 @@ export function createListener(acceptObj, createApi)
 
 			} else {
 				listener.appRequest = listener.createApi(requestnum, false, {...request});
+			}
+
+			for (let [action, dispose, ...args] of request.actions) {
+				tryRequestActionCall(requestnum, listener.appRequest, action, dispose, ...args);
+				tryRequestActionCall(requestnum, listener.ajaxRequestList[requestnum], action, dispose, ...args);
 			}
 		}
 	}
@@ -356,7 +366,8 @@ function abortAutoSubmit($form) {
 }
 
 
-function onRequestStart(isAjax, isGlobal, endpoint, $element, requestnum) {
+function onRequestStart(isAjax, isGlobal, endpoint, $element, requestnum)
+{
 	if (appRequestList[requestnum]!==undefined) {
 		return false;
 	}
@@ -368,7 +379,7 @@ function onRequestStart(isAjax, isGlobal, endpoint, $element, requestnum) {
 	const $form = $element.tagName==='FORM' ? $element : $element.form;
 	const formName = $form && ($form.getAttribute('data-ajax') || $form.getAttribute('name')) || null;
 
-	appRequestList[requestnum] = { isAjax, isGlobal, endpoint, $element, formName, labels: {}, level: 0 }
+	appRequestList[requestnum] = { isAjax, isGlobal, endpoint, $element, formName, labels: {}, level: 0, actions: [] }
 
 	const foundListeners = matchListners(listeners, $element, appRequestList[requestnum], false);
 
@@ -403,14 +414,25 @@ function onRequestStart(isAjax, isGlobal, endpoint, $element, requestnum) {
 }
 
 
-function onRequestActionEnd(requestnum, action, ...args) {
+function onRequestSubmit(requestnum, form)
+{
+	onRequestActionInternal(requestnum, 'submit', false, form);
+}
 
+
+function onRequestResponse(requestnum, response) {
+	onRequestActionInternal(requestnum, 'response', false, response);
+	response.json && onRequestActionInternal(requestnum, 'responseJSON', false, response.json);
+	response.html && onRequestActionInternal(requestnum, 'responseHTML', false, response.html);
+}
+
+
+function onRequestActionEnd(requestnum, action, ...args)
+{
+	onRequestActionInternal(requestnum, action, true, ...args);
 	delete appRequestList[requestnum];
 
 	for (let listener of listeners) {
-		tryRequestActionCall(requestnum, listener.appRequest, action, true, ...args);
-		tryRequestActionCall(requestnum, listener.ajaxRequestList[requestnum], action, true, ...args);
-
 		if (listener.appRequest && listener.appRequest.requestnum===requestnum) {
 			listener.appRequest = null;
 		}
@@ -424,10 +446,14 @@ function onRequestActionEnd(requestnum, action, ...args) {
 }
 
 
-function onRequestActionInternal(requestnum, action, ...args) {
+function onRequestActionInternal(requestnum, action, dispose, ...args) {
+	if (appRequestList[requestnum]) {
+		appRequestList[requestnum].actions.push([action, dispose, ...args]);
+	}
+
 	for (let listener of listeners) {
-		tryRequestActionCall(requestnum, listener.appRequest, action, false, ...args);
-		tryRequestActionCall(requestnum, listener.ajaxRequestList[requestnum], action, false, ...args);
+		tryRequestActionCall(requestnum, listener.appRequest, action, dispose, ...args);
+		tryRequestActionCall(requestnum, listener.ajaxRequestList[requestnum], action, dispose, ...args);
 	}
 }
 

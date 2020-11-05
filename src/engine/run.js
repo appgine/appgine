@@ -174,7 +174,7 @@ export default function run(options, scrollTo=0, bodyClassName, isRequestInitial
 		if (_pending) {
 			_pending = 0;
 			_pushing = false;
-			_options.dispatch('app.request', 'abort', { _requestnum });
+			_options.dispatch('app.request', 'abort', { requestnum: _requestnum });
 			_requestnum = createRequestnum();
 		}
 
@@ -571,6 +571,9 @@ function submitForm(submitRequest, $form, $submitter, formTarget) {
 	}
 
 	const requestnum = _requestnum;
+
+	_options.dispatch('app.request', 'submit', { requestnum, endpoint: formEndpoint, method: formMethod, data: formData });
+
 	createAjax($element, true, $form.getAttribute('data-ajax')||null).submit(formEndpoint, formMethod, submitData, function(...response) {
 		if ($form.hasAttribute('data-immutable')===false) {
 			if (formMethod!=='GET' || _pushing) {
@@ -580,7 +583,7 @@ function submitForm(submitRequest, $form, $submitter, formTarget) {
 
 		bindSubmitRequest(...response);
 	}, function(loaded, total) {
-		_options.dispatch('app.request', 'upload', { $element, requestnum, loaded, total });
+		_options.dispatch('app.request', 'upload', { requestnum, loaded, total });
 	});
 }
 
@@ -596,7 +599,7 @@ function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
 		const error = _options.locale[locale.error.request.ajax] + '\n' + String(_options.locale[errno]||'');
 		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
 		_options.onError(error);
-		_options.dispatch('app.request', 'error', { $element, requestnum: _requestnum, errno, error });
+		_options.dispatch('app.request', 'error', { requestnum: _requestnum, errno, error });
 	});
 }
 
@@ -613,7 +616,7 @@ function bindAjaxRequest(apiRequest, $element, endpoint, scrollTo) {
 		const error = _options.locale[locale.error.request.page] + '\n' + String(_options.locale[errno]||'');
 		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
 		_options.onError(error);
-		_options.dispatch('app.request', 'error', { $element, requestnum: _requestnum, errno, error });
+		_options.dispatch('app.request', 'error', { requestnum: _requestnum, errno, error });
 	});
 }
 
@@ -636,7 +639,8 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 	return _options.onResponse(function(status, response) {
 		const isLast = () => requestnum===_requestnum;
 		apiRequest.onResponse(status, response, isLast());
-		_options.dispatch('app.request', 'response', { $element, requestnum });
+		status===ajax.SUCCESS && _options.dispatch('app.request', 'response', { requestnum, response, isLast: isLast() });
+		_options.dispatch('app.request', status===ajax.ABORT ? 'abort' : 'end', { requestnum });
 
 		if (status===ajax.ABORT) {
 			if (_pushing && isLast()) {
@@ -660,7 +664,6 @@ function _bindRequest(apiRequest, requestnum, $element, endpoint, newPage, scrol
 		}
 
 		apiRequest.onComplete(isLast())
-		_options.dispatch('app.request', status===ajax.ABORT ? 'abort' : 'end', { $element, requestnum });
 	})
 }
 

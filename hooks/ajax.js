@@ -1,5 +1,5 @@
 
-import { create, ABORT } from '../src/lib/ajax'
+import { create, ABORT, SUCCESS } from '../src/lib/ajax'
 import createRequestnum from '../src/requestnum'
 
 import { useContext, bindContext } from 'appgine/hooks'
@@ -37,6 +37,10 @@ function ajaxRequest($element, state, method, isGlobal, isPlugin, endpoint, ...a
 
 	dispatch('ajax.request', 'start', endpoint, { $element, requestnum, isGlobal });
 
+	if (method==='post') {
+		dispatch('ajax.request', 'submit', endpoint, { endpoint, method, data: args[0] });
+	}
+
 	const fn = args.pop();
 	state.ajax[method](endpoint, ...args, function(status, response) {
 		if (state.requestnum===requestnum) {
@@ -44,11 +48,15 @@ function ajaxRequest($element, state, method, isGlobal, isPlugin, endpoint, ...a
 			state.$element = null;
 		}
 
-		dispatch('ajax.request', status===ABORT ? 'abort' : 'end', { $element, requestnum, isGlobal });
+		status===SUCCESS && dispatch('ajax.request', 'response', { requestnum, response });
+		dispatch('ajax.request', status===ABORT ? 'abort' : 'end', { requestnum });
 
 		if (state.ajax) {
 			fn(status, response);
 		}
+
+	}, function(loaded, total) {
+		dispatch('ajax.request', 'upload', { requestnum, loaded, total });
 	});
 
 	return function() {
@@ -65,11 +73,8 @@ function ajaxRequest($element, state, method, isGlobal, isPlugin, endpoint, ...a
 
 function ajaxAbort(state) {
 	if (state.ajax && state.requestnum && state.ajax.canAbort()) {
-		const $element = state.$element;
 		const requestnum = state.requestnum;
-		const isGlobal = state.isGlobal;
-
-		dispatch('ajax.request', 'abort', { $element, requestnum, isGlobal });
+		dispatch('ajax.request', 'abort', { requestnum });
 		state.requestnum = 0;
 		state.$element = null;
 		state.ajax.abort();
