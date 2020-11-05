@@ -244,11 +244,8 @@ export function onClickHash(e, $link, hash, toTarget) {
 
 		if (_stack.loadRequest() && _stack.loadRequest().shouldReloadForHash(hash)) {
 			loaderReporting('clickHash');
-
-			if (!e.defaultPrevented) {
-				e.preventDefault();
-				loadPage($link, endpoint, false, 0);
-			}
+			e.preventDefault();
+			loadPage($link, endpoint, false, 0);
 
 		} else {
 			e.preventDefault();
@@ -279,11 +276,8 @@ export function onClick(e, $link, toTarget) {
 
 				} else {
 					loaderReporting('click');
-
-					if (!e.defaultPrevented) {
-						e.preventDefault();
-						loadEndpoint($link, endpoint, toTarget==='_ajax', toTarget==='_current'||null, hash||createTargetScroll(toTarget));
-					}
+					e.preventDefault();
+					loadEndpoint($link, endpoint, toTarget==='_ajax', toTarget==='_current'||null, hash||createTargetScroll(toTarget));
 				}
 
 			} else {
@@ -303,10 +297,8 @@ export function onSubmitForm(e, $form, $submitter, toTarget) {
 	if ((toTarget==='' || toTarget==='_ajax' || toTarget==='_current' || toTarget.indexOf('_this')===0 || toTarget[0]==='#') && 'FormData' in window) {
 		if (closure.uri.sameOrigin(endpoint)) {
 			loaderReporting('submit', String($submitter && $submitter.name || ''));
-			if (!e.defaultPrevented) {
-				e.preventDefault();
-				submitForm($form, $submitter, toTarget||'');
-			}
+			e.preventDefault();
+			submitForm($form, $submitter, toTarget||'');
 		}
 	}
 }
