@@ -534,12 +534,6 @@ function submitForm($form, $submitter, formTarget) {
 }
 
 
-/**
- * @param {object}
- * @param {Element}
- * @param {string}
- * @param {mixed}
- */
 function bindAjaxRequest($element, endpoint, scrollTo) {
 	return _bindRequest(_pushing ? 0 : (_requestnum = createRequestnum()), $element, endpoint, false, scrollTo, function(errno) {
 		const error = _options.locale[locale.error.request.ajax] + '\n' + String(_options.locale[errno]||'');
@@ -550,14 +544,8 @@ function bindAjaxRequest($element, endpoint, scrollTo) {
 }
 
 
-/**
- * @param {object}
- * @param {Element}
- * @param {string}
- * @param {bool}
- * @param {mixed}
- */
- function bindRequest($element, endpoint, newPage, scrollTo) {
+
+function bindRequest($element, endpoint, newPage, scrollTo) {
 	return _bindRequest((_requestnum = createRequestnum()), $element, endpoint, newPage, scrollTo, function(errno) {
 		const error = _options.locale[locale.error.request.page] + '\n' + String(_options.locale[errno]||'');
 		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
@@ -567,15 +555,6 @@ function bindAjaxRequest($element, endpoint, scrollTo) {
 }
 
 
-/**
- * @param {object}
- * @param {int}
- * @param {Element}
- * @param {string}
- * @param {bool}
- * @param {mixed}
- * @param {function}
- */
 function _bindRequest(requestnum, $element, endpoint, newPage, scrollTo, onError) {
 	const onResponse = ajaxResponse($element, endpoint, newPage, scrollTo);
 
@@ -609,6 +588,7 @@ function _bindRequest(requestnum, $element, endpoint, newPage, scrollTo, onError
 		}
 	})
 }
+
 
 function ajaxResponse($element, endpoint, newPage, scrollTo) {
 	const [, ...anchor] = endpoint.split('#');
