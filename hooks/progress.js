@@ -77,9 +77,9 @@ withModuleContext(module, function() {
 				swapRequest.endpoint = uri.createForm(foundListener.$form, e.target);
 
 				const autoSubmitRequest = foundListener.createApi(null, true, {...swapRequest});
+				foundListener.autoSubmitRequest = autoSubmitRequest;
 
-				if (autoSubmitRequest) {
-					foundListener.autoSubmitRequest = autoSubmitRequest;
+				if (foundListener.autoSubmitRequest) {
 					foundListener.autoSubmitRequest.abortTimeout = setTimeout(function() {
 						foundListener.autoSubmitRequest = null;
 
@@ -102,26 +102,28 @@ withModuleContext(module, function() {
 		}
 	});
 
-	useListen('auto-submit', 'start', function($form, $element) {
+	useListen('auto-submit', 'start', function($form, $element, abort) {
 		if (autoSubmitForm.indexOf($form)===-1) {
 			autoSubmitForm.push($form);
-			autoSubmitElement.push($element);
 		}
 
-		for (let listener of findListeners($element)) {
+		autoSubmitElement[autoSubmitForm.indexOf($form)] = $element;
+
+		const formTarget = getElementTarget($element) || getElementTarget($form)
+		const formName = $form.getAttribute('data-ajax') || $form.getAttribute('name') || null;
+
+		const isAjax = formTarget==='_ajax';
+		const isGlobal = false;
+		const endpoint = uri.createForm($form, $element);
+		const request = { isAjax, isGlobal, endpoint, $form, $element, formName, labels: {}, level: 0, actions: [], abort  };
+
+		for (let listener of matchListners(listeners, $element, request, false)) {
 			if (listener.autoSubmitRequest) {
 				clearTimeout(listener.autoSubmitRequest.abortTimeout);
+				tryRequestActionCall(null, listener.autoSubmitRequest, 'autoSubmit', false);
 
-			} else if (listener.$element && listener.form) {
-				const formTarget = getElementTarget($element) || getElementTarget($form)
-				const formName = $form.getAttribute('data-ajax') || $form.getAttribute('name') || null;
-
-				const isAjax = formTarget==='_ajax';
-				const isGlobal = false;
-				const endpoint = uri.createForm($form, $element);
-				const request = { isAjax, isGlobal, endpoint, $element, formName, labels: {}, level: 0, actions: [] };
-
-				listener.autoSubmitRequest = listener.createApi(null, true, {...request})
+			} else {
+				listener.autoSubmitRequest = listener.createApi(null, true, {...request});
 			}
 		}
 	});
@@ -135,7 +137,7 @@ withModuleContext(module, function() {
 	useListen('auto-submit', 'abort', abortAutoSubmit);
 	useListen('auto-submit', 'destroy', abortAutoSubmit);
 
-	useListen('app.request', 'start', (endpoint, { $element, requestnum }) => onRequestStart(false, true, endpoint, $element, requestnum));
+	useListen('app.request', 'start', (endpoint, { $element, requestnum, abort }) => onRequestStart(requestnum, endpoint, $element, false, true, abort));
 	useListen('app.request', 'submit', ({ requestnum, endpoint, method, data }) => onRequestSubmit(requestnum, { endpoint, method, data }));
 	useListen('app.request', 'response', ({ requestnum, response }) => onRequestResponse(requestnum, response));
 	useListen('app.request', 'upload', ({ requestnum, loaded, total }) => onRequestActionInternal(requestnum, 'progress', false, loaded, total));
@@ -143,7 +145,7 @@ withModuleContext(module, function() {
 	useListen('app.request', 'abort', ({ requestnum }) => onRequestActionEnd(requestnum, 'abort'));
 	useListen('app.request', 'end', ({ requestnum }) => onRequestActionEnd(requestnum, 'end'));
 
-	useListen('ajax.request', 'start', (endpoint, { $element, requestnum, isGlobal }) => onRequestStart(true, isGlobal, endpoint, $element, requestnum));
+	useListen('ajax.request', 'start', (endpoint, { $element, requestnum, isGlobal, abort }) => onRequestStart(requestnum, endpoint, $element, true, isGlobal, abort));
 	useListen('ajax.request', 'submit', ({ requestnum, endpoint, method, data }) => onRequestSubmit(requestnum, { endpoint, method, data }));
 	useListen('ajax.request', 'response', ({ requestnum, response }) => onRequestResponse(requestnum, response));
 	useListen('ajax.request', 'upload', ({ requestnum, loaded, total }) => onRequestActionInternal(requestnum, 'progress', false, loaded, total));
@@ -332,6 +334,18 @@ function matchListners(listeners, $element, request=null, matchLabels=false)
 					found = [listener];
 				}
 
+			} else if (listener.$form) {
+				let elementLevel = 0;
+				let $tmp = listener.$form;
+				do { ++elementLevel } while (($tmp = $tmp.parentNode) && $tmp.tagName!=='BODY');
+
+				if (foundLevel < elementLevel) {
+					foundLevel = elementLevel;
+					found = [];
+				}
+
+				found.push(listener);
+
 			} else if (foundLevel===0) {
 				found.push(listener);
 			}
@@ -355,18 +369,20 @@ function abortAutoSubmit($form) {
 	const index = autoSubmitForm.indexOf($form);
 
 	if (index!==-1) {
-		for (let listener of findListeners(autoSubmitElement[index])) {
+		autoSubmitForm.splice(index, 1);
+		autoSubmitElement.splice(index, 1);
+	}
+
+	for (let listener of listeners) {
+		if (listener.autoSubmitRequest && listener.autoSubmitRequest.request.$form===$form) {
 			tryRequestActionCall(null, listener.autoSubmitRequest, 'abort', true);
 			listener.autoSubmitRequest = null;
 		}
-
-		autoSubmitForm.splice(index, 1);
-		autoSubmitElement.splice(index, 1);
 	}
 }
 
 
-function onRequestStart(isAjax, isGlobal, endpoint, $element, requestnum)
+function onRequestStart(requestnum, endpoint, $element, isAjax, isGlobal, abort)
 {
 	if (appRequestList[requestnum]!==undefined) {
 		return false;
@@ -379,7 +395,7 @@ function onRequestStart(isAjax, isGlobal, endpoint, $element, requestnum)
 	const $form = $element.tagName==='FORM' ? $element : $element.form;
 	const formName = $form && ($form.getAttribute('data-ajax') || $form.getAttribute('name')) || null;
 
-	appRequestList[requestnum] = { isAjax, isGlobal, endpoint, $element, formName, labels: {}, level: 0, actions: [] }
+	appRequestList[requestnum] = { isAjax, isGlobal, endpoint, $form, $element, formName, labels: {}, level: 0, actions: [], abort }
 
 	const foundListeners = matchListners(listeners, $element, appRequestList[requestnum], false);
 
@@ -398,13 +414,22 @@ function onRequestStart(isAjax, isGlobal, endpoint, $element, requestnum)
 				const ajaxRequest = autoSubmitRequest || listener.createApi(requestnum, false, {...appRequestList[requestnum]});
 				ajaxRequest && (listener.ajaxRequestList[requestnum] = ajaxRequest);
 
-			} else if (autoSubmitRequest===null && listener.appRequest && listener.appRequest.api.replace) {
+			} else if (autoSubmitRequest || (listener.appRequest && listener.appRequest.api.replace)) {
+				if (autoSubmitRequest) {
+					tryRequestActionCall(null, listener.appRequest, 'abort', true);
+				}
+
+				listener.appRequest = autoSubmitRequest || listener.appRequest;
 				listener.appRequest.requestnum = requestnum;
-				tryRequestActionCall(null, listener.appRequest, 'replace', false, {...appRequestList[requestnum]})
+				listener.appRequest.request.endpoint = endpoint;
+				listener.appRequest.request.$form = $form;
+				listener.appRequest.request.$element = $element;
+				listener.appRequest.request.abort = abort;
+				tryRequestActionCall(null, listener.appRequest, 'replace', false)
 
 			} else {
 				tryRequestActionCall(null, listener.appRequest, 'abort', true);
-				listener.appRequest = autoSubmitRequest || listener.createApi(requestnum, false, {...appRequestList[requestnum]});
+				listener.appRequest = listener.createApi(requestnum, false, {...appRequestList[requestnum]});
 			}
 
 		} else if (listener.appRequest && isAjax===false) {

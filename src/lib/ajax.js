@@ -54,43 +54,65 @@ export function create(headers, timeout, name=null) {
 		request.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
 		request.setRequestHeader('Pragma', 'no-cache');
 		request.setRequestHeader('Expires', '0');
-
 		request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
 		bindRequest(endpoint, request, timeout, fndone, fnprogress);
 		request.send(data);
 	}
 
+	let aborted = false;
+	function checkPendingAbort(onResponse, onCreate) {
+		if (aborted===true) {
+			aborted = false;
+			const error = locale.error.request.abort;
+			return onResponse(ABORT, { code: 0, headers: {}, error, json: undefined, html: '' });
+		}
+
+		return onCreate();
+	}
 
 	return {
 		abort() {
-			localRequest && localRequest.abort();
-			localRequest = null;
-			globalRequest.current && globalRequest.current.abort();
-			globalRequest.current = null;
+			if (localRequest || globalRequest.current) {
+				localRequest && localRequest.abort();
+				localRequest = null;
+				globalRequest.current && globalRequest.current.abort();
+				globalRequest.current = null;
+
+			} else {
+				aborted = true;
+			}
 		},
 		canAbort() {
 			return !!(localRequest || globalRequest.current);
 		},
 		get(endpoint, fn) {
-			localRequest && localRequest.abort();
-			localRequest = createRequest(false);
-			ajaxRequest(localRequest, endpoint, 'GET', null, fn);
+			checkPendingAbort(fn, function() {
+				localRequest && localRequest.abort();
+				localRequest = createRequest(false);
+				ajaxRequest(localRequest, endpoint, 'GET', null, fn);
+			})
 		},
 		post(endpoint, data, fn, fnprogress) {
-			localRequest && localRequest.abort();
-			localRequest = createRequest(!!fnprogress);
-			ajaxRequest(localRequest, endpoint, 'POST', data, fn, fnprogress);
+			checkPendingAbort(fn, function() {
+				localRequest && localRequest.abort();
+				localRequest = createRequest(!!fnprogress);
+				ajaxRequest(localRequest, endpoint, 'POST', data, fn, fnprogress);
+			})
 		},
 		load(endpoint, fn) {
-			globalRequest.current && globalRequest.current.abort();
-			globalRequest.current = createRequest(false);
-			ajaxRequest(globalRequest.current, endpoint, 'GET', null, fn);
+			checkPendingAbort(fn, function() {
+				globalRequest.current && globalRequest.current.abort();
+				globalRequest.current = createRequest(false);
+				ajaxRequest(globalRequest.current, endpoint, 'GET', null, fn);
+			})
 		},
 		submit(endpoint, method, data, fn, fnprogress) {
-			globalRequest.current && globalRequest.current.abort();
-			globalRequest.current = createRequest(!!fnprogress);
-			ajaxRequest(globalRequest.current, endpoint, method, data, fn, fnprogress);
+			checkPendingAbort(fn, function() {
+				globalRequest.current && globalRequest.current.abort();
+				globalRequest.current = createRequest(!!fnprogress);
+				ajaxRequest(globalRequest.current, endpoint, method, data, fn, fnprogress);
+			})
 		}
 	}
 }

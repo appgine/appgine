@@ -331,10 +331,13 @@ function loadEndpoint($element, endpoint, isAjax, toCurrent=null, scrollTo=0) {
 
 
 function leave(endpoint) {
+	let aborted = false;
 	const requestnum = _requestnum = createRequestnum();
-	_options.dispatch('app.request', 'start', endpoint, { requestnum, $element: document.body });
+	_options.dispatch('app.request', 'start', endpoint, { requestnum, $element: document.body, abort() {
+		aborted = true;
+	} });
 
-	if (_options.onRedirect(endpoint)) {
+	if (aborted===false && _options.onRedirect(endpoint)) {
 		_options.dispatch('app.request', 'leave', { requestnum });
 
 		if (_pending) {
@@ -413,7 +416,7 @@ function loadAjax($element, endpoint, scrollTo) {
 
 
 function loadAjaxWithContext(ajaxContext, $element, endpoint, scrollTo) {
-	ajaxContext.get(endpoint, bindAjaxRequest($element, endpoint, scrollTo));
+	ajaxContext.get(endpoint, bindAjaxRequest(ajaxContext, $element, endpoint, scrollTo));
 }
 
 
@@ -423,7 +426,7 @@ function loadPage($element, endpoint, newPage, scrollTo) {
 
 
 function loadPageWithContext(ajaxContext, $element, endpoint, newPage, scrollTo) {
-	ajaxContext.load(endpoint, bindRequest($element, endpoint, newPage, scrollTo));
+	ajaxContext.load(endpoint, bindRequest(ajaxContext, $element, endpoint, newPage, scrollTo));
 }
 
 
@@ -456,9 +459,11 @@ function submitForm($form, $submitter, formTarget) {
 	const formScroll = createFormScroll($form, formName[0]==='#', _options.hashFixedEdge);
 	const targetScroll = createTargetScroll(formTarget);
 
+	const ajaxContext = createAjax($element, true, $form.getAttribute('data-ajax')||null);
+
 	let bindSubmitRequest;
 	if (formTarget==='_ajax') {
-		bindSubmitRequest = bindAjaxRequest($element, formEndpoint, function() {
+		bindSubmitRequest = bindAjaxRequest(ajaxContext, $element, formEndpoint, function() {
 			const $found = closure.dom.findForm(formName, formId);
 
 			if (formTarget==='#') {
@@ -471,7 +476,7 @@ function submitForm($form, $submitter, formTarget) {
 
 	} else {
 		pushEndpoint(formEndpoint, { formId }, !newPage);
-		bindSubmitRequest = bindRequest($element, formEndpoint, newPage, function() {
+		bindSubmitRequest = bindRequest(ajaxContext, $element, formEndpoint, newPage, function() {
 			const $found = closure.dom.findForm(formName, formId);
 
 			if (targetScroll) {
@@ -501,7 +506,7 @@ function submitForm($form, $submitter, formTarget) {
 
 	_options.dispatch('app.request', 'submit', { requestnum, endpoint: formEndpoint, method: formMethod, data: formData });
 
-	createAjax($element, true, $form.getAttribute('data-ajax')||null).submit(formEndpoint, formMethod, submitData, function(...response) {
+	ajaxContext.submit(formEndpoint, formMethod, submitData, function(...response) {
 		if ($form.hasAttribute('data-immutable')===false) {
 			if (formMethod!=='GET' || _pushing) {
 				_stack.clearHistory();
@@ -515,8 +520,8 @@ function submitForm($form, $submitter, formTarget) {
 }
 
 
-function bindAjaxRequest($element, endpoint, scrollTo) {
-	return _bindRequest(_pushing ? 0 : (_requestnum = createRequestnum()), $element, endpoint, false, scrollTo, function(errno) {
+function bindAjaxRequest(ajaxContext, $element, endpoint, scrollTo) {
+	return _bindRequest(ajaxContext, _pushing ? 0 : (_requestnum = createRequestnum()), $element, endpoint, false, scrollTo, function(errno) {
 		const error = _options.locale[locale.error.request.ajax] + '\n' + String(_options.locale[errno]||'');
 		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
 		_options.onError(error);
@@ -526,8 +531,8 @@ function bindAjaxRequest($element, endpoint, scrollTo) {
 
 
 
-function bindRequest($element, endpoint, newPage, scrollTo) {
-	return _bindRequest((_requestnum = createRequestnum()), $element, endpoint, newPage, scrollTo, function(errno) {
+function bindRequest(ajaxContext, $element, endpoint, newPage, scrollTo) {
+	return _bindRequest(ajaxContext, (_requestnum = createRequestnum()), $element, endpoint, newPage, scrollTo, function(errno) {
 		const error = _options.locale[locale.error.request.page] + '\n' + String(_options.locale[errno]||'');
 		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
 		_options.onError(error);
@@ -536,11 +541,11 @@ function bindRequest($element, endpoint, newPage, scrollTo) {
 }
 
 
-function _bindRequest(requestnum, $element, endpoint, newPage, scrollTo, onError) {
+function _bindRequest(ajaxContext, requestnum, $element, endpoint, newPage, scrollTo, onError) {
 	const onResponse = ajaxResponse($element, endpoint, newPage, scrollTo);
 
 	_pending = 1;
-	_options.dispatch('app.request', 'start', endpoint, { $element, requestnum });
+	_options.dispatch('app.request', 'start', endpoint, { $element, requestnum, abort: ajaxContext.abort });
 
 	return _options.onResponse(function(status, response) {
 		const isLast = () => requestnum===_requestnum;

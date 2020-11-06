@@ -14,7 +14,7 @@ $email.type = 'email';
 export default function create($element) {
 	const $form = dom.getAncestor($element, 'form');
 	const internalDispatch = bindDispatch('auto-submit');
-	const dispatch = (type, $element) => internalDispatch(type, $form, $element);
+	const dispatch = (type, $element, ...args) => internalDispatch(type, $form, $element, ...args);
 
 	let $focus = null;
 	let value = undefined;
@@ -32,11 +32,11 @@ export default function create($element) {
 
 	$emails.map($email => $email.type = 'text');
 
-	function clearSubmitForm($currentForm, type) {
+	function clearSubmitForm($currentForm, abortEvent) {
 		if ($form===$currentForm && $currentForm._appgineSubmitTimeout) {
 			clearTimeout($currentForm._appgineSubmitTimeout);
 			delete $currentForm._appgineSubmitTimeout;
-			type && dispatch(type);
+			abortEvent && dispatch('abort');
 		}
 	}
 
@@ -71,23 +71,34 @@ export default function create($element) {
 		}
 
 		if (isValid) {
-			clearSubmitForm(target.form);
-			dispatch('start', target);
+			let aborted = 1;
+			clearSubmitForm(target.form, false);
+			dispatch('start', target, function() {
+				clearSubmitForm($form, false);
+				aborted = aborted>0 ? 2 : 0;
+				aborted===0 && dispatch('abort');
+			});
 
-			if ((isTextInput || isTextarea) && delay) {
+			if (aborted===2) {
+				dispatch('abort');
+
+			} else if ((isTextInput || isTextarea) && delay) {
 				target.form._appgineSubmitTimeout = setTimeout(function() {
-					dispatch('submit', target);
-					clearSubmitForm(target.form);
-					target.form.submit();
+					clearSubmitForm(target.form, false);
+					aborted===1 && dispatch('submit', target);
+					aborted===1 && target.form.submit();
+					aborted===2 && dispatch('abort');
+					aborted = 0;
 				}, delayTimeout);
 
 			} else {
-				dispatch('submit', target);
-				target.form.submit();
+				aborted===1 && dispatch('submit', target);
+				aborted===1 && target.form.submit();
+				aborted = 0;
 			}
 
 		} else {
-			clearSubmitForm(target.form, 'abort');
+			clearSubmitForm(target.form, true);
 		}
 	}
 
@@ -96,7 +107,18 @@ export default function create($element) {
 		if ($focus) {
 			value = $focus.value;
 			checked = $focus.checked;
-			clearSubmitForm(e.target); // TODO: Really?
+			clearSubmitForm(e.target, false); // TODO: Really?
+		}
+	}
+
+	const onReset = function(e) {
+		if ($focus) {
+			value = e.target.value;
+			checked = e.target.checked;
+
+		} else {
+			value = undefined;
+			checked = undefined;
 		}
 	}
 
@@ -136,13 +158,14 @@ export default function create($element) {
 	}
 
 	$form && useEvent($form, 'submit', onSubmit);
+	$form && useEvent($form, 'reset', onReset);
 	useEvent($element, 'change', onChange);
 	useEvent($element, 'focusin', onFocusIn);
 	useEvent($element, 'focusout', onFocusOut);
 	useEvent($element, 'keyup', onChange);
 
 	return function() {
-		$form && clearSubmitForm($form);
+		$form && clearSubmitForm($form, false);
 		dispatch('destroy');
 		$emails.map($email => $email.type = 'email');
 	}
