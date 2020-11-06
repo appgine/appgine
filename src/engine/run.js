@@ -294,8 +294,10 @@ export function onLeave(url) {
 
 export function onRedirect($element, url)
 {
-	if (_options.ajax!==false) {
-		location($element, url);
+	const endpoint = closure.uri.create(url, {});
+
+	if (_options.ajax!==false && closure.uri.sameOrigin(endpoint)) {
+		loadEndpoint($element, endpoint, isAjax);
 
 	} else {
 		_options.onLeave(url);
@@ -303,36 +305,15 @@ export function onRedirect($element, url)
 }
 
 
-export function location($element, endpoint, isAjax=false) {
-	endpoint = closure.uri.create(endpoint, {});
-
-	if (closure.uri.sameOrigin(endpoint)) {
-		loadEndpoint($element, endpoint, isAjax);
-
-	} else {
-		leave(endpoint);
-	}
+// deprecated
+export function location($element, url) {
+	onRedirect($element, url);
 }
 
 
 export function scroll($element, animated)
 {
 	internalScrollNode($element, $element, true, animated);
-}
-
-
-export function ajaxGet($element, params) {
-	const foundRequest = _stack.findRequest($element);
-	const endpoint = foundRequest ? closure.uri.create(foundRequest.endpoint, params) : closure.uri.create(params);
-
-	createAjax($element).get(endpoint, bindAjaxRequest($element, endpoint, 0));
-}
-
-
-export function ajaxPost($element, endpoint, data) {
-	endpoint = closure.uri.create(endpoint);
-
-	createAjax($element).post(endpoint, data, bindAjaxRequest($element, endpoint, 0));
 }
 
 
