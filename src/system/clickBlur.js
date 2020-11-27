@@ -24,12 +24,14 @@ export default function create() {
 
 	useEvent(document, 'mouseup', function(e) {
 		let _$target = $target;
-		do {
+		while (_$target) {
 			if (['A', 'BUTTON', 'LABEL'].indexOf(_$target.tagName)!==-1) {
 				if (enter===false && !_$target.onfocus && !_$target.onblur) {
 					try { _$target.blur(); } catch (e) {}
 				}
 			}
-		} while (_$target = _$target.parentNode);
+
+			_$target = _$target.parentNode;
+		}
 	});
 }
