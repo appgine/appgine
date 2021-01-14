@@ -18,9 +18,8 @@ export function abort() {
 
 
 export function create(headers, timeout, name=null) {
-	let localRequest, globalRequest;
-
-	globalRequest = _globalRequest[name] = _globalRequest[name] || {current: null};
+	let localRequest = null;
+	let globalRequest = _globalRequest[name] = _globalRequest[name] || {current: null};
 	timeout = timeout===undefined ? 30e3 : parseInt(timeout, 10);
 
 	function ajaxRequest(request, endpoint, method, data, fn, fnprogress) {
@@ -73,18 +72,12 @@ export function create(headers, timeout, name=null) {
 
 	return {
 		abort() {
-			if (localRequest || globalRequest.current) {
-				localRequest && localRequest.abort();
-				localRequest = null;
-				globalRequest.current && globalRequest.current.abort();
-				globalRequest.current = null;
-
-			} else {
-				aborted = true;
-			}
+			aborted = aborted || localRequest!==null;
+			localRequest && localRequest.abort();
+			localRequest = null;
 		},
 		canAbort() {
-			return !!(localRequest || globalRequest.current);
+			return !!localRequest;
 		},
 		get(endpoint, fn) {
 			checkPendingAbort(fn, function() {
