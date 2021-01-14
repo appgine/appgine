@@ -1,5 +1,5 @@
 
-import clone from '../lib/clone'
+import clone from 'appgine/utils/clone'
 
 
 let loaded = false;

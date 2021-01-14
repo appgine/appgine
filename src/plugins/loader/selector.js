@@ -1,7 +1,7 @@
 
 import { bindInternalSelector, loadInternalSelector } from '../lib/internalSelector'
 import { loadData } from './scripts'
-import clone from '../lib/clone'
+import clone from 'appgine/utils/clone'
 
 import resolveDataAttribute from '../lib/resolveDataAttribute'
 import { dom } from 'appgine/closure'

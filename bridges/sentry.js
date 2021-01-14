@@ -1,7 +1,7 @@
 
 import { listen, ERROR } from 'appgine/errorhub'
 import loadScript from 'appgine/addons/loadScript'
-import cloneToSerializable from 'appgine/src/lib/cloneToSerializable'
+import cloneToSerializable from 'appgine/utils/cloneToSerializable'
 
 
 export default function bridgeSentry(src, endpoint, config, filterErrors=false) {
