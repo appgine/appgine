@@ -1,7 +1,6 @@
 
-import { uri, selection, string } from 'appgine/closure'
+import { uri, selection } from 'appgine/closure'
 
-import { bindReact } from 'appgine/hooks/react'
 import { useEvent } from 'appgine/hooks/event'
 import { bindDispatch } from 'appgine/hooks/channel'
 import { useTimeout, bindTimeout } from 'appgine/hooks/timer'
@@ -9,50 +8,33 @@ import { usePluginShortcut } from 'appgine/hooks/shortcut'
 import { bindPluginAjax } from 'appgine/hooks/ajax'
 import { useTargets } from 'appgine/hooks/target'
 
+import { canonizeText, normalizeText } from 'appgine/utils/text'
+import clone from 'appgine/utils/clone'
 
-export default function create($input, Component, activeSelector, endpoint, inputName=null) {
+
+export default function create($input, endpoint, createAutocomplete, inputName=null) {
 	const [ajaxTimeout, destroyAjaxTimeout] = bindTimeout();
 	const [ajax, ajaxAbort] = bindPluginAjax();
 	const dispatch = bindDispatch('autocomplete');
 
 	const state = {token: null, results: [], visible: false, loading: null, container: []};
 
-	const request = token => {
-		ajaxAbort();
-		state.loading = token;
-
-		if (token) {
-			ajaxTimeout(() => {
-				ajax(uri.create(endpoint, {[inputName||$input.name]: token}), (status, response) => {
-					if (response.code>0) {
-						if (response.code===200 || token===state.loading) {
-							handleResults(token, response.code===200 && Array.isArray(response.json) && response.json || []);
-						}
-					}
-				});
-			}, 100);
-
-		} else if (token!==null) {
-			destroyAjaxTimeout();
-			handleResults(token, []);
-		}
-	}
-
 	function handleResults(token, results) {
 		if (state.loading===token) {
-			destroyAjaxTimeout();
-			state.token = token;
 			state.loading = null;
+			state.token = token;
+			destroyAjaxTimeout();
 		}
 
-		let hilitate = !($input.form && $input.form.hasAttribute('action'));
+		const hilitate = !($input.form && $input.form.hasAttribute('action'));
+		const active = results[0] && (hilitate || canonizeText(results[0].title||results[0].label||'')===canonizeText(token)) ? 0 : null;
 
 		state.visible = results.length>0;
+		state.active = active;
 		state.results = results.map((result, i) => {
 			return Object.assign({}, result, {
-				active: i===0 && (hilitate || canonizeText(result.title||result.label||'')===canonizeText(token)),
 				onClick() { dispatch('redirect', result.url||result.redirect) },
-				onMouseMove() { renderIndex(i) },
+				onMouseMove() {  renderIndex(i) },
 			});
 		});;
 
@@ -60,22 +42,11 @@ export default function create($input, Component, activeSelector, endpoint, inpu
 		token && dispatch('type', token);
 	}
 
-	function canonizeText(text) {
-		if (typeof text !== 'string') {
-			return '';
-		}
-
-		if (text.normalize) {
-			text = text.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-		}
-
-		return string.collapseWhitespace(text).toLowerCase();
-	}
 
 	useEvent($input, 'focus', () => {
 		if (state.loading===null) {
 			state.visible = state.results.length>0;
-			state.results.forEach(result => (result.active = false));
+			state.active = null;
 			render();
 		}
 	});
@@ -95,36 +66,53 @@ export default function create($input, Component, activeSelector, endpoint, inpu
 	}, true);
 
 	useEvent($input, 'keyup', () => {
-		const token = string.collapseWhitespace($input.value);
+		const token = normalizeText($input.value);
 
-		if (state.token===token) {
-			request(null);
+		if (state.loading!==token) {
+			state.loading = token;
+			ajaxAbort();
 
-		} else if (token==='') {
-			request('');
+			if (token==='') {
+				handleResults(token, []);
 
-		} else if (state.loading!==token) {
-			request(token);
+			} else if (state.token===token) {
+				state.loading = null;
+				destroyAjaxTimeout();
+
+			} else {
+				ajaxTimeout(() => {
+					ajax(uri.create(endpoint, {[inputName||$input.name]: token}), (status, response) => {
+						if (response.code>0) {
+							if (response.code===200 || token===state.loading) {
+								handleResults(token, response.code===200 && Array.isArray(response.json) && response.json || []);
+							}
+						}
+					});
+				}, 100);
+			}
 		}
 	});
 
 	useEvent(document, 'click', function(e) {
-		if ($input===e.target) {
-			return true;
+		if (state.visible===false) {
+			return;
+
+		} else if ($input===e.target) {
+			return;
 
 		} else if ($input.contains(e.target)) {
-			return true;
+			return;
 		}
 
 		for (let { $target } of targets.concat(state.container)) {
 			if ($target===e.target) {
 				$input.focus();
 				e.preventDefault();
-				return true;
+				return;
 
 			} else if ($target.contains(e.target)) {
 				$input.focus();
-				return true;
+				return;
 			}
 		}
 
@@ -137,93 +125,81 @@ export default function create($input, Component, activeSelector, endpoint, inpu
 	});
 
 	usePluginShortcut('down', function(e) {
-		if ($input.value.length!==selection.getStart($input)) {
-			return true;
+		if ($input.value.length===selection.getStart($input)) {
+			if (state.visible) {
+				renderIndexStep(1);
+				e.preventDefault();
 
-		} else if ($input.value.length!==selection.getEnd($input)) {
-			return true;
+			} else if (state.results.length && state.loading===null) {
+				state.visible = true;
+				render();
+			}
 		}
-
-		state.visible = state.results.length>0;
-		renderIndexStep(1);
 	});
 
 	usePluginShortcut('esc', function(e) {
-		unmount();
 		e.preventDefault();
+		state.visible && unmount();
 	});
 
 	usePluginShortcut('enter', function(e) {
 		useTimeout(unmount, 100);
-		targets.concat(state.container).forEach(({ $target }) => {
-			const $a = $target.querySelector(activeSelector);
-			if ($a) {
-				e.preventDefault();
-				$a.click();
-			}
-		});
+		targets.concat(state.container).some(({ component }) => component.enter && component.enter(e));
 	});
 
 	const targets = useTargets('content', function($target, target) {
-		const [useReact, destroyReact] = bindReact($target);
-		state.visible && useReact(Component, { $input, endpoint, unmount, results: state.results });
-		return { $target, useReact, destroyReact };
+		unmountContainer();
+		const component = createAutocomplete($target);
+		state.visible && component.results && component.results(clone(state.results), state.active);
+		return { $target, component };
 	});
 
 	function renderIndexStep(step) {
-		const index = state.results.findIndex(result => result.active);
+		if (state.results.length) {
+			if (state.active===null) {
+				renderIndex(step>0 ? 0 : state.results.length-1);
 
-		if (state.results.length>1) {
-			renderIndex((index+state.results.length+step) % state.results.length);
-
-		} else {
-			renderIndex(index+1);
+			} else {
+				renderIndex((state.active+state.results.length+step) % state.results.length);
+			}
 		}
 	}
 
 	function renderIndex(index) {
-		const active = state.results.findIndex(result => result.active);
-
-		state.results.forEach((result, i) => (result.active = i===index));
-
-		if (active!==state.results.findIndex(result => result.active)) {
-			render();
+		if (state.active!==index) {
+			state.active = index;
+			targets.concat(state.container).forEach(({ component }) => component.changeActive && component.changeActive(state.active));
 		}
 	}
 
 	function render() {
 		if (state.visible===false) {
-			unmount();
+			return unmount();
+		}
 
-		} else if (targets.length===0 && state.container.length===0) {
+		if (targets.length===0 && state.container.length===0) {
 			const $target = document.createElement('div');
 			$input.parentNode.appendChild($target);
-
-			const [useReact, destroyReact] = bindReact($target);
-			useReact(Component, { $input, endpoint, unmount, results: state.results });
-			state.container.push({ $target, useReact, destroyReact });
+			state.container.push({ $target, component: createAutocomplete($target) });
 
 		} else if (targets.length) {
 			unmountContainer();
 		}
 
-		targets.concat(state.container).forEach(({ useReact }) => useReact(Component, { $input, endpoint, unmount, results: state.results }));
+		targets.concat(state.container).forEach(({ component }) => component.results && component.results(clone(state.results), state.active, { $input, endpoint, unmount }));
 	}
 
 	function unmount() {
 		state.visible = false;
-		state.results.forEach(result => (result.active = false));
-		targets.forEach(({ destroyReact }) => destroyReact());
+		state.active = null;
+		targets.forEach(({ component }) => component.destroy && component.destroy());
 		unmountContainer();
 	}
 
 	function unmountContainer() {
-		for (let { $target, destroyReact } of state.container.splice(0, state.container.length)) {
-			destroyReact();
-
-			if ($target.parentNode) {
-				$target.parentNode.removeChild($target);
-			}
+		for (let { $target, component } of state.container.splice(0, state.container.length)) {
+			component.destroy && component.destroy();
+			$target.parentNode && $target.parentNode.removeChild($target);
 		}
 	}
 }
