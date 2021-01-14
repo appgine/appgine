@@ -100,7 +100,7 @@ export function useContext(fn) {
 export function withErrorCatch(errormsg, tryFn, args=[])
 {
 	try {
-		return tryFn(...args);
+		return tryFn && tryFn(...args);
 
 	} catch (e) {
 		contextStack.length && contextStack[contextStack.length-1].redbox && contextStack[contextStack.length-1].redbox.render(e);

@@ -19,6 +19,7 @@
     "addons/",
     "bridges/",
     "hooks/",
+    "utils/",
     "run.js",
     "closure.js",
     "shim.js",
