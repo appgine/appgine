@@ -12,7 +12,7 @@ import createFragment from '../lib/createFragment'
 import createTargetScroll from '../lib/swap/createTargetScroll'
 import createElementScroll from '../lib/swap/createElementScroll'
 import createFormScroll from '../lib/swap/createFormScroll'
-import { createSwapping } from 'appgine/hooks/swap'
+
 import { scrollNodeToView, setHashFixedEdge, setScrollPosition } from '../lib/scroll'
 import * as apiShortcut from 'appgine/hooks/shortcut'
 import { scrollTo as windowScrollTo } from 'appgine/hooks/window'
@@ -21,6 +21,7 @@ import { willUpdate, wasUpdated } from '../update'
 import createRequestnum from '../requestnum'
 import * as history from './history'
 
+import React from 'appgine/react'
 import closure from 'appgine/closure'
 import * as ajax from '../lib/ajax'
 
@@ -614,17 +615,30 @@ function ajaxResponse($element, endpoint, newPage, scrollTo) {
 		} else {
 			if (json!==undefined) {
 				willUpdate();
-				const swapping = createSwapping(foundRequest, isCurrent);
 
 				if (json && typeof json==='object') {
-					Object.keys(json).
-						filter(key => String(key).indexOf('swap[')===0).
-						forEach(key => swapping.add(key.substr(5, key.length-6), String(json[key]||'')));
+					React.transaction(function() {
+						Object.keys(json).forEach(key => {
+							if (String(key).indexOf('swap[')===0) {
+								const swapId = key.substr(5, key.length-6);
+								const swapContent = String(json[key]||'');
+								const $swapFragment = (isCurrent ? document : request.$fragment);
+								const $swapElement = $swapFragment.querySelector('[data-swap="'+swapId+'"]');
+
+								if ($swapElement) {
+									React.swapElement($swapElement, swapContent);
+
+								} else if (swapId==='title' || swapId==='document-title') {
+									const $title = $swapFragment.querySelector('title');
+									$title && ($title.textContent = content);
+								}
+							}
+						});
+					});
 
 					update((isCurrent && document) || (foundRequest && foundRequest.$fragment) || $element.ownerDocument, $element, json);
 				}
 
-				swapping.process();
 				wasUpdated();
 
 				if (scrollTo) {

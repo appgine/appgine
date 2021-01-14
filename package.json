@@ -25,6 +25,7 @@
     "shim.js",
     "hooks.js",
     "plugins.js",
+    "react.js",
     "errorhub.js"
   ],
   "dependencies": {
