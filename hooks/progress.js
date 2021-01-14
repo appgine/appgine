@@ -8,21 +8,14 @@ import { useListen } from 'appgine/hooks/channel'
 import { useEvent } from 'appgine/hooks/event'
 
 
-export function useProgress(accept, api) {
-	return internalUseProgress({}, accept, api);
-}
-
-export function useAppProgress(accept, api) {
-	return internalUseProgress({ ajax: false }, accept, api);
-}
-
-export function useAjaxProgress(accept, api) {
-	return internalUseProgress({ ajax: true }, accept, api);
-}
-
-export function useFormProgress(accept, api) {
-	return internalUseProgress({ form: true }, accept, api);
-}
+export const useProgress = (accept, api) => internalUseProgress({ request: false }, accept, api);
+export const useAppProgress = (accept, api) => internalUseProgress({ ajax: false, request: false }, accept, api);
+export const useAjaxProgress = (accept, api) => internalUseProgress({ ajax: true, request: false }, accept, api);
+export const useFormProgress = (accept, api) => internalUseProgress({ form: true, request: false }, accept, api);
+export const useRequest = (accept, api) => internalUseProgress({ request: true }, accept, api);
+export const useAppRequest = (accept, api) => internalUseProgress({ ajax: false, request: true }, accept, api);
+export const useAjaxRequest = (accept, api) => internalUseProgress({ ajax: true, request: true }, accept, api);
+export const useFormRequest = (accept, api) => internalUseProgress({ form: true, request: true }, accept, api);
 
 
 function internalUseProgress(defaultAccept, accept, api) {
@@ -37,6 +30,7 @@ const $link = document.createElement('a');
 const appRequestList = {};
 const listeners = [];
 
+let callingCreateStack = [];
 let swapListeners = [];
 const autoSubmitForm = [];
 const autoSubmitElement = [];
@@ -78,6 +72,7 @@ withModuleContext(module, function() {
 
 				const autoSubmitRequest = foundListener.createApi(null, true, {...swapRequest});
 				foundListener.autoSubmitRequest = autoSubmitRequest;
+				createApiFinish();
 
 				if (foundListener.autoSubmitRequest) {
 					foundListener.autoSubmitRequest.abortTimeout = setTimeout(function() {
@@ -117,13 +112,14 @@ withModuleContext(module, function() {
 		const endpoint = uri.createForm($form, $element);
 		const request = { isAjax, isGlobal, endpoint, $form, $element, formName, labels: {}, level: 0, actions: [], abort  };
 
-		for (let listener of matchListners(listeners, $element, request, false)) {
+		for (let listener of matchListeners(listeners, $element, request, false)) {
 			if (listener.autoSubmitRequest) {
 				clearTimeout(listener.autoSubmitRequest.abortTimeout);
 				tryRequestActionCall(null, listener.autoSubmitRequest, 'autoSubmit', false);
 
 			} else {
 				listener.autoSubmitRequest = listener.createApi(null, true, {...request});
+				createApiFinish();
 			}
 		}
 	});
@@ -177,7 +173,10 @@ export function createListener(acceptObj, createApi)
 
 	let currentListenerApi = null;
 	const tmpCreateApi = bindContext(function(isAutoSubmit, request) {
-		currentListenerApi = listener.form ? createApi(isAutoSubmit, request) : createApi(request);
+		try {
+			currentListenerApi = listener.form ? createApi(isAutoSubmit, request) : createApi(request);
+		} catch (e) {}
+
 		return currentListenerApi && currentListenerApi.dispose;
 	});
 
@@ -190,6 +189,7 @@ export function createListener(acceptObj, createApi)
 	listener.labels = [];
 	listener.form = false;
 	listener.formName = null;
+	listener.request = acceptObj.request||false;
 	listener.ajax = acceptObj.ajax !== undefined ? acceptObj.ajax : null;
 
 	listener.appRequest = null;
@@ -237,7 +237,7 @@ export function createListener(acceptObj, createApi)
 		requestnum = parseInt(requestnum, 10);
 		const request = appRequestList[requestnum]
 
-		const foundListeners = matchListners([listener], request.$element, request, true);
+		const foundListeners = matchListeners([listener], request.$element, request, true);
 
 		if (foundListeners.length>0) {
 			listener.labels.forEach(label => request.labels[label] = true);
@@ -245,9 +245,11 @@ export function createListener(acceptObj, createApi)
 			if (request.isAjax) {
 				const ajaxRequest = listener.createApi(requestnum, false, {...request});
 				ajaxRequest && (listener.ajaxRequestList[requestnum] = ajaxRequest);
+				createApiFinish();
 
 			} else {
 				listener.appRequest = listener.createApi(requestnum, false, {...request});
+				createApiFinish();
 			}
 
 			for (let [action, dispose, ...args] of request.actions) {
@@ -261,7 +263,7 @@ export function createListener(acceptObj, createApi)
 }
 
 
-function matchListners(listeners, $element, request=null, matchLabels=false)
+function matchListeners(listeners, $element, request=null, matchLabels=false)
 {
 	let selector;
 	let endpoint;
@@ -274,7 +276,8 @@ function matchListners(listeners, $element, request=null, matchLabels=false)
 		selector = 'a[href="'+endpoint.replace(/["\\]/g, '\\$&')+'"]';
 	}
 
-	let found = [];
+	let foundRequest = [];
+	let foundProgress = [];
 	let foundLevel = request && request.level || 0;
 	for (let listener of listeners) {
 		let matched = true;
@@ -315,23 +318,23 @@ function matchListners(listeners, $element, request=null, matchLabels=false)
 
 		if (request && listener.formName) {
 			matched = matched && listener.formName===request.formName;
-
-		} else if (listener.form && request && !request.formName) {
-			matched = false;
 		}
 
 		if (matched) {
-			if (listener.$element) {
+			if (listener.request) {
+				foundRequest.push(listener);
+
+			} else if (listener.$element) {
 				let elementLevel = 0;
 				let $tmp = listener.$element;
 				do { ++elementLevel } while (($tmp = $tmp.parentNode) && $tmp.tagName!=='BODY');
 
 				if (foundLevel===elementLevel) {
-					found.push(listener);
+					foundProgress.push(listener);
 
 				} else if (foundLevel===0 || elementLevel>foundLevel) {
 					foundLevel = elementLevel;
-					found = [listener];
+					foundProgress = [listener];
 				}
 
 			} else if (listener.$form) {
@@ -341,13 +344,13 @@ function matchListners(listeners, $element, request=null, matchLabels=false)
 
 				if (foundLevel < elementLevel) {
 					foundLevel = elementLevel;
-					found = [];
+					foundProgress = [];
 				}
 
-				found.push(listener);
+				foundProgress.push(listener);
 
 			} else if (foundLevel===0) {
-				found.push(listener);
+				foundProgress.push(listener);
 			}
 		}
 	}
@@ -356,12 +359,19 @@ function matchListners(listeners, $element, request=null, matchLabels=false)
 		request.level = foundLevel;
 	}
 
-	return found;
+	return [].concat(foundRequest, foundProgress);
 }
 
 
 function findListeners($element) {
-	return matchListners(listeners, $element);
+	return matchListeners(listeners, $element);
+}
+
+
+function createApiFinish() {
+	for (let [fn, ...args] of callingCreateStack.splice(0, callingCreateStack.length)) {
+		fn(...args);
+	}
 }
 
 
@@ -397,7 +407,7 @@ function onRequestStart(requestnum, endpoint, $element, isAjax, isGlobal, abort)
 
 	appRequestList[requestnum] = { isAjax, isGlobal, endpoint, $form, $element, formName, labels: {}, level: 0, actions: [], abort }
 
-	const foundListeners = matchListners(listeners, $element, appRequestList[requestnum], false);
+	const foundListeners = matchListeners(listeners, $element, appRequestList[requestnum], false);
 
 	for (let listener of listeners) {
 		if (foundListeners.indexOf(listener)!==-1) {
@@ -413,6 +423,7 @@ function onRequestStart(requestnum, endpoint, $element, isAjax, isGlobal, abort)
 			if (isAjax) {
 				const ajaxRequest = autoSubmitRequest || listener.createApi(requestnum, false, {...appRequestList[requestnum]});
 				ajaxRequest && (listener.ajaxRequestList[requestnum] = ajaxRequest);
+				createApiFinish();
 
 			} else if (autoSubmitRequest || (listener.appRequest && listener.appRequest.api.replace)) {
 				if (autoSubmitRequest) {
@@ -430,6 +441,7 @@ function onRequestStart(requestnum, endpoint, $element, isAjax, isGlobal, abort)
 			} else {
 				tryRequestActionCall(null, listener.appRequest, 'abort', true);
 				listener.appRequest = listener.createApi(requestnum, false, {...appRequestList[requestnum]});
+				createApiFinish();
 			}
 
 		} else if (listener.appRequest && isAjax===false) {
