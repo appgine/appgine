@@ -150,28 +150,28 @@ export function addElement($element)
 
 
 export function useTarget(target, fn) {
-	const plugin = { first: true, target, fn };
-	return internalPluginTargets(plugin);
+	const plugin = { first: true, target };
+	return internalPluginTargets(plugin, fn);
 }
 
 
 export function useTargets(target, fn) {
-	const plugin = { first: false, target, fn };
-	return internalPluginTargets(plugin);
+	const plugin = { first: false, target };
+	return internalPluginTargets(plugin, fn);
 }
 
 
 export function useFirstSelector(selector, fn) {
-	const plugin = { first: true, selector, fn };
+	const plugin = { first: true, selector };
 	addInternalSelector(selector, false);
-	return internalPluginTargets(plugin, () => removeInternalSelector(selector));
+	return internalPluginTargets(plugin, fn, () => removeInternalSelector(selector));
 }
 
 
 export function useSelector(selector, fn) {
-	const plugin = { first: false, selector, fn };
+	const plugin = { first: false, selector };
 	addInternalSelector(selector, false);
-	return internalPluginTargets(plugin, () => removeInternalSelector(selector));
+	return internalPluginTargets(plugin, fn, () => removeInternalSelector(selector));
 }
 
 
@@ -200,7 +200,8 @@ function removeInternalSelector(selector) {
 }
 
 
-function internalPluginTargets(plugin, whenDispose) {
+function internalPluginTargets(plugin, fn, whenDispose) {
+	plugin.fn = fn || (_ => _);
 	plugin.containers = [];
 	plugin.results = [];
 	plugin.targets = [];
