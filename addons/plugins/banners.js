@@ -1,17 +1,15 @@
 
-import React from 'react'
+import React from 'appgine/react'
 
 import { useListen } from 'appgine/hooks/channel'
 import { useTargets, useComplete } from 'appgine/hooks/target'
-import { bindReact } from 'appgine/hooks/react'
-import { bindTimeout } from 'appgine/hooks/timer'
+import { bindTimeout, useTimeout } from 'appgine/hooks/timer'
 
 
-export default function create(ButtonsComponent, $element, { autoInterval }) {
+export default function create($element, { autoInterval }) {
 	const [ rotateTimeout, rotateDestroy ] = bindTimeout();
 
 	const state = { active: 0 };
-	let autorotate = null;
 
 	useListen('modal', 'open', function() {
 		$element.classList.add('paused');
@@ -24,10 +22,18 @@ export default function create(ButtonsComponent, $element, { autoInterval }) {
 	});
 
 	const $banners = useTargets('banner', $banner => $banner);
-	const buttons = useTargets('buttons', $buttons => bindReact($buttons));
+	const $buttons = useTargets('buttons', $target => {
+		const $children = Array.from(Array($banners.length).keys()).map(index => (
+			<button type="button" role="presentation" tabIndex={-1} onClick={() => changeIndex(index)} class={{ active: state.active===index }}>
+				{index+1}
+			</button>
+		));
+
+		React.render($target, $children);
+		return $children;
+	});
 
 	useComplete(function() {
-		render();
 		startAutoRotate();
 		return rotateDestroy;
 	});
@@ -36,45 +42,33 @@ export default function create(ButtonsComponent, $element, { autoInterval }) {
 	function startAutoRotate() {
 		rotateDestroy();
 		if (autoInterval!==false) {
-			autorotate = rotateTimeout(function() {
-				changeIndex((state.active+1)%$banners.length);
-			}, autoInterval||5000);
+			rotateTimeout(() => changeIndex((state.active+1)%$banners.length), autoInterval||5000);
 		}
 	}
 
 	function changeIndex(index) {
 		startAutoRotate();
+
 		if (state.active!==index) {
+			$buttons.forEach($buttons => $buttons[state.active] && $buttons[state.active].classList.remove('active'));
+			$buttons.forEach($buttons => $buttons[index] && $buttons[index].classList.add('active'));
 			state.active = index;
 
 			if ($banners[index]) {
 				$banners[index].classList.add('visible');
 
+				const $activeList = $banners.filter($banner => $banner.classList.contains('active'));
 				$banners.forEach($banner => $banner.classList.remove('fadeout'));
-
-				$banners.
-					filter($banner => $banner.classList.contains('active')).
-					forEach($banner => {
-						$banner.classList.add('fadeout');
-						$banner.classList.remove('active');
-						$banner.classList.remove('fadein');
-					});
-
+				$activeList.forEach($banner => $banner.classList.add('fadeout'));
+				$activeList.forEach($banner => $banner.classList.remove('active', 'fadein'));
 
 				const $banner = $banners[index];
-				setTimeout(function() {
-					if (state.active===index) {
-						$banner.classList.add('active');
-						$banner.classList.add('fadein');
-					}
+				useTimeout(function() {
+					$banner.classList.toggle('active', state.active===index);
+					$banner.classList.toggle('fadein', state.active===index);
 				}, 200);
 			}
-
-			render();
 		}
 	}
 
-	function render() {
-		buttons.forEach(useReact => useReact(<ButtonsComponent count={$banners.length} active={state.active} onClick={changeIndex}/>));
-	}
 }
