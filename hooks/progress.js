@@ -36,102 +36,13 @@ const autoSubmitForm = [];
 const autoSubmitElement = [];
 
 withModuleContext(module, function() {
-	useEvent(document, 'focusin', function(e) {
-		for (let foundListener of findListeners(e.target)) {
-			for (let swapListener of swapListeners) {
-				if (foundListener.form===false || foundListener.form!==swapListener.form) {
-					continue;
+	useEvent(document, 'focusin', onFocusIn);
+	useEvent(document, 'focusout', onFocusOut);
 
-				} else if (foundListener.formName===null || foundListener.formName!==swapListener.formName) {
-					continue;
-
-				} else if (foundListener.autoSubmitRequest || foundListener.appRequest || Object.keys(foundListener.ajaxRequestList).length>0) {
-					continue;
-				}
-
-				let swapRequest = null;
-				for (let requestnum of Object.keys(swapListener.ajaxRequestList)) {
-					const ajaxRequest = swapListener.ajaxRequestList[requestnum];
-
-					if (ajaxRequest.request.formName===foundListener.formName) {
-						swapRequest = {...ajaxRequest.request};
-						break;
-					}
-				}
-
-				if (swapListener.appRequest && swapListener.appRequest.request.formName===foundListener.formName) {
-					swapRequest = {...swapListener.appRequest.request};
-				}
-
-				if (swapRequest===null) {
-					continue;
-				}
-
-				swapRequest.$element = e.target;
-				swapRequest.endpoint = uri.createForm(foundListener.$form, e.target);
-
-				const autoSubmitRequest = foundListener.createApi(null, true, {...swapRequest});
-				foundListener.autoSubmitRequest = autoSubmitRequest;
-				createApiFinish();
-
-				if (foundListener.autoSubmitRequest) {
-					foundListener.autoSubmitRequest.abortTimeout = setTimeout(function() {
-						foundListener.autoSubmitRequest = null;
-
-						if (autoSubmitRequest.api.abort) {
-							autoSubmitRequest.api.abort();
-						}
-					}, 300);
-					break;
-				}
-			}
-		}
-
-		swapListeners = [];
-	});
-
-	useEvent(document, 'focusout', function(e) {
-		if (isSwapping()) {
-			swapListeners = findListeners(e.target);
-			setTimeout(() => { swapListeners = []; }, 200);
-		}
-	});
-
-	useListen('auto-submit', 'start', function($form, $element, abort) {
-		if (autoSubmitForm.indexOf($form)===-1) {
-			autoSubmitForm.push($form);
-		}
-
-		autoSubmitElement[autoSubmitForm.indexOf($form)] = $element;
-
-		const formTarget = getElementTarget($element) || getElementTarget($form)
-		const formName = $form.getAttribute('data-ajax') || $form.getAttribute('name') || null;
-
-		const isAjax = formTarget==='_ajax';
-		const isGlobal = false;
-		const endpoint = uri.createForm($form, $element);
-		const request = { isAjax, isGlobal, endpoint, $form, $element, formName, labels: {}, level: 0, actions: [], abort  };
-
-		for (let listener of matchListeners(listeners, $element, request, false)) {
-			if (listener.autoSubmitRequest) {
-				clearTimeout(listener.autoSubmitRequest.abortTimeout);
-				tryRequestActionCall(null, listener.autoSubmitRequest, 'autoSubmit', false);
-
-			} else {
-				listener.autoSubmitRequest = listener.createApi(null, true, {...request});
-				createApiFinish();
-			}
-		}
-	});
-
-	useListen('auto-submit', 'submit', function($form, $element) {
-		if (autoSubmitForm.indexOf($form)!==-1) {
-			autoSubmitElement[autoSubmitForm.indexOf($form)] = $element;
-		}
-	});
-
-	useListen('auto-submit', 'abort', abortAutoSubmit);
-	useListen('auto-submit', 'destroy', abortAutoSubmit);
+	useListen('auto-submit', 'start', onAutoSubmitStart);
+	useListen('auto-submit', 'submit', onAutoSubmit);
+	useListen('auto-submit', 'abort', onAutoSubmitAbort);
+	useListen('auto-submit', 'destroy', onAutoSubmitAbort);
 
 	useListen('app.request', 'start', (endpoint, { $element, requestnum, abort }) => onRequestStart(requestnum, endpoint, $element, false, true, abort));
 	useListen('app.request', 'submit', ({ requestnum, endpoint, method, data }) => onRequestSubmit(requestnum, { endpoint, method, data }));
@@ -176,7 +87,6 @@ export function createListener(acceptObj, createApi)
 		try {
 			currentListenerApi = listener.form ? createApi(isAutoSubmit, request) : createApi(request);
 		} catch (e) {}
-
 		return currentListenerApi && currentListenerApi.dispose;
 	});
 
@@ -318,6 +228,9 @@ function matchListeners(listeners, $element, request=null, matchLabels=false)
 
 		if (request && listener.formName) {
 			matched = matched && listener.formName===request.formName;
+
+		// } else if (listener.form && request && !request.formName) {
+		// 	matched = false;
 		}
 
 		if (matched) {
@@ -375,7 +288,109 @@ function createApiFinish() {
 }
 
 
-function abortAutoSubmit($form) {
+function onFocusIn(e)
+{
+	for (let foundListener of findListeners(e.target)) {
+		for (let swapListener of swapListeners) {
+			if (foundListener.form===false || foundListener.form!==swapListener.form) {
+				continue;
+
+			} else if (foundListener.formName===null || foundListener.formName!==swapListener.formName) {
+				continue;
+
+			} else if (foundListener.autoSubmitRequest || foundListener.appRequest || Object.keys(foundListener.ajaxRequestList).length>0) {
+				continue;
+			}
+
+			let swapRequest = null;
+			for (let requestnum of Object.keys(swapListener.ajaxRequestList)) {
+				const ajaxRequest = swapListener.ajaxRequestList[requestnum];
+
+				if (ajaxRequest.request.formName===foundListener.formName) {
+					swapRequest = {...ajaxRequest.request};
+					break;
+				}
+			}
+
+			if (swapListener.appRequest && swapListener.appRequest.request.formName===foundListener.formName) {
+				swapRequest = {...swapListener.appRequest.request};
+			}
+
+			if (swapRequest===null) {
+				continue;
+			}
+
+			swapRequest.$element = e.target;
+			swapRequest.endpoint = uri.createForm(foundListener.$form, e.target);
+
+			const autoSubmitRequest = foundListener.createApi(null, true, {...swapRequest});
+			foundListener.autoSubmitRequest = autoSubmitRequest;
+			createApiFinish();
+
+			if (foundListener.autoSubmitRequest) {
+				foundListener.autoSubmitRequest.abortTimeout = setTimeout(function() {
+					foundListener.autoSubmitRequest = null;
+
+					if (autoSubmitRequest.api.abort) {
+						autoSubmitRequest.api.abort();
+					}
+				}, 300);
+				break;
+			}
+		}
+	}
+
+	swapListeners = [];
+}
+
+
+function onFocusOut(e)
+{
+	if (isSwapping()) {
+		swapListeners = findListeners(e.target);
+		setTimeout(() => { swapListeners = []; }, 200);
+	}
+}
+
+
+function onAutoSubmitStart($form, $element, abort)
+{
+	if (autoSubmitForm.indexOf($form)===-1) {
+		autoSubmitForm.push($form);
+	}
+
+	autoSubmitElement[autoSubmitForm.indexOf($form)] = $element;
+
+	const formTarget = getElementTarget($element) || getElementTarget($form)
+	const formName = $form.getAttribute('data-ajax') || $form.getAttribute('name') || null;
+
+	const isAjax = formTarget==='_ajax';
+	const isGlobal = false;
+	const endpoint = uri.createForm($form, $element);
+	const request = { isAjax, isGlobal, endpoint, $form, $element, formName, labels: {}, level: 0, actions: [], abort  };
+
+	for (let listener of matchListeners(listeners, $element, request, false)) {
+		if (listener.autoSubmitRequest) {
+			clearTimeout(listener.autoSubmitRequest.abortTimeout);
+			tryRequestActionCall(null, listener.autoSubmitRequest, 'autoSubmit', false);
+
+		} else {
+			listener.autoSubmitRequest = listener.createApi(null, true, {...request});
+			createApiFinish();
+		}
+	}
+}
+
+
+function onAutoSubmit($form, $element) {
+	if (autoSubmitForm.indexOf($form)!==-1) {
+		autoSubmitElement[autoSubmitForm.indexOf($form)] = $element;
+	}
+}
+
+
+function onAutoSubmitAbort($form)
+{
 	const index = autoSubmitForm.indexOf($form);
 
 	if (index!==-1) {
