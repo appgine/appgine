@@ -5,6 +5,7 @@ import * as errorhub from '../errorhub'
 
 export const ABORT = 'abort';
 export const ERROR = 'error';
+export const EMPTY = 'empty';
 export const TIMEOUT = 'timeout';
 export const SUCCESS = 'success';
 
@@ -256,7 +257,7 @@ function bindRequest(endpoint, request, timeout, onresponse, onprogress)
 				errorhub.dispatch(errorhub.ERROR.AJAX, error, new Error(error), endpoint, code, headers, json, html, args);
 			}
 
-			status = requestStatus(status, error);
+			status = requestStatus(status, error, json, html);
 			html = status===SUCCESS ? html : '';
 			json = status===SUCCESS ? json : undefined;
 
@@ -297,12 +298,15 @@ function bindRequest(endpoint, request, timeout, onresponse, onprogress)
 		return null;
 	}
 
-	function requestStatus(status, error) {
+	function requestStatus(status, error, json, html) {
 		if (status===TIMEOUT || status===ABORT) {
 			return status;
 
 		} else if (error) {
 			return ERROR;
+
+		} else if (!html && json===undefined) {
+			return EMPTY;
 		}
 
 		return SUCCESS;

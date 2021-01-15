@@ -525,8 +525,6 @@ function bindAjaxRequest(ajaxContext, $element, endpoint, scrollTo) {
 	return _bindRequest(ajaxContext, _pushing ? 0 : (_requestnum = createRequestnum()), $element, endpoint, false, scrollTo, function(errno) {
 		const error = _options.locale[locale.error.request.ajax] + '\n' + String(_options.locale[errno]||'');
 		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
-		_options.onError(error);
-		_options.dispatch('app.request', 'error', { requestnum: _requestnum, errno, error });
 	});
 }
 
@@ -536,8 +534,6 @@ function bindRequest(ajaxContext, $element, endpoint, newPage, scrollTo) {
 	return _bindRequest(ajaxContext, (_requestnum = createRequestnum()), $element, endpoint, newPage, scrollTo, function(errno) {
 		const error = _options.locale[locale.error.request.page] + '\n' + String(_options.locale[errno]||'');
 		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
-		_options.onError(error);
-		_options.dispatch('app.request', 'error', { requestnum: _requestnum, errno, error });
 	});
 }
 
@@ -551,23 +547,33 @@ function _bindRequest(ajaxContext, requestnum, $element, endpoint, newPage, scro
 	return _options.onResponse(function(status, response) {
 		const isLast = () => requestnum===_requestnum;
 		status===ajax.SUCCESS && _options.dispatch('app.request', 'response', { requestnum, response, isLast: isLast() });
-		_options.dispatch('app.request', status===ajax.ABORT ? 'abort' : 'end', { requestnum });
 
 		if (status===ajax.ABORT) {
-			if (_pushing && isLast()) {
-				history.cancelState();
-			}
-
-		} else if (response.html || response.json) {
-			const nowRequest = onResponse(response.html, response.json, response.headers);
-
-		} else if (response.error || response.json===undefined) {
-			onError(response.error);
+			_options.dispatch('app.request', 'abort', { requestnum });
 
 			if (_pushing && isLast()) {
 				history.cancelState();
 			}
 		}
+
+		if (status===ajax.ERROR) {
+			try { onError(response.error); } catch (e) {}
+			try { _options.onError(response.error); } catch (e) {}
+		}
+
+		if (status===ajax.ERROR || status===ajax.EMPTY) {
+			_options.dispatch('app.request', 'error', { requestnum });
+
+			if (_pushing && isLast()) {
+				history.cancelState();
+			}
+		}
+
+		if (status===ajax.SUCCESS) {
+			const nowRequest = (function() { try { return onResponse(response.html, response.json, response.headers); } catch (e) {} })();
+		}
+
+		_options.dispatch('app.request', 'end', { requestnum });
 
 		if (isLast()) {
 			_pending = 0;
