@@ -101,8 +101,8 @@ export default {
 
 		appendChildren($element, children);
 
-		targets.length>0 && $element.setAttribute('data-target', targets.join(';'));
-		plugins.length>0 && $element.setAttribute('data-plugin', plugins.join(';'));
+		targets.length>0 && $element.setAttribute('data-target', targets.join('$'));
+		plugins.length>0 && $element.setAttribute('data-plugin', plugins.join('$'));
 
 		return $element;
 	},
