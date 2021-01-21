@@ -23,6 +23,7 @@
     "run.js",
     "closure.js",
     "shim.js",
+    "shim-legacy.js",
     "hooks.js",
     "plugins.js",
     "react.js",
