@@ -1,2 +1,3 @@
-module.exports = require('./src/plugins/context');
-module.exports.default = undefined;
+
+export default from './src/plugins/context'
+export * from './src/plugins/context'
