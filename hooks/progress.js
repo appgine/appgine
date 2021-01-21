@@ -15,7 +15,7 @@ export const useFormProgress = (accept, api) => internalUseProgress({ form: true
 export const useRequest = (accept, api) => internalUseProgress({ request: true }, accept, api);
 export const useAppRequest = (accept, api) => internalUseProgress({ ajax: false, request: true }, accept, api);
 export const useAjaxRequest = (accept, api) => internalUseProgress({ ajax: true, request: true }, accept, api);
-export const useFormRequest = (accept, api) => internalUseProgress({ form: true, request: true }, accept, api);
+export const useFormRequest = (accept, api) => internalUseProgress({ form: true, ajax: false, request: true }, accept, api);
 
 
 function internalUseProgress(defaultAccept, accept, api) {
@@ -220,7 +220,7 @@ function matchListeners(listeners, $element, request=null, matchLabels=false)
 			matched = true;
 
 		} else if (listener.$element) {
-			matched = matched && !!($element && (dom.contains(listener.$element, $element) || dom.contains($element, listener.$element)));
+			matched = matched && !!($element && (dom.contains(listener.$form||listener.$element, $element) || dom.contains($element, listener.$form||listener.$element)));
 
 		} else if (request && request.isGlobal) {
 			matched = matched || listener.endpointList.length===0;
