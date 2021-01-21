@@ -19,8 +19,25 @@ let ticking = false;
 let updated = false;
 
 window.addEventListener('load', () => loaded = true);
+window.addEventListener('unload', () => { loaded = false; dispose() });
 
-const streamEvents = Kefir.stream(function(emitter) {
+let stream_scroll;
+let stream_resize;
+
+const stream_interval = Kefir.stream(function(emitter) {
+	let lastEmitted = 0;
+	setInterval(function() {
+		if (document.hidden!==true) {
+			lastEmitted = Date.now()
+		}
+
+		if (lastEmitted+5000>Date.now()) {
+			emitter.emit();
+		}
+	}, 300);
+});
+
+const stream_events = Kefir.stream(function(emitter) {
 	let throttled = 0;
 	let interval = null;
 	function throttleTick() {
@@ -31,12 +48,14 @@ const streamEvents = Kefir.stream(function(emitter) {
 		}
 	}
 
-	Kefir.fromEvents(window, 'scroll').onValue(function() {
+	stream_scroll = Kefir.fromEvents(window, 'scroll');
+	stream_scroll.onValue(function() {
 		throttled = Date.now();
 		interval = interval || setInterval(throttleTick, 10);
 	});
 
-	Kefir.fromEvents(window, 'resize').onValue(function() {
+	stream_resize = Kefir.fromEvents(window, 'resize');
+	stream_resize.onValue(function() {
 		ticks.forEach(tick => tick.updated = true);
 		throttled = Date.now();
 		interval = interval || setInterval(throttleTick, 10);
@@ -44,19 +63,8 @@ const streamEvents = Kefir.stream(function(emitter) {
 });
 
 const stream1 = Kefir.merge([
-	streamEvents,
-	Kefir.stream(function(emitter) {
-		let lastEmitted = 0;
-		setInterval(function() {
-			if (document.hidden!==true) {
-				lastEmitted = Date.now()
-			}
-
-			if (lastEmitted+5000>Date.now()) {
-				emitter.emit();
-			}
-		}, 300);
-	}),
+	stream_events,
+	stream_interval,
 	Kefir.stream(emitter => onUpdated(() => {
 		updated = true;
 		ticks.forEach(tick => tick.updated = true);
@@ -152,8 +160,8 @@ function isDone() {
 
 export function dispose()
 {
-	stream_scroll._emitEnd();
-	stream_resize._emitEnd();
-	stream_interval._emitEnd();
+	stream_scroll && stream_scroll._emitEnd();
+	stream_resize && stream_resize._emitEnd();
+	stream_interval && stream_interval._emitEnd();
 	stream1._emitEnd();
 }
