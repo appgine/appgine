@@ -2,6 +2,7 @@
 import { uri, selection } from 'appgine/closure'
 
 import { useEvent } from 'appgine/hooks/event'
+import { useFormRequest } from 'appgine/hooks/progress'
 import { bindDispatch } from 'appgine/hooks/channel'
 import { useTimeout, bindTimeout } from 'appgine/hooks/timer'
 import { usePluginShortcut } from 'appgine/hooks/shortcut'
@@ -34,7 +35,7 @@ export default function create($input, endpoint, createAutocomplete, inputName=n
 		state.results = results.map((result, i) => {
 			return Object.assign({}, result, {
 				onClick() { dispatch('redirect', result.url||result.redirect) },
-				onMouseMove() {  renderIndex(i) },
+				onMouseMove() { renderIndex(i) },
 			});
 		});;
 
@@ -42,10 +43,11 @@ export default function create($input, endpoint, createAutocomplete, inputName=n
 		token && dispatch('type', token);
 	}
 
+	useFormRequest($input, unmount);
 
 	useEvent($input, 'focus', () => {
-		if (state.loading===null) {
-			state.visible = state.results.length>0;
+		if (state.visible===false && state.results.length>0 && state.loading===null) {
+			state.visible = true;
 			state.active = null;
 			render();
 		}
