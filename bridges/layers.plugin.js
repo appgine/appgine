@@ -1,5 +1,4 @@
 
-import * as closure from 'appgine/closure'
 import * as history from 'appgine/src/engine/history'
 import { requestStack } from 'appgine/src/engine/run'
 

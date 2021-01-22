@@ -1,9 +1,9 @@
 
-import { dom } from 'appgine/closure'
 import { isSwapping } from '../../src/update'
 
 import { useEvent } from 'appgine/hooks/event'
 import { bindDispatch } from 'appgine/hooks/channel'
+import { getAncestor } from 'appgine/utils/dom'
 
 
 let focusValue;
@@ -12,7 +12,7 @@ $email.type = 'email';
 
 
 export default function create($element) {
-	const $form = dom.getAncestor($element, 'form');
+	const $form = getAncestor($element, 'form');
 	const internalDispatch = bindDispatch('auto-submit');
 	const dispatch = (type, $element, ...args) => internalDispatch(type, $form, $element, ...args);
 

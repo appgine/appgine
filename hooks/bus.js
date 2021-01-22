@@ -1,5 +1,4 @@
 
-import { dom } from 'appgine/closure'
 import { useContext, bindContext } from 'appgine/hooks'
 
 
@@ -56,7 +55,7 @@ export function dispatch($element, type, action, ...args) {
 		filter(listener => listener.type===null || listener.type===type).
 		filter(listener => listener.action===null || listener.action===action).
 		filter(listener => (unique[key]||[]).indexOf(listener.$element)===-1).
-		filter(listener => dom.contains(listener.$element, $element) || dom.contains($element, listener.$element)).
+		filter(listener => listener.$element.contains($element) || $element.contains(listener.$element)).
 		forEach(function(listener) {
 			unique[key] = unique[key] || [];
 			unique[key].push(listener.$element);

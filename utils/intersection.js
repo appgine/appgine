@@ -1,6 +1,6 @@
 
 
-export function intersection(rect1, rect2) {
+export default function intersection(rect1, rect2) {
 	const x0 = Math.max(rect1.left, rect2.left);
 	const x1 = Math.min(rect1.left + rect1.width, rect2.left + rect2.width);
 

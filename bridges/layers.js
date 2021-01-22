@@ -1,5 +1,6 @@
 
-import closure from 'appgine/closure'
+import { animation } from 'appgine/closure'
+import * as uri from 'appgine/src/engine/uri'
 import * as history from 'appgine/src/engine/history'
 import { requestStack } from 'appgine/src/engine/run'
 
@@ -16,8 +17,8 @@ export default function bridgeLayers(options={}, render) {
 
 	const { initRequest, onAfterSwap } = options;
 
-	function runAnimation(animation) {
-		animation && closure.animation.animateOnce(animation[0], animation[1]);
+	function runAnimation(def) {
+		def && animation.animateOnce(def[0], def[1]);
 	}
 
 	options.onAfterSwap = function(requestFrom, requestTo) {
@@ -67,7 +68,7 @@ export default function bridgeLayers(options={}, render) {
 			const layerMode = parseInt($layer.getAttribute('layer-auto') || $layer.getAttribute('layer-mode'), 10) || 0;
 			const layerExit = parseInt($layer.getAttribute('layer-exit'), 10) || 0;
 			const endpoint = request.endpoint;
-			const endpointArgs = closure.uri.getQueryKeys(endpoint);
+			const endpointArgs = uri.getQueryKeys(endpoint);
 
 			$layer.removeAttribute('data-layer');
 			$layer.removeAttribute('layer-mode');

@@ -1,20 +1,21 @@
 
-import { dom, selection, rect } from 'appgine/closure'
 import { currentScreen, scrollTo } from 'appgine/hooks/window'
-import { intersection } from 'appgine/src/lib/utils'
+import intersection from 'appgine/utils/intersection'
+import * as selection from 'appgine/utils/selection';
+import * as forms from 'appgine/utils/forms'
 
 
 export default function createFormFocus(isRequestNew) {
 	if (document.activeElement) {
 		const $active = document.activeElement;
 
-		if (dom.isFormElement($active)) {
-			const formId = dom.createFormId($active.form);
+		if (forms.isFormElement($active)) {
+			const formId = forms.createFormId($active.form);
 			const formName = $active.form.name||null;
 			const inputName = $active.name;
 			const inputValue = $active.value;
-			const selectionStart = selection.getStart($active);
-			const selectionEnd = selection.getEnd($active);
+			const selectionStart = selection.getStart($active)||0;
+			const selectionEnd = selection.getEnd($active)||0;
 
 			const bounds = $active.getBoundingClientRect();
 			const boundsObj = { left: bounds.left, top: bounds.top, width: bounds.width, height: bounds.height }
@@ -24,7 +25,7 @@ export default function createFormFocus(isRequestNew) {
 
 			return function(canKeepScroll) {
 				let $inputs = [];
-				const $found = dom.findForm(formName, formId);
+				const $found = forms.findForm(formName, formId);
 
 				if ($found && $found[inputName] instanceof NodeList) {
 					$inputs = Array.from($found[inputName]);

@@ -1,6 +1,6 @@
 
-import closure from 'appgine/closure'
 import * as ajax from 'appgine/src/lib/ajax'
+import { getRandomString } from 'appgine/utils/text'
 
 
 export default function bridgeTracy(options={}) {
@@ -14,7 +14,7 @@ export default function bridgeTracy(options={}) {
 		const $body = $html.querySelector('body');
 
 		if ($tracy && $body) {
-			tracyStaticId = tracyStaticId || ('tracy-' + closure.string.getRandomString());
+			tracyStaticId = tracyStaticId || ('tracy-' + getRandomString());
 
 			const $siblings = findTracySiblings($tracy);
 
@@ -90,7 +90,7 @@ function findTracySiblings($tracy) {
 
 			let $element = $tracy;
 			for (let tagName of pattern) {
-				const $sibling = closure.dom.getNextElementSibling($element);
+				const $sibling = $element && $element.nextElementSibling;
 
 				if (!$sibling) {
 					break loopSiblings;

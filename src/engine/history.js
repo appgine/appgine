@@ -1,6 +1,7 @@
 
+import * as uri from './uri'
 import shallowEqual from '../lib/shallowEqual'
-import closure from 'appgine/closure'
+import { getRandomString } from 'appgine/utils/text'
 
 const _supported = !!(window.history && window.history.pushState);
 
@@ -13,7 +14,7 @@ let _firstlink = window.location.href;
 let _initialLink = true;
 let _state = window.history.state||{};
 let _mergingState = null;
-let _link = closure.uri.change(window.location.href);
+let _link = uri.change(window.location.href);
 let _origin = _state.origin || _link;
 
 let _requestTree = [];
@@ -31,7 +32,7 @@ if (matched) {
 	} catch (e) {}
 
 } else {
-	_session = closure.string.getRandomString();
+	_session = getRandomString();
 	mergeStateImmediatelly(createState({}, null, true))
 }
 
@@ -47,7 +48,7 @@ export function init(ajaxEnabled) {
 
 	} catch (e) {}
 
-	const link = closure.uri.change(window.location.href);
+	const link = uri.change(window.location.href);
 
 	if (_link!==link) {
 		changeState(_state, link);
@@ -74,7 +75,7 @@ export function isInitial() {
 }
 
 export function getCanonizedLink(link) {
-	return closure.uri.areSame(link, _origin) ? _link : link;
+	return uri.areSame(link, _origin) ? _link : link;
 }
 
 export function getLink() {
@@ -109,7 +110,7 @@ popstate((e, link, initial) => {
 	_mergingState = null;
 	_firstlink = null;
 	_state = window.history.state||{};
-	_link = closure.uri.change(link);
+	_link = uri.change(link);
 	_origin = _state.origin || _link;
 
 	dispatch('change');
@@ -130,7 +131,7 @@ export function onReplace(fn) {
 }
 
 export function onChange(fn) {
-	fn(closure.uri.create());
+	fn(uri.create());
 	return createEvent('change', fn);
 }
 
@@ -182,7 +183,7 @@ function mergeStateImmediatelly(value, pushState=false, invoke=null)
 function commitMergeState(pushState=false, invoke=null) {
 	if (_supported) {
 		const method = pushState ? 'pushState' : 'replaceState';
-		window.history[method](_state, document.title, closure.uri.createCanonical(getLink(), true));
+		window.history[method](_state, document.title, uri.createCanonical(getLink(), true));
 	}
 
 	if (invoke) {
@@ -205,10 +206,10 @@ export function cancelState() {
 }
 
 export function canonical(link, deferred) {
-	if (_link!==closure.uri.create(link, true, true)) {
-		if (closure.uri.sameOrigin(link)) {
+	if (_link!==uri.create(link, true, true)) {
+		if (uri.sameOrigin(link)) {
 			if (deferred) {
-				_link = closure.uri.change(link);
+				_link = uri.change(link);
 
 			} else {
 				changeState(_state, link, false, 'replace');
@@ -218,7 +219,7 @@ export function canonical(link, deferred) {
 }
 
 export function replaceState(state={}, link) {
-	closure.uri.isSame(link) && _link!==_origin && (state.origin = _origin);
+	uri.isSame(link) && _link!==_origin && (state.origin = _origin);
 	changeState(createState(state, false), link, false, 'replace');
 }
 
@@ -244,7 +245,7 @@ function changeState(state, link, pushState, invoke) {
 
 	_firstlink = null;
 	_state = state;
-	_link = closure.uri.change(link);
+	_link = uri.change(link);
 	_origin = _state.origin || _link;
 
 	if (_supported) {

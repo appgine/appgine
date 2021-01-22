@@ -1,5 +1,7 @@
 
-import { crc32, browser } from 'appgine/closure'
+import { browser } from 'appgine/closure'
+import crc32 from 'appgine/utils/crc32'
+import { isFirefox } from 'appgine/utils/browser'
 
 
 function defaultTransform(href) {
@@ -155,7 +157,7 @@ function buildLinkHash($link, href) {
 
 
 function createCssElement($link) {
-	if (browser.isFirefox()) {
+	if (isFirefox()) {
 		const $style = document.createElement('style');
 		$style.textContent = '@import "' + $link.href + '"';
 
@@ -179,7 +181,7 @@ function addLoadedHandlers(item, cb) {
 
 	let done = false;
 	function onDone(e) {
-		if (!browser.isFirefox() || e===true) {
+		if (!isFirefox() || e===true) {
 			$link.onload = null;
 			$link.onreadystatechange = null;
 

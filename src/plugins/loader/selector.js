@@ -4,7 +4,6 @@ import { loadData } from './scripts'
 import clone from 'appgine/utils/clone'
 
 import resolveDataAttribute from '../lib/resolveDataAttribute'
-import { dom } from 'appgine/closure'
 
 const internalBinders = [];
 const loadedPlugins = [];
@@ -102,7 +101,7 @@ export function load($dom, options={})
 
 export function unload($dom)
 {
-	const plugins = findPlugins(({ $element }) => dom.contains($dom, $element));
+	const plugins = findPlugins(({ $element }) => $dom.contains($element));
 
 	plugins.forEach(pluginObj => {
 		if (loadedPlugins.indexOf(pluginObj)!==-1) {

@@ -2,7 +2,7 @@
 import ready from './lib/ready'
 import * as history from './engine/history'
 import run, { onClick, onClickHash, onSubmitForm, onReload, onLeave } from './engine/run'
-import { uri } from 'appgine/closure'
+import * as uri from './engine/uri'
 import createLoader from './plugins/loader'
 
 import { addListener } from 'appgine/hooks/channel'

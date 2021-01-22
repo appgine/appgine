@@ -1,11 +1,12 @@
 
-import { dom, uri } from 'appgine/closure'
+import * as uri from 'appgine/src/engine/uri'
 import { isSwapping } from '../src/update'
 import { getElementTarget } from '../src/lib/target'
 
 import { withModuleContext, useContext, bindContext } from 'appgine/hooks'
 import { useListen } from 'appgine/hooks/channel'
 import { useEvent } from 'appgine/hooks/event'
+import { getAncestor } from 'appgine/utils/dom'
 
 
 export const useProgress = (accept, api) => internalUseProgress({ request: false }, accept, api);
@@ -112,7 +113,7 @@ export function createListener(acceptObj, createApi)
 
 	if (acceptObj.$element) {
 		if (acceptObj.form) {
-			const $form = dom.getAncestor(acceptObj.$element, 'form');
+			const $form = getAncestor(acceptObj.$element, 'form');
 			const formName = $form && ($form.getAttribute('data-ajax') || $form.getAttribute('name')) || null;
 			listener.formName = formName;
 			listener.form = true;
@@ -121,6 +122,10 @@ export function createListener(acceptObj, createApi)
 
 		if (listener.formName===null) {
 			listener.$element = acceptObj.$element;
+			listener.contains = function($element) {
+				const $contains = listener.$form||listener.$element;
+				return $element && ($contains.contains($element) || $element.contains($contains)) || false;
+			}
 		}
 
 	} else if (acceptObj.form) {
@@ -219,8 +224,8 @@ function matchListeners(listeners, $element, request=null, matchLabels=false)
 		} else if (selector && listener.$element && listener.$element.querySelector(selector)) {
 			matched = true;
 
-		} else if (listener.$element) {
-			matched = matched && !!($element && (dom.contains(listener.$form||listener.$element, $element) || dom.contains($element, listener.$form||listener.$element)));
+		} else if (listener.contains) {
+			matched = matched && listener.contains($element);
 
 		} else if (request && request.isGlobal) {
 			matched = matched || listener.endpointList.length===0;

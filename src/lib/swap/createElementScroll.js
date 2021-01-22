@@ -1,5 +1,4 @@
 
-import { dom } from 'appgine/closure'
 import { scrollZero, scrollOffset } from 'appgine/hooks/window'
 import { setHashFixedEdge, findFixedEdge } from '../scroll'
 
@@ -80,7 +79,7 @@ function createSelectorsScroll($element, oldBounds, selectors) {
 	let $tree;
 	let treeBounds;
 
-	if (dom.contains(document, $element)) {
+	if (document.contains($element)) {
 		$tree = $element;
 		treeBounds = oldBounds;
 

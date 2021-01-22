@@ -1,7 +1,6 @@
 
 goog.module('shortcuthandler');
 
-goog.require('goog.array');
 goog.require('goog.events');
 goog.require('goog.events.KeyHandler');
 goog.require('goog.events.KeyHandler.EventType');
@@ -9,7 +8,7 @@ goog.require('goog.ui.KeyboardShortcutHandler');
 goog.require('goog.ui.KeyboardShortcutHandler.EventType');
 
 exports = function() {
-	var args = [].slice.call(arguments);
+	var args = Array.from(arguments);
 	var fn = args.pop();
 	var handler = new goog.ui.KeyboardShortcutHandler(window);
 
@@ -37,6 +36,6 @@ exports = function() {
 		handler.dispose();
 	}
 
-	goog.array.forEach(args, register);
+	args.forEach(register);
 	return register;
 }

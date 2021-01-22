@@ -1,6 +1,6 @@
 
-import { dom } from 'appgine/closure'
 import { getEventTarget, getElementTarget } from '../lib/target'
+import { getSubmitter } from 'appgine/utils/dom'
 
 import { useEvent } from 'appgine/hooks/event'
 import { useDispatch } from 'appgine/hooks/channel'
@@ -25,7 +25,7 @@ export default function create() {
 
 	useEvent(document, 'submit', function(e) {
 		const _$form = e.target;
-		const _$submitter = _submitterEvent && dom.getSubmitter(_$form, _submitterEvent);
+		const _$submitter = _submitterEvent && getSubmitter(_$form, _submitterEvent);
 		const _toTarget = getEventTarget(_submitterEvent) || getElementTarget(_$submitter) || getElementTarget(e.target);
 
 		if (!e.defaultPrevented) {

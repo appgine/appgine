@@ -1,5 +1,6 @@
 
-import { animation, browser } from 'appgine/closure'
+import { animation } from 'appgine/closure'
+import { isChrome } from 'appgine/utils/browser'
 
 import { useEvent } from 'appgine/hooks/event'
 import { useTargets, useComplete } from 'appgine/hooks/target'
@@ -8,7 +9,7 @@ import { useTargets, useComplete } from 'appgine/hooks/target'
 export default function create($element, { step=1, infinite=false, duration=300, delay=0 }) {
 	const state = { move: false, moving: 0, duration: 0, infinite: false };
 
-	$element.classList.toggle('scroll-webkit', browser.isChrome());
+	$element.classList.toggle('scroll-webkit', isChrome());
 
 	const $items = useTargets('item', $item => $item);
 	const $parents = useTargets('parent', $parent => $parent);

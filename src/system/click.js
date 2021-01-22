@@ -1,14 +1,14 @@
 
-import { dom } from 'appgine/closure'
 import { getEventTarget, getElementTarget } from '../lib/target'
 
 import { useEvent } from 'appgine/hooks/event'
 import { useDispatch } from 'appgine/hooks/channel'
+import { getLink } from 'appgine/utils/dom'
 
 
 export default function create() {
 	useEvent(document, 'click', function(e) {
-		const $link = dom.getLink(e);
+		const $link = getLink(e);
 
 		if ($link && $link.protocol==='') {
 			$link.href = $link.href; // fix IE bug with React/Preact Element

@@ -1,5 +1,5 @@
 
-import { dom } from 'appgine/closure'
+import { compareNodeOrder } from 'appgine/utils/dom'
 
 
 export default function createListeners(onArgs) {
@@ -77,7 +77,7 @@ export default function createListeners(onArgs) {
 				}
 
 				if (a.listener.$element && b.listener.$element) {
-					return dom.compareNodeOrder(b.listener.$element, a.listener.$element);
+					return compareNodeOrder(b.listener.$element, a.listener.$element);
 
 				} else if (a.listener.$element || b.listener.$element) {
 					return a.listener.$element ? -1 : 1;

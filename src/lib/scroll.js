@@ -3,6 +3,7 @@ import closure from 'appgine/closure'
 import scrollIntoViewIfNeeded from './scrollIntoViewIfNeeded'
 
 import { scrollTo, scrollTop, currentScreen } from 'appgine/hooks/window'
+import { getAncestor } from 'appgine/utils/dom'
 
 
 let optionsHashFixedEdge = null;
@@ -218,7 +219,7 @@ function findTrOffset($node) {
 		return null;
 
 	} else if (index===0) {
-		const tableOffset = findNodeOffset(closure.dom.getAncestor($node, 'table'));
+		const tableOffset = findNodeOffset(getAncestor($node, 'table'));
 
 		tableOffset[1] = Math.max(tableOffset[1], nodeOffset[1]-nodeHeight-60);
 		tableOffset[1] = Math.min(tableOffset[1], nodeOffset[1]-Math.min(60, nodeHeight));

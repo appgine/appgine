@@ -2,7 +2,6 @@
 import querySelectorAll from '../src/plugins/lib/querySelectorAll'
 import resolveDataAttribute from '../src/plugins/lib/resolveDataAttribute'
 
-import { dom } from 'appgine/closure'
 import withContext from 'appgine/hooks'
 import { useContext, withErrorCatch } from 'appgine/hooks'
 
@@ -109,7 +108,7 @@ export function removeElement($element)
 
 	const removed = [];
 	internalTargets = internalTargets.filter(target => {
-		if (dom.contains($element, target.$element)) {
+		if ($element.contains(target.$element)) {
 			removed.push(target);
 			return false;
 		}
@@ -139,7 +138,7 @@ export function addElement($element)
 		for (let pointer=0; pointer<containerPointer.length; pointer++) {
 			if (containerPointer[pointer]!==undefined) {
 				for (const $containerNode of containerNodes[pointer]) {
-					if (dom.contains($containerNode, $element)) {
+					if ($containerNode.contains($element)) {
 						addSelectorWithContainer(selector, useSelectorAttr[selector], containerPointer[pointer], $element);
 					}
 				}
@@ -221,7 +220,7 @@ function internalPluginTargets(plugin, fn, whenDispose) {
 			for (let pointer=0; pointer<containerPointer.length; pointer++) {
 				if (containerPointer[pointer]!==undefined) {
 					for (const $containerNode of containerNodes[pointer]) {
-						if (dom.contains($containerNode, plugin.$element)) {
+						if ($containerNode.contains(plugin.$element)) {
 							plugin.containers.push(containerPointer[pointer]);
 							continue pointer;
 						}
@@ -300,7 +299,7 @@ export function addContainer(container, $node) {
 
 	for (let plugin of internalPlugins) {
 		if (plugin.containers.indexOf(container)===-1) {
-			if (dom.contains($node, plugin.$element)) {
+			if ($node.contains(plugin.$element)) {
 				plugin.containers.push(container);
 			}
 		}
@@ -327,7 +326,7 @@ export function removeContainer(container, $node) {
 
 	for (let target of internalTargets) {
 		if (target.containers.indexOf(container)!==-1) {
-			if (containerNodes[pointer].length===0 || dom.contains($node, target.$element)) {
+			if (containerNodes[pointer].length===0 || $node.contains(target.$element)) {
 				target.containers.splice(target.containers.indexOf(container), 1);
 			}
 		}
@@ -335,7 +334,7 @@ export function removeContainer(container, $node) {
 
 	for (let plugin of internalPlugins) {
 		if (plugin.containers.indexOf(container)!==-1) {
-			if (containerNodes[pointer].length===0 || dom.contains($node, plugin.$element)) {
+			if (containerNodes[pointer].length===0 || $node.contains(plugin.$element)) {
 				plugin.containers.splice(plugin.containers.indexOf(container), 1);
 			}
 		}
@@ -455,7 +454,7 @@ function internalCompletePluginTarget(plugin, target) {
 
 
 function matchTargetPlugin(plugin, target) {
-	return plugin.name===target.name || (target.pluginName==='this' && dom.contains(plugin.$element, target.$element));
+	return plugin.name===target.name || (target.pluginName==='this' && plugin.$element.contains(target.$element));
 }
 
 

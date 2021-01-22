@@ -1,5 +1,5 @@
 
-import { uri, selection } from 'appgine/closure'
+import * as uri from 'appgine/src/engine/uri'
 
 import { useEvent } from 'appgine/hooks/event'
 import { useFormRequest } from 'appgine/hooks/progress'
@@ -11,6 +11,7 @@ import { useTargets } from 'appgine/hooks/target'
 
 import { canonizeText, normalizeText } from 'appgine/utils/text'
 import clone from 'appgine/utils/clone'
+import * as selection from 'appgine/utils/selection'
 
 
 export default function create($input, endpoint, createAutocomplete, inputName=null) {

@@ -4,15 +4,10 @@ goog.module('style');
 goog.require('goog.style');
 
 exports.getSize = goog.style.getSize;
-exports.setStyle = goog.style.setStyle;
 exports.getBounds = goog.style.getBounds;
 exports.getMarginBox = goog.style.getMarginBox;
-exports.getPaddingBox = goog.style.getPaddingBox;
 exports.getPageOffsetTop = goog.style.getPageOffsetTop;
 exports.getPageOffsetLeft = goog.style.getPageOffsetLeft;
-exports.getOffsetParent = goog.style.getOffsetParent;
-exports.scrollIntoContainerView = goog.style.scrollIntoContainerView;
-exports.getContainerOffsetToScrollInto = goog.style.getContainerOffsetToScrollInto;
 
 
 exports.isOverflow = function($node) {

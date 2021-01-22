@@ -2,8 +2,7 @@
 import Kefir from './kefir'
 import { onUpdated, isUpdating } from './update'
 import { isRequestCurrent } from './engine/run'
-import closure from 'appgine/closure'
-import { intersection } from './lib/utils'
+import intersection from 'appgine/utils/intersection'
 
 import { currentScreen } from 'appgine/hooks/window'
 

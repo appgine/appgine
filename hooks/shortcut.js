@@ -1,5 +1,5 @@
 
-import { dom, shortcuthandler } from 'appgine/closure'
+import { shortcuthandler } from 'appgine/closure'
 import createListeners from '../src/lib/createListeners'
 
 import { withModuleContext } from 'appgine/hooks'
@@ -79,7 +79,7 @@ function onElementCheck($element) {
 
 
 function onPluginCheck($requestElement) {
-	return $element => dom.contains($element, $requestElement);
+	return $element => $element.contains($requestElement);
 }
 
 

@@ -22,7 +22,9 @@ import createRequestnum from '../requestnum'
 import * as history from './history'
 
 import React from 'appgine/react'
-import closure from 'appgine/closure'
+import * as uri from './uri'
+import * as forms from 'appgine/utils/forms'
+import * as formDataUtils from 'appgine/utils/formData'
 import * as ajax from '../lib/ajax'
 
 const _stack = new RequestStack();
@@ -38,7 +40,7 @@ export const requestStack = _stack;
 tick.onEachTick(function(screen, updated, done) {
 
 	if (_poping && _poping!==true) {
-		const endpoint = closure.uri.create(_poping, {});
+		const endpoint = uri.create(_poping, {});
 		loadPage(document.body, endpoint, true, history.state('scrollTop', 0));
 		_poping = true;
 	}
@@ -139,7 +141,7 @@ export default function run(options, scrollTo=0, bodyClassName, isRequestInitial
 
 	willUpdate(loadMain);
 
-	internalSwap(closure.uri.create(), html, scrollTo, isRequestInitial);
+	internalSwap(uri.create(), html, scrollTo, isRequestInitial);
 
 	history.popstate(function(e, endpoint, initial) {
 		if (initial && _stack.loadRequest()) {
@@ -176,11 +178,11 @@ export default function run(options, scrollTo=0, bodyClassName, isRequestInitial
 					_swapNewPage && history.changeId();
 					internalSwap(_swapUrl, _swapHtml, _swapScrollTo, false);
 					history.canonical(_stack.loadRequest().endpoint, true);
-					_options.dispatch('app.request', 'pageview', closure.uri.create());
+					_options.dispatch('app.request', 'pageview', uri.create());
 
 				} else if (request!==_request) {
-					if (closure.uri.getPart(endpoint, 'hash')[0]) {
-						request.scrolled = closure.uri.getPart(endpoint, 'hash')[0].substr(1);
+					if (uri.getHash(endpoint)) {
+						request.scrolled = uri.getHash(endpoint).substr(1);
 
 					} else {
 						request.scrolled = -1;
@@ -188,17 +190,17 @@ export default function run(options, scrollTo=0, bodyClassName, isRequestInitial
 
 					internalSwapRequest(request, false, false);
 					history.canonical(request.endpoint, true);
-					_options.dispatch('app.request', 'pageview', closure.uri.create());
+					_options.dispatch('app.request', 'pageview', uri.create());
 
-				} else if (closure.uri.getPart(endpoint, 'hash')[0]) {
-					internalScrollHashToView(null, closure.uri.getPart(endpoint, 'hash')[0].substr(1));
+				} else if (uri.getHash(endpoint)) {
+					internalScrollHashToView(null, uri.getHash(endpoint).substr(1));
 
 				} else {
 					request.scrolled = -1;
 					request.scrollTop = history.state('scrollTop', 0);
 				}
 
-				if (closure.uri.isSame(request.endpoint)===false) {
+				if (uri.isSame(request.endpoint)===false) {
 					willUpdate();
 					_pushing = true;
 					_poping = endpoint;
@@ -216,7 +218,7 @@ export default function run(options, scrollTo=0, bodyClassName, isRequestInitial
 
 export function onClickHash(e, $link, hash, toTarget) {
 	if (toTarget==='' || toTarget==='_ajax' || toTarget==='_current') {
-		const endpoint = closure.uri.create('', {}, hash);
+		const endpoint = uri.create('', {}, hash);
 
 		if (toTarget==='' && endpoint!==history.getLink()) {
 			pushEndpoint(endpoint);
@@ -239,11 +241,11 @@ export function onClick(e, $link, toTarget) {
 	const endpoint = String($link.href||'');
 
 	if (toTarget==='' || toTarget==='_ajax' || toTarget==='_current' || toTarget.indexOf('_this')===0 || toTarget[0]==='#') {
-		if (closure.uri.sameOrigin(endpoint)) {
+		if (uri.sameOrigin(endpoint)) {
 			if (_pending===0 || toTarget==='_ajax' || endpoint!==history.getLink()) {
 				const hash = String($link.hash||'').substr(1);
-				const endpointWithoutHash = closure.uri.create(endpoint, {}, '');
-				const historyWithoutHash = closure.uri.create(history.getLink(), {}, '');
+				const endpointWithoutHash = uri.create(endpoint, {}, '');
+				const historyWithoutHash = uri.create(history.getLink(), {}, '');
 
 				if (endpointWithoutHash===historyWithoutHash && hash && document.getElementById(hash)) {
 					if (toTarget==='' && endpoint!==history.getLink()) {
@@ -271,10 +273,10 @@ export function onClick(e, $link, toTarget) {
 
 
 export function onSubmitForm(e, $form, $submitter, toTarget) {
-	const endpoint = closure.uri.createForm($form, $submitter);
+	const endpoint = uri.createForm($form, $submitter);
 
 	if ((toTarget==='' || toTarget==='_ajax' || toTarget==='_current' || toTarget.indexOf('_this')===0 || toTarget[0]==='#') && 'FormData' in window) {
-		if (closure.uri.sameOrigin(endpoint)) {
+		if (uri.sameOrigin(endpoint)) {
 			e.preventDefault();
 			submitForm($form, $submitter, toTarget||'');
 		}
@@ -283,7 +285,7 @@ export function onSubmitForm(e, $form, $submitter, toTarget) {
 
 
 export function onReload() {
-	const endpoint = closure.uri.create(history.getLink(), {});
+	const endpoint = uri.create(history.getLink(), {});
 	loadPageWithContext(createAjax(document.body, false), document.body, endpoint, false, false);
 }
 
@@ -295,9 +297,9 @@ export function onLeave(url) {
 
 export function onRedirect($element, url)
 {
-	const endpoint = closure.uri.create(url, {});
+	const endpoint = uri.create(url, {});
 
-	if (_options.ajax!==false && closure.uri.sameOrigin(endpoint)) {
+	if (_options.ajax!==false && uri.sameOrigin(endpoint)) {
 		loadEndpoint($element, endpoint, isAjax);
 
 	} else {
@@ -357,8 +359,8 @@ function leave(endpoint) {
 
 
 function canonize($element, endpoint, newPage=false, scrollTo=0) {
-	if (closure.uri.sameOrigin(endpoint)) {
-		const _newPage = !closure.uri.isSame(endpoint) || newPage;
+	if (uri.sameOrigin(endpoint)) {
+		const _newPage = !uri.isSame(endpoint) || newPage;
 		history.redirectState({}, endpoint);
 		return loadPage($element||document.body, endpoint, _newPage, scrollTo);
 	}
@@ -368,8 +370,8 @@ function canonize($element, endpoint, newPage=false, scrollTo=0) {
 
 
 function redirect($element, endpoint, newPage=false, scrollTo=0) {
-	if (closure.uri.sameOrigin(endpoint)) {
-		const _newPage = !closure.uri.isSame(endpoint) || newPage;
+	if (uri.sameOrigin(endpoint)) {
+		const _newPage = !uri.isSame(endpoint) || newPage;
 		pushEndpoint(endpoint);
 		return loadPageWithContext(createAjax($element, false), $element||document.body, endpoint, _newPage, (_newPage>newPage && scrollTo===false) ? 0 : scrollTo);
 	}
@@ -382,7 +384,7 @@ function pushEndpoint(endpoint, state={}, replacing=null) {
 	_internalScrollHash = '';
 	_internalRemoveScroll && _internalRemoveScroll();
 
-	if (_pushing || replacing || (closure.uri.isSame(endpoint) && replacing===null)) {
+	if (_pushing || replacing || (uri.isSame(endpoint) && replacing===null)) {
 		history.replaceState({...state, scrollTop: history.state('scrollTop', 0)}, endpoint);
 		return false;
 
@@ -435,16 +437,16 @@ function submitForm($form, $submitter, formTarget) {
 	const $element = $submitter||$form;
 
 	const formName = String($form.name);
-	const formId = closure.dom.shouldHaveFormId($form) ? closure.dom.createFormId($form) : null;
-	const formEndpoint = closure.uri.createForm($form, $submitter);
+	const formId = forms.shouldHaveFormId($form) ? forms.createFormId($form) : null;
+	const formEndpoint = uri.createForm($form, $submitter);
 	const formMethod = (($submitter && $submitter.formmethod) || $form.method || 'GET').toUpperCase();
-	const formData = closure.form.postData($form, $submitter);
+	const formData = formDataUtils.postData($form, $submitter);
 
 	let newPage;
 	if (formTarget==='_current') {
 		newPage = false;
 
-	} else if (closure.uri.isSame(formEndpoint) && formId===null) {
+	} else if (uri.isSame(formEndpoint) && formId===null) {
 		newPage = false;
 
 	} else if (formId && history.state('formId')===formId) {
@@ -465,7 +467,7 @@ function submitForm($form, $submitter, formTarget) {
 	let bindSubmitRequest;
 	if (formTarget==='_ajax') {
 		bindSubmitRequest = bindAjaxRequest(ajaxContext, $element, formEndpoint, function() {
-			const $found = closure.dom.findForm(formName, formId);
+			const $found = forms.findForm(formName, formId);
 
 			if (formTarget==='#') {
 				windowScrollTo(0, 0);
@@ -478,7 +480,7 @@ function submitForm($form, $submitter, formTarget) {
 	} else {
 		pushEndpoint(formEndpoint, { formId }, !newPage);
 		bindSubmitRequest = bindRequest(ajaxContext, $element, formEndpoint, newPage, function() {
-			const $found = closure.dom.findForm(formName, formId);
+			const $found = forms.findForm(formName, formId);
 
 			if (targetScroll) {
 				targetScroll();
@@ -592,7 +594,7 @@ function ajaxResponse($element, endpoint, newPage, scrollTo) {
 		const isCurrent = foundRequest===_stack.loadRequest();
 
 		if (json && json.reload) {
-			leave(closure.uri.create());
+			leave(uri.create());
 
 		} else if (json && json.refresh) {
 			if (isCurrent) {
@@ -668,7 +670,7 @@ function ajaxResponse($element, endpoint, newPage, scrollTo) {
 				const canonical = headers.link.match(/<(.+)>; rel="canonical"/i);
 
 				if (canonical) {
-					nowRequest.endpoint = closure.uri.canonical(canonical[1]);
+					nowRequest.endpoint = uri.canonical(canonical[1]);
 				}
 			}
 
@@ -678,7 +680,7 @@ function ajaxResponse($element, endpoint, newPage, scrollTo) {
 				}
 
 				if (newPage) {
-					_options.dispatch('app.request', 'pageview', closure.uri.create());
+					_options.dispatch('app.request', 'pageview', uri.create());
 				}
 			}
 
@@ -755,7 +757,7 @@ function internalSwapRequest(requestInto, isRequestNew, isRequestInitial) {
 	const $canonical = requestInto.$fragment.querySelector('link[rel="canonical"]');
 
 	if ($canonical) {
-		requestInto.endpoint = closure.uri.canonical($canonical.getAttribute('href'));
+		requestInto.endpoint = uri.canonical($canonical.getAttribute('href'));
 	}
 }
 

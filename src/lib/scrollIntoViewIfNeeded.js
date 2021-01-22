@@ -1,9 +1,10 @@
 
 import closure from 'appgine/closure'
+import { getDocumentScrollElement } from 'appgine/utils/dom'
 
 
 export default function scrollIntoViewIfNeeded($element, animated, onEnd) {
-	const $scrollElement = closure.getDocumentScrollElement();
+	const $scrollElement = getDocumentScrollElement();
 
 	function withinBounds(value, min, max, extent) {
 		if (max <= value + extent && value <= min + extent) {

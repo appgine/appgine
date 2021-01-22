@@ -1,6 +1,4 @@
 
-import { dom } from 'appgine/closure'
-
 
 export default function createFragment(htmlString) {
 	const $fragment = _createFragmentElement();
@@ -67,11 +65,9 @@ function _createFragmentPart(htmlString, part) {
 		const $attrs = document.createElement('div');
 		$attrs.innerHTML = '<div ' + matched[1] + '></div>';
 
-		const attrs = {};
 		Array.from($attrs.children[0].attributes).
-			forEach(attr => attrs[attr.name] = attr.value);
+			forEach(attr => $part.setAttribute(attr.name, attr.value));
 
-		dom.setProperties($part, attrs);
 		return $part;
 	}
 }

@@ -18,7 +18,7 @@ import resolveDataAttribute from '../plugins/lib/resolveDataAttribute'
 
 import { addContainer, removeContainer } from 'appgine/hooks/target'
 import { callUpdate } from 'appgine/hooks/update'
-import { dom } from 'appgine/closure'
+import { compareNodeOrder } from 'appgine/utils/dom'
 
 
 export function loadMain()
@@ -83,7 +83,7 @@ export function unloadAtomic($dom, request)
 
 export function update($dom, $element, data)
 {
-	const plugins = findPlugins(({ $element, options }) => dom.contains($dom, $element) || options.static);
+	const plugins = findPlugins(({ $element, options }) => $dom.contains($element) || options.static);
 	updatePlugins($element, plugins, data);
 }
 
@@ -92,10 +92,10 @@ function updatePlugins($element, plugins, data) {
 	let plugin = null;
 
 	plugins.forEach(function(_plugin) {
-		if ($element && dom.contains(_plugin.$element, $element)) {
+		if ($element && _plugin.$element.contains($element)) {
 			plugin = plugin || _plugin;
 
-			if (dom.compareNodeOrder(_plugin.$element, plugin.$element)>=0) {
+			if (compareNodeOrder(_plugin.$element, plugin.$element)>=0) {
 				plugin = _plugin;
 			}
 		}
