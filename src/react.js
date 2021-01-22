@@ -85,7 +85,7 @@ export default {
 				} else {
 					for (let styleKey of Object.keys(attrValue)) {
 						const match = attrValue[styleKey].match(/(.*?)\s*(!important)?\s*$/);
-						$element.style.setProperty(styleKey, match[1], match[2] && 'important');
+						$element.style[styleKey] = match[1];
 					}
 				}
 
