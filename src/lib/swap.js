@@ -137,7 +137,7 @@ export default function swap(from, into, isRequestNew, isRequestInitial) {
 
 			Array.from(document.querySelectorAll('body script[data-runtime]')).forEach(runtimeScript);
 
-			formFocus();
+			formFocus(scrolled===true);
 
 			if (scrolled===-1) {
 				scrollTo(0, scrollTop);

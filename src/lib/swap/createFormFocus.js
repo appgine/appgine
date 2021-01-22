@@ -1,5 +1,7 @@
 
-import { dom, selection } from 'appgine/closure'
+import { dom, selection, rect } from 'appgine/closure'
+import { currentScreen, scrollTo } from 'appgine/hooks/window'
+import { intersection } from 'appgine/src/lib/utils'
 
 
 export default function createFormFocus(isRequestNew) {
@@ -14,7 +16,13 @@ export default function createFormFocus(isRequestNew) {
 			const selectionStart = selection.getStart($active);
 			const selectionEnd = selection.getEnd($active);
 
-			return function() {
+			const bounds = $active.getBoundingClientRect();
+			const boundsObj = { left: bounds.left, top: bounds.top, width: bounds.width, height: bounds.height }
+			const screen = currentScreen();
+
+			const intersected = intersection(boundsObj, screen);
+
+			return function(canKeepScroll) {
 				let $inputs = [];
 				const $found = dom.findForm(formName, formId);
 
@@ -54,6 +62,10 @@ export default function createFormFocus(isRequestNew) {
 					} else {
 						$inputs[0].focus && $inputs[0].focus();
 						selection.setCursorAtEnd($inputs[0]);
+					}
+
+					if (intersected===false && canKeepScroll) {
+						scrollTo(screen.scrollLeft, screen.scrollTop);
 					}
 				}
 			}
