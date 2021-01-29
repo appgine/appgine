@@ -54,11 +54,25 @@ export default function createFormFocus(isRequestNew) {
 
 				if ($inputs[0]) {
 					if ($inputs[0].hasAttribute('value') && isRequestNew) {
+						const changed = $inputs[0].value && $inputs[0].value!==inputValue;
 						$inputs[0].value = inputValue;
+
 						$inputs[0].focus && $inputs[0].focus();
 						selection.setCursorAtEnd($inputs[0]);
 						selection.setStart($inputs[0], selectionStart);
 						selection.setEnd($inputs[0], selectionEnd);
+
+						if (changed) {
+							try {
+								const event = new Event('change', {bubbles: true, cancelable: true, target: $inputs[0], srcElement: $inputs[0]});
+								$inputs[0].dispatchEvent(event);
+
+							} catch (e) {
+								const event = document.createEvent('Event');
+								event.initEvent('change', true, true);
+								$inputs[0].dispatchEvent(event);
+							}
+						}
 
 					} else {
 						$inputs[0].focus && $inputs[0].focus();

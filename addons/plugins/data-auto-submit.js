@@ -1,12 +1,8 @@
 
-import { isSwapping } from '../../src/update'
-
 import { useEvent } from 'appgine/hooks/event'
 import { bindDispatch } from 'appgine/hooks/channel'
 import { getAncestor } from 'appgine/utils/dom'
 
-
-let focusValue;
 const $email = document.createElement('input');
 $email.type = 'email';
 
@@ -16,7 +12,6 @@ export default function create($element) {
 	const internalDispatch = bindDispatch('auto-submit');
 	const dispatch = (type, $element, ...args) => internalDispatch(type, $form, $element, ...args);
 
-	let $focus = null;
 	let value = undefined;
 	let checked = undefined;
 	let $emails = [];
@@ -102,24 +97,9 @@ export default function create($element) {
 		}
 	}
 
-	const onSubmit = function(e) {
-		// fix double send of form
-		if ($focus) {
-			value = $focus.value;
-			checked = $focus.checked;
-			clearSubmitForm(e.target, false); // TODO: Really?
-		}
-	}
-
 	const onReset = function(e) {
-		if ($focus) {
-			value = e.target.value;
-			checked = e.target.checked;
-
-		} else {
-			value = undefined;
-			checked = undefined;
-		}
+		value = undefined;
+		checked = undefined;
 	}
 
 	const onChange = function(e) {
@@ -131,38 +111,14 @@ export default function create($element) {
 	}
 
 	const onFocusIn = function(e) {
-		if (focusValue && focusValue.now+200>Date.now()) {
-			value = focusValue.value;
-			checked = focusValue.checked;
-			focusValue = null;
-			onChange(e);
-
-		} else {
-			$focus = e.target;
-			value = e.target.value;
-			checked = e.target.checked;
-		}
+		value = e.target.value;
+		checked = e.target.checked;
 	}
 
-	const onFocusOut = function(e) {
-		if (isSwapping()) {
-			focusValue = { now: Date.now(), value, checked }
-
-		} else if (value!==e.target.value || checked!==e.target.checked) {
-			autoSubmitForm(e.target, false);
-		}
-
-		$focus = null;
-		value = undefined;
-		checked = undefined;
-	}
-
-	$form && useEvent($form, 'submit', onSubmit);
 	$form && useEvent($form, 'reset', onReset);
 	useEvent($element, 'change', onChange);
-	useEvent($element, 'focusin', onFocusIn);
-	useEvent($element, 'focusout', onFocusOut);
 	useEvent($element, 'keyup', onChange);
+	useEvent($element, 'focusin', onFocusIn);
 
 	return function() {
 		$form && clearSubmitForm($form, false);
