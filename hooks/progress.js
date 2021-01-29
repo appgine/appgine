@@ -9,14 +9,14 @@ import { useEvent } from 'appgine/hooks/event'
 import { getAncestor } from 'appgine/utils/dom'
 
 
-export const useProgress = (accept, api) => internalUseProgress({ request: false }, accept, api);
-export const useAppProgress = (accept, api) => internalUseProgress({ ajax: false, request: false }, accept, api);
-export const useAjaxProgress = (accept, api) => internalUseProgress({ ajax: true, request: false }, accept, api);
-export const useFormProgress = (accept, api) => internalUseProgress({ form: true, request: false }, accept, api);
-export const useRequest = (accept, api) => internalUseProgress({ request: true }, accept, api);
-export const useAppRequest = (accept, api) => internalUseProgress({ ajax: false, request: true }, accept, api);
-export const useAjaxRequest = (accept, api) => internalUseProgress({ ajax: true, request: true }, accept, api);
-export const useFormRequest = (accept, api) => internalUseProgress({ form: true, ajax: false, request: true }, accept, api);
+export const useProgress = (...args) => internalUseProgress({ request: false }, ...args);
+export const useAppProgress = (...args) => internalUseProgress({ ajax: false, request: false }, ...args);
+export const useAjaxProgress = (...args) => internalUseProgress({ ajax: true, request: false }, ...args);
+export const useFormProgress = (...args) => internalUseProgress({ form: true, request: false }, ...args);
+export const useRequest = (...args) => internalUseProgress({ request: true }, ...args);
+export const useAppRequest = (...args) => internalUseProgress({ ajax: false, request: true }, ...args);
+export const useAjaxRequest = (...args) => internalUseProgress({ ajax: true, request: true }, ...args);
+export const useFormRequest = (...args) => internalUseProgress({ form: true, ajax: false, request: true }, ...args);
 
 
 function internalUseProgress(defaultAccept, accept, api) {
@@ -42,8 +42,8 @@ withModuleContext(module, function() {
 
 	useListen('auto-submit', 'start', onAutoSubmitStart);
 	useListen('auto-submit', 'submit', onAutoSubmit);
-	useListen('auto-submit', 'abort', onAutoSubmitAbort);
-	useListen('auto-submit', 'destroy', onAutoSubmitAbort);
+	useListen('auto-submit', 'abort', $form => onAutoSubmitAbort($form));
+	useListen('auto-submit', 'destroy', $form => onAutoSubmitDestroy($form));
 
 	useListen('app.request', 'start', (endpoint, { $element, requestnum, abort }) => onRequestStart(requestnum, endpoint, $element, false, true, abort));
 	useListen('app.request', 'submit', ({ requestnum, endpoint, method, data }) => onRequestSubmit(requestnum, { endpoint, method, data }));
@@ -62,8 +62,10 @@ withModuleContext(module, function() {
 });
 
 
-export function createListener(acceptObj, createApi)
+export function createListener(...acceptObjList)
 {
+	const createApi = acceptObjList.pop();
+
 	const listener = function() {
 		if (listeners.indexOf(listener)!==-1) {
 			listeners.splice(listeners.indexOf(listener), 1);
@@ -98,54 +100,64 @@ export function createListener(acceptObj, createApi)
 
 	listener.endpointList = [];
 	listener.labels = [];
+	listener.ajax = null;
 	listener.form = false;
 	listener.formName = null;
-	listener.request = acceptObj.request||false;
-	listener.ajax = acceptObj.ajax !== undefined ? acceptObj.ajax : null;
+	listener.autoSubmit = false;
+	listener.request = false;
 
 	listener.appRequest = null;
 	listener.autoSubmitRequest = null;
 	listener.ajaxRequestList = {};
 
-	if (typeof acceptObj.accept === 'function') {
-		listener.accept = acceptObj.accept;
-	}
-
-	if (acceptObj.$element) {
-		if (acceptObj.form) {
-			const $form = getAncestor(acceptObj.$element, 'form');
-			const formName = $form && ($form.getAttribute('data-ajax') || $form.getAttribute('name')) || null;
-			listener.formName = formName;
-			listener.form = true;
-			listener.$form = $form;
+	for (let acceptObj of acceptObjList) {
+		if (acceptObj.ajax!==undefined) {
+			listener.ajax = acceptObj.ajax;
 		}
 
-		if (listener.formName===null) {
-			listener.$element = acceptObj.$element;
-			listener.contains = function($element) {
-				const $contains = listener.$form||listener.$element;
-				return $element && ($contains.contains($element) || $element.contains($contains)) || false;
+		listener.request = acceptObj.request || listener.request;
+		listener.autoSubmit = acceptObj.autoSubmit || listener.autoSubmit;
+
+		if (typeof acceptObj.accept === 'function') {
+			listener.accept = acceptObj.accept;
+		}
+
+		if (acceptObj.$element) {
+			if (acceptObj.form) {
+				const $form = getAncestor(acceptObj.$element, 'form');
+				const formName = $form && ($form.getAttribute('data-ajax') || $form.getAttribute('name')) || null;
+				listener.formName = formName;
+				listener.form = true;
+				listener.$form = $form;
 			}
+
+			if (listener.formName===null) {
+				listener.$element = acceptObj.$element;
+				listener.contains = function($element) {
+					const $contains = listener.$form||listener.$element;
+					return $element && ($contains.contains($element) || $element.contains($contains)) || false;
+				}
+			}
+
+		} else if (acceptObj.form) {
+			listener.form = true;
 		}
 
-	} else if (acceptObj.form) {
-		listener.form = true;
-	}
+		if (acceptObj.labels) {
+			listener.labels = Array.isArray(acceptObj.labels) ? acceptObj.labels : [acceptObj.labels];
 
-	if (acceptObj.labels) {
-		listener.labels = Array.isArray(acceptObj.labels) ? acceptObj.labels : [acceptObj.labels];
+		} else if (acceptObj.label) {
+			listener.labels.push(acceptObj.label);
+		}
 
-	} else if (acceptObj.label) {
-		listener.labels.push(acceptObj.label);
-	}
-
-	if (acceptObj.endpoint) {
-		listener.endpointList = Array.isArray(acceptObj.endpoint) ? acceptObj.endpoint : [acceptObj.endpoint];
-		listener.endpointList = listener.endpointList.map(endpoint => {
-			$link.href = endpoint;
-			$link.href = $link.href;
-			return $link.href;
-		});
+		if (acceptObj.endpoint) {
+			listener.endpointList = Array.isArray(acceptObj.endpoint) ? acceptObj.endpoint : [acceptObj.endpoint];
+			listener.endpointList = listener.endpointList.map(endpoint => {
+				$link.href = endpoint;
+				$link.href = $link.href;
+				return $link.href;
+			});
+		}
 	}
 
 	for (let requestnum of Object.keys(appRequestList)) {
@@ -376,10 +388,12 @@ function onAutoSubmitStart($form, $element, abort)
 
 	for (let listener of matchListeners(listeners, $element, request, false)) {
 		if (listener.autoSubmitRequest) {
+			listener.autoSubmitRequest.requestnum = null;
+			listener.autoSubmitRequest.request = {...request}
 			clearTimeout(listener.autoSubmitRequest.abortTimeout);
 			tryRequestActionCall(null, listener.autoSubmitRequest, 'autoSubmit', false);
 
-		} else {
+		} else if (listener.autoSubmit) {
 			listener.autoSubmitRequest = listener.createApi(null, true, {...request});
 			createApiFinish();
 		}
@@ -390,6 +404,14 @@ function onAutoSubmitStart($form, $element, abort)
 function onAutoSubmit($form, $element) {
 	if (autoSubmitForm.indexOf($form)!==-1) {
 		autoSubmitElement[autoSubmitForm.indexOf($form)] = $element;
+	}
+}
+
+
+function onAutoSubmitDestroy($form)
+{
+	if (!isSwapping()) {
+		onAutoSubmitAbort($form);
 	}
 }
 
@@ -437,20 +459,23 @@ function onRequestStart(requestnum, endpoint, $element, isAjax, isGlobal, abort)
 
 			if (autoSubmitRequest) {
 				autoSubmitRequest.requestnum = requestnum;
-				listener.autoSubmitRequest = null;
 			}
 
+			let nextRequest;
+
 			if (isAjax) {
-				const ajaxRequest = autoSubmitRequest || listener.createApi(requestnum, false, {...appRequestList[requestnum]});
-				ajaxRequest && (listener.ajaxRequestList[requestnum] = ajaxRequest);
+				nextRequest = autoSubmitRequest || listener.createApi(requestnum, false, {...appRequestList[requestnum]});
+				nextRequest && (listener.ajaxRequestList[requestnum] = nextRequest);
 				createApiFinish();
 
 			} else if (autoSubmitRequest || (listener.appRequest && listener.appRequest.api.replace)) {
-				if (autoSubmitRequest) {
+				if (autoSubmitRequest && listener.appRequest!==autoSubmitRequest) {
 					tryRequestActionCall(null, listener.appRequest, 'abort', true);
 				}
 
-				listener.appRequest = autoSubmitRequest || listener.appRequest;
+				nextRequest = autoSubmitRequest || listener.appRequest;
+
+				listener.appRequest = nextRequest;
 				listener.appRequest.requestnum = requestnum;
 				listener.appRequest.request.endpoint = endpoint;
 				listener.appRequest.request.$form = $form;
@@ -460,9 +485,12 @@ function onRequestStart(requestnum, endpoint, $element, isAjax, isGlobal, abort)
 
 			} else {
 				tryRequestActionCall(null, listener.appRequest, 'abort', true);
-				listener.appRequest = listener.createApi(requestnum, false, {...appRequestList[requestnum]});
+				nextRequest = listener.createApi(requestnum, false, {...appRequestList[requestnum]});
+				listener.appRequest = nextRequest;
 				createApiFinish();
 			}
+
+			listener.autoSubmitRequest = listener.autoSubmitRequest || ($form && nextRequest) || null;
 
 		} else if (listener.appRequest && isAjax===false) {
 			listener.appRequest.requestnum = requestnum;
@@ -494,6 +522,10 @@ function onRequestActionEnd(requestnum, action, ...args)
 			listener.appRequest = null;
 		}
 
+		if (listener.autoSubmitRequest && listener.autoSubmitRequest.requestnum===requestnum) {
+			listener.autoSubmitRequest = null;
+		}
+
 		if (Object.keys(listener.ajaxRequestList).length===1) {
 			tryRequestActionCall(requestnum, listener.ajaxRequestList[requestnum], 'finish', action==='end');
 		}
@@ -509,6 +541,10 @@ function onRequestActionInternal(requestnum, action, dispose, ...args) {
 	}
 
 	for (let listener of listeners) {
+		if (action==='response' && listener.appRequest && listener.appRequest===listener.autoSubmitRequest && listener.appRequest.requestnum===requestnum) {
+			listener.autoSubmitRequest = null;
+		}
+
 		tryRequestActionCall(requestnum, listener.appRequest, action, dispose, ...args);
 		tryRequestActionCall(requestnum, listener.ajaxRequestList[requestnum], action, dispose, ...args);
 	}
