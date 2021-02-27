@@ -1,6 +1,6 @@
 {
   "name": "appgine",
-  "version": "0.31.1",
+  "version": "0.31.2",
   "license": "SEE LICENSE IN licence.md",
   "maintainers": [
     "Ales Kafka <ales.kafka@gmail.com>"
@@ -32,6 +32,7 @@
   "dependencies": {
     "babel-regenerator-runtime": "^6.5.0",
     "classlist-polyfill": "^1.0.2",
+    "kefir": "^3.1.0",
     "core-js": "^3.8.3",
     "prop-types": ">=15.0.0",
     "react": "^16.13.0",
