@@ -45,7 +45,7 @@ withModuleContext(module, function() {
 	useListen('auto-submit', 'abort', $form => onAutoSubmitAbort($form));
 	useListen('auto-submit', 'destroy', $form => onAutoSubmitDestroy($form));
 
-	useListen('app.request', 'start', (endpoint, { $element, requestnum, abort }) => onRequestStart(requestnum, endpoint, $element, false, true, abort));
+	useListen('app.request', 'start', (endpoint, { $element, requestnum, isAjax, abort }) => onRequestStart(requestnum, endpoint, $element, isAjax, true, abort));
 	useListen('app.request', 'submit', ({ requestnum, endpoint, method, data }) => onRequestSubmit(requestnum, { endpoint, method, data }));
 	useListen('app.request', 'response', ({ requestnum, response }) => onRequestResponse(requestnum, response));
 	useListen('app.request', 'upload', ({ requestnum, loaded, total }) => onRequestActionInternal(requestnum, 'progress', false, loaded, total));
