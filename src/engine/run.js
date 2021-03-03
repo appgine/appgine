@@ -28,6 +28,7 @@ import * as formDataUtils from 'appgine/utils/formData'
 import * as ajax from '../lib/ajax'
 
 const _stack = new RequestStack();
+let _internalAjax = new Map();
 let _options = createOptions({});
 let _pending = 0;
 let _requestnum = 0;
@@ -134,7 +135,10 @@ export default function run(options, scrollTo=0, bodyClassName, isRequestInitial
 			if (_pending) {
 				e.stopPropagation();
 				e.preventDefault();
-				ajax.abort();
+
+				if (_internalAjax.has(null)) {
+					_internalAjax.get(null).abort();
+				}
 			}
 		});
 	}
@@ -409,16 +413,17 @@ function createAjax($element, allowSwap=true, name=null) {
 		headers['X-Request-Tracker'] = $element.getAttribute('data-tracker');
 	}
 
-	return ajax.create(headers, _options.timeout, name);
+	if (_internalAjax.has(name)===false) {
+		_internalAjax.set(name, ajax.create());
+	}
+
+	return _internalAjax.get(name).createRequest(headers, _options.timeout);
 }
 
 
 function loadAjax($element, endpoint, scrollTo) {
-	loadAjaxWithContext(createAjax($element), $element, endpoint, scrollTo)
-}
-
-
-function loadAjaxWithContext(ajaxContext, $element, endpoint, scrollTo) {
+	const ajaxName = $form.getAttribute('data-ajax')||$element||'';
+	const ajaxContext = createAjax($element, true, ajaxName);
 	ajaxContext.get(endpoint, bindAjaxRequest(ajaxContext, $element, endpoint, scrollTo));
 }
 
@@ -429,7 +434,7 @@ function loadPage($element, endpoint, newPage, scrollTo) {
 
 
 function loadPageWithContext(ajaxContext, $element, endpoint, newPage, scrollTo) {
-	ajaxContext.load(endpoint, bindRequest(ajaxContext, $element, endpoint, newPage, scrollTo));
+	ajaxContext.get(endpoint, bindRequest(ajaxContext, $element, endpoint, newPage, scrollTo));
 }
 
 
@@ -462,7 +467,7 @@ function submitForm($form, $submitter, formTarget) {
 	const formScroll = createFormScroll($form, formName[0]==='#', _options.hashFixedEdge);
 	const targetScroll = createTargetScroll(formTarget);
 
-	const ajaxContext = createAjax($element, true, $form.getAttribute('data-ajax')||null);
+	const ajaxContext = createAjax($element, true, $form.getAttribute('data-ajax')||$form);
 
 	let bindSubmitRequest;
 	if (formTarget==='_ajax') {

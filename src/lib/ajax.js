@@ -10,109 +10,88 @@ export const TIMEOUT = 'timeout';
 export const SUCCESS = 'success';
 
 
-const _globalRequest = {};
-
-
-export function abort() {
-	_globalRequest[null] && _globalRequest[null].current && _globalRequest[null].current.abort();
-}
-
-
-export function create(headers, timeout, name=null) {
-	let localRequest = null;
-	let globalRequest = _globalRequest[name] = _globalRequest[name] || {current: null};
-	timeout = timeout===undefined ? 30e3 : parseInt(timeout, 10);
-
-	function ajaxRequest(request, endpoint, method, data, fn, fnprogress) {
-		request.open(method, endpoint, true);
-
-		function fndone(...args) {
-			if (localRequest===request) {
-				localRequest = null;
-			}
-
-			if (globalRequest.current===request) {
-				globalRequest.current = null;
-			}
-
-			if (_globalRequest[null].current===request) {
-				_globalRequest[null].current = null;
-			}
-
-			fn && fn(...args);
-			fn = null;
-		}
-
-		for (let key of Object.keys(headers||{})) {
-			request.setRequestHeader(key, headers[key]);
-		}
-
-		if ((method==='POST' || method==='PUT') && !(data instanceof FormData)) {
-			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-		}
-
-		request.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-		request.setRequestHeader('Pragma', 'no-cache');
-		request.setRequestHeader('Expires', '0');
-		request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-
-		bindRequest(endpoint, request, timeout, fndone, fnprogress);
-		request.send(data);
-	}
-
+export function create() {
 	let aborted = false;
-	function checkPendingAbort(onResponse, onCreate) {
-		if (aborted===true) {
-			aborted = false;
-			const error = locale.error.request.abort;
-			return onResponse(ABORT, { code: 0, headers: {}, error, json: undefined, html: '' });
-		}
+	let localRequest = null;
 
-		return onCreate();
-	}
+	function abort() {
+		aborted = aborted || localRequest!==null;
+		localRequest && localRequest.abort();
+		localRequest = null;
+	};
+
+	function canAbort() {
+		return !!localRequest;
+	};
 
 	return {
-		abort() {
-			aborted = aborted || localRequest!==null;
-			localRequest && localRequest.abort();
-			localRequest = null;
+		abort,
+		canAbort,
+		get(...args) {
+			return this.createRequest().get(...args);
 		},
-		canAbort() {
-			return !!localRequest;
+		post(...args) {
+			return this.createRequest().post(...args);
 		},
-		get(endpoint, fn) {
-			checkPendingAbort(fn, function() {
-				localRequest && localRequest.abort();
-				localRequest = createRequest(false);
-				ajaxRequest(localRequest, endpoint, 'GET', null, fn);
-			})
+		submit(...args) {
+			return this.createRequest().submit(...args);
 		},
-		post(endpoint, data, fn, fnprogress) {
-			checkPendingAbort(fn, function() {
-				localRequest && localRequest.abort();
-				localRequest = createRequest(!!fnprogress);
-				ajaxRequest(localRequest, endpoint, 'POST', data, fn, fnprogress);
-			})
-		},
-		load(endpoint, fn) {
-			checkPendingAbort(fn, function() {
-				globalRequest.current && globalRequest.current.abort();
-				globalRequest.current = createRequest(false);
-				ajaxRequest(globalRequest.current, endpoint, 'GET', null, fn);
-			})
-		},
-		submit(endpoint, method, data, fn, fnprogress) {
-			checkPendingAbort(fn, function() {
-				globalRequest.current && globalRequest.current.abort();
-				globalRequest.current = createRequest(!!fnprogress);
-				ajaxRequest(globalRequest.current, endpoint, method, data, fn, fnprogress);
-			})
+		createRequest(headers, timeout) {
+			timeout = timeout===undefined ? 30e3 : parseInt(timeout, 10);
+
+			function ajaxRequest(request, endpoint, method, data, fn, fnprogress) {
+				request.open(method, endpoint, true);
+
+				function fndone(...args) {
+					localRequest = null;
+					fn && fn(...args);
+					fn = null;
+				}
+
+				for (let key of Object.keys(headers||{})) {
+					request.setRequestHeader(key, headers[key]);
+				}
+
+				if ((method==='POST' || method==='PUT') && !(data instanceof FormData)) {
+					request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+				}
+
+				request.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+				request.setRequestHeader('Pragma', 'no-cache');
+				request.setRequestHeader('Expires', '0');
+				request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+				bindRequest(endpoint, request, timeout, fndone, fnprogress);
+				request.send(data);
+			}
+
+			return {
+				abort,
+				canAbort,
+				get(endpoint, fn) {
+					this.request(endpoint, 'GET', null, fn, null);
+				},
+				post(endpoint, data, fn, fnprogress) {
+					this.request(endpoint, 'POST', data, fn, fnprogress);
+				},
+				submit(endpoint, method, data, fn, fnprogress) {
+					this.request(endpoint, method, data, fn, fnprogress);
+				},
+				request(endpoint, method, data, fn, fnprogress) {
+					if (aborted===true) {
+						aborted = false;
+						const error = locale.error.request.abort;
+						return fn && fn(ABORT, { code: 0, headers: {}, error, json: undefined, html: '' });
+					}
+
+					localRequest && localRequest.abort();
+					localRequest = createRequest(!!fnprogress);
+					ajaxRequest(localRequest, endpoint, method, data, fn, fnprogress);
+				}
+			}
 		}
 	}
 }
-
-
-export default create();
 
 
 function createRequestController() {
