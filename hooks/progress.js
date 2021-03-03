@@ -91,7 +91,7 @@ export function createListener(...acceptObjList)
 	let currentListenerApi = null;
 	const tmpCreateApi = bindContext(function(isAutoSubmit, request) {
 		try {
-			currentListenerApi = listener.form ? createApi(isAutoSubmit, request) : createApi(request);
+			currentListenerApi = listener.form ? createApi(request, isAutoSubmit) : createApi(request);
 		} catch (e) {}
 		return currentListenerApi && currentListenerApi.dispose;
 	});
