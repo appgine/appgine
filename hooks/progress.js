@@ -7,16 +7,19 @@ import { withModuleContext, useContext, bindContext } from 'appgine/hooks'
 import { useListen } from 'appgine/hooks/channel'
 import { useEvent } from 'appgine/hooks/event'
 import { getAncestor } from 'appgine/utils/dom'
+import { isUpload as isFormUpload } from 'appgine/utils/formData'
 
 
 export const useProgress = (...args) => internalUseProgress({ request: false }, ...args);
 export const useAppProgress = (...args) => internalUseProgress({ ajax: false, request: false }, ...args);
 export const useAjaxProgress = (...args) => internalUseProgress({ ajax: true, request: false }, ...args);
 export const useFormProgress = (...args) => internalUseProgress({ form: true, request: false }, ...args);
+export const useUploadProgress = (...args) => internalUseProgress({ upload: true, request: false }, ...args);
 export const useRequest = (...args) => internalUseProgress({ request: true }, ...args);
 export const useAppRequest = (...args) => internalUseProgress({ ajax: false, request: true }, ...args);
 export const useAjaxRequest = (...args) => internalUseProgress({ ajax: true, request: true }, ...args);
 export const useFormRequest = (...args) => internalUseProgress({ form: true, ajax: false, request: true }, ...args);
+export const useUploadRequest = (...args) => internalUseProgress({ upload: true, ajax: false, request: true }, ...args);
 
 
 function internalUseProgress(defaultAccept, accept, api) {
@@ -117,13 +120,14 @@ export function createListener(...acceptObjList)
 
 		listener.request = acceptObj.request || listener.request;
 		listener.autoSubmit = acceptObj.autoSubmit || listener.autoSubmit;
+		listener.upload = acceptObj.upload===true;
 
 		if (typeof acceptObj.accept === 'function') {
 			listener.accept = acceptObj.accept;
 		}
 
 		if (acceptObj.$element) {
-			if (acceptObj.form) {
+			if (acceptObj.form || acceptObj.upload) {
 				const $form = getAncestor(acceptObj.$element, 'form');
 				const formName = $form && ($form.getAttribute('data-ajax') || $form.getAttribute('name')) || null;
 				listener.formName = formName;
@@ -139,7 +143,7 @@ export function createListener(...acceptObjList)
 				}
 			}
 
-		} else if (acceptObj.form) {
+		} else if (acceptObj.form || acceptObj.upload) {
 			listener.form = true;
 		}
 
@@ -243,11 +247,17 @@ function matchListeners(listeners, $element, request=null, matchLabels=false)
 			matched = matched || listener.endpointList.length===0;
 		}
 
-		if (request && listener.formName) {
-			matched = matched && listener.formName===request.formName;
+		if (listener.form && request) {
+			if (!request.$form) {
+				matched = false;
 
-		// } else if (listener.form && request && !request.formName) {
-		// 	matched = false;
+			} else if (listener.formName && listener.formName!==request.formName) {
+				matched = false;
+			}
+		}
+
+		if (listener.upload && (!request || request.isUpload!==true)) {
+			matched = false;
 		}
 
 		if (matched) {
@@ -383,8 +393,9 @@ function onAutoSubmitStart($form, $element, abort)
 
 	const isAjax = formTarget==='_ajax';
 	const isGlobal = false;
+	const isUpload = isFormUpload($form);
 	const endpoint = uri.createForm($form, $element);
-	const request = { isAjax, isGlobal, endpoint, $form, $element, formName, labels: {}, level: 0, actions: [], abort  };
+	const request = { isAjax, isGlobal, isUpload, endpoint, $form, $element, formName, labels: {}, level: 0, actions: [], abort  };
 
 	for (let listener of matchListeners(listeners, $element, request, false)) {
 		if (listener.autoSubmitRequest) {
@@ -446,8 +457,9 @@ function onRequestStart(requestnum, endpoint, $element, isAjax, isGlobal, abort)
 
 	const $form = $element.tagName==='FORM' ? $element : $element.form;
 	const formName = $form && ($form.getAttribute('data-ajax') || $form.getAttribute('name')) || null;
+	const isUpload = $form ? isFormUpload($form) : false;
 
-	appRequestList[requestnum] = { isAjax, isGlobal, endpoint, $form, $element, formName, labels: {}, level: 0, actions: [], abort }
+	appRequestList[requestnum] = { isAjax, isGlobal, isUpload, endpoint, $form, $element, formName, labels: {}, level: 0, actions: [], abort }
 
 	const foundListeners = matchListeners(listeners, $element, appRequestList[requestnum], false);
 
