@@ -336,7 +336,7 @@ function loadEndpoint($element, endpoint, isAjax, toCurrent=null, scrollTo=0) {
 function leave(endpoint) {
 	let aborted = false;
 	const requestnum = _requestnum = createRequestnum();
-	_options.dispatch('app.request', 'start', endpoint, { requestnum, $element: document.body, abort() {
+	_options.dispatch('app.request', 'start', endpoint, { requestnum, isAjax: false, $element: document.body, abort() {
 		aborted = true;
 	} });
 
@@ -524,7 +524,7 @@ function submitForm($form, $submitter, formTarget) {
 
 
 function bindAjaxRequest(ajaxContext, $element, endpoint, scrollTo) {
-	return _bindRequest(ajaxContext, _pushing ? 0 : (_requestnum = createRequestnum()), $element, endpoint, false, scrollTo, function(errno) {
+	return _bindRequest(true, ajaxContext, _pushing ? 0 : (_requestnum = createRequestnum()), $element, endpoint, false, scrollTo, function(errno) {
 		const error = _options.locale[locale.error.request.ajax] + '\n' + String(_options.locale[errno]||'');
 		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
 	});
@@ -533,18 +533,18 @@ function bindAjaxRequest(ajaxContext, $element, endpoint, scrollTo) {
 
 
 function bindRequest(ajaxContext, $element, endpoint, newPage, scrollTo) {
-	return _bindRequest(ajaxContext, (_requestnum = createRequestnum()), $element, endpoint, newPage, scrollTo, function(errno) {
+	return _bindRequest(false, ajaxContext, (_requestnum = createRequestnum()), $element, endpoint, newPage, scrollTo, function(errno) {
 		const error = _options.locale[locale.error.request.page] + '\n' + String(_options.locale[errno]||'');
 		errorhub.dispatch(errorhub.ERROR.REQUEST, error, undefined, endpoint);
 	});
 }
 
 
-function _bindRequest(ajaxContext, requestnum, $element, endpoint, newPage, scrollTo, onError) {
+function _bindRequest(isAjax, ajaxContext, requestnum, $element, endpoint, newPage, scrollTo, onError) {
 	const onResponse = ajaxResponse($element, endpoint, newPage, scrollTo);
 
 	_pending = 1;
-	_options.dispatch('app.request', 'start', endpoint, { $element, requestnum, abort: ajaxContext.abort });
+	_options.dispatch('app.request', 'start', endpoint, { $element, requestnum, isAjax, abort: ajaxContext.abort });
 
 	return _options.onResponse(function(status, response) {
 		const isLast = () => requestnum===_requestnum;
