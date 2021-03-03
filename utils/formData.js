@@ -1,5 +1,16 @@
 
 
+export function isUpload($form)
+{
+	let isUpload = false;
+	eachFormData($form, null, function(name, value, isFile) {
+		isUpload = isUpload || isFile;
+	});
+
+	return isUpload;
+}
+
+
 export function postData($form, $submitter) {
 	const data = new FormData();
 	eachFormData($form, $submitter, function(name, value, isFile) {
