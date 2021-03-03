@@ -556,8 +556,13 @@ function tryRequestActionCall(requestnum, request, action, dispose, ...args) {
 		return;
 	}
 
-	if (action===null && ['abort', 'error', 'end'].indexOf(request.action)===-1) {
-		action = request.action==='response' ? 'end' : 'abort';
+	if (action===null) {
+		if (['response', 'responseHTML', 'responseJSON'].indexOf(request.action)!==-1) {
+			action = 'end';
+
+		} else if (['abort', 'error', 'end'].indexOf(request.action)===-1) {
+			action = 'abort';
+		}
 	}
 
 	try {
