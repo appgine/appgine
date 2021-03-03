@@ -74,7 +74,10 @@ export function createListener(...acceptObjList)
 			listeners.splice(listeners.indexOf(listener), 1);
 		}
 
-		tryRequestActionCall(null, listener.autoSubmitRequest, 'abort', true);
+		if (listener.autoSubmitRequest!==listener.appRequest) {
+			tryRequestActionCall(null, listener.autoSubmitRequest, 'abort', true);
+		}
+
 		tryRequestActionCall(null, listener.appRequest, null, true);
 
 		for (let requestnum of Object.keys(listener.ajaxRequestList)) {
@@ -496,7 +499,7 @@ function onRequestStart(requestnum, endpoint, $element, isAjax, isGlobal, abort)
 				tryRequestActionCall(null, listener.appRequest, 'replace', false)
 
 			} else {
-				tryRequestActionCall(null, listener.appRequest, 'abort', true);
+				tryRequestActionCall(null, listener.appRequest, null, true);
 				nextRequest = listener.createApi(requestnum, false, {...appRequestList[requestnum]});
 				listener.appRequest = nextRequest;
 				createApiFinish();
