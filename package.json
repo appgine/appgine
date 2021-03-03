@@ -51,7 +51,7 @@
     "extend": "^3.0.0",
     "goog-loader": "^0.9.1",
     "gulp": "^4.0.2",
-    "node-notifier": "^4.4.0",
+    "node-notifier": "^8.0.1",
     "script-loader": "^0.6.1",
     "webpack": "^4.42.0",
     "webpack-dev-server": "3.7.2"
